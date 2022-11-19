@@ -1,0 +1,24 @@
+(+4) Frontend:
+    Parsowanie przy użyciu ANTLR w Go.
+    Analiza semantyczna (type-check, banialuki).
+
+    Co pamiętać:
+        - ma działać wyrażenie typu human[3].withName('foo').children[5].copy();
+        - ma działać przypisanie typu human[3].children[5] = new child;
+
+
+(+10) Backend:
+    Kompilator produkuje kod x64 (AT&T)
+
+(+8) Optymalizacje:
+    - (+5) Wykorzystanie rejestrów
+    - (+3) Local Common Subexpression Elimination
+
+(+11) Bazowe Latte plus następujące rozszerzenia:
+    - (+1) Tablice
+    - (+10) Obiekty
+        - (+2) Pola i metody
+        - (+4) Metody wirtualne 
+        - (+4) Dziedziczenie (bez wielodziedziczenia) z nadpisywaniem metod wirtualnych
+
+Łącznie: 4 + 10 + 8 + 13 = 33
