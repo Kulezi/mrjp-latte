@@ -7,3 +7,6 @@ mrjp-tests/
 lattests/
 !lattests/good/*.lat
 !lattests/good/*.output
+
+latc_x86_64
+compiler_output
