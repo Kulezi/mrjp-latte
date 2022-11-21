@@ -3,6 +3,7 @@ package compiler
 import (
 	"fmt"
 	"latte/parser"
+	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -64,6 +65,8 @@ func (c *compiler) Parse(filename string) error {
 	if err := parseErrors.Check("parse error:"); err != nil {
 		return err
 	}
+
+	log.Println(c.tree.Accept(TypeCheckVisitor{}))
 
 	return nil
 }

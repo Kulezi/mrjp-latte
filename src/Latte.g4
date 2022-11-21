@@ -17,29 +17,26 @@ field: type_ ID ';' # ClassFieldDef | fundef # ClassMethodDef;
 block: '{' stmt* '}';
 
 lvalue:
-	ID					# LVId
-	| ID '[' expr ']'	# LVArrayRef
-	| lvalue '.' lvalue	# LVField;
+	lvalue '.' lvalue		# LVField
+	| lvalue '[' expr ']'	# LVArrayRef
+	| ID					# LVId;
 
 stmt:
-	';'												# SEmpty
-	| block											# SBlockStmt
-	| type_ item ( ',' item)* ';'					# SDecl
-	| lvalue '=' expr ';'							# SAss
-	| lvalue '[' expr ']' '=' expr ';'				# SAssArray
-	| lvalue '++' ';'								# SIncr
-	| lvalue '--' ';'								# SDecr
-	| 'return' expr ';'								# SRet
-	| 'return' ';'									# SVRet
-	| 'if' '(' expr ')' stmt						# SCond
-	| 'if' '(' expr ')' stmt 'else' stmt			# SCondElse
-	| 'while' '(' expr ')' stmt						# SWhile
-	| 'for' '(' singular_type_ ID ':' ID ')' stmt	# SFor
-	| expr ';'										# SExp;
+	';'										# SEmpty
+	| block									# SBlockStmt
+	| type_ item ( ',' item)* ';'			# SDecl
+	| lvalue '=' expr ';'					# SAss
+	| lvalue '++' ';'						# SIncr
+	| lvalue '--' ';'						# SDecr
+	| 'return' expr ';'						# SRet
+	| 'return' ';'							# SVRet
+	| 'if' '(' expr ')' stmt				# SCond
+	| 'if' '(' expr ')' stmt 'else' stmt	# SCondElse
+	| 'while' '(' expr ')' stmt				# SWhile
+	| 'for' '(' type_ ID ':' ID ')' stmt	# SFor
+	| expr ';'								# SExp;
 
-type_:
-	singular_type_ '[]'	# TArray
-	| singular_type_	# TSingular;
+type_: type_ '[]' # TArray | singular_type_ # TSingular;
 
 singular_type_:
 	ID			# TClass
@@ -56,8 +53,7 @@ expr: ('-' | '!') expr						# EUnOp
 	| expr relOp expr						# ERelOp
 	| <assoc = right> expr '&&' expr		# EAnd
 	| <assoc = right> expr '||' expr		# EOr
-	| 'new' singular_type_ '[' expr ']'		# ENewArray
-	| 'new' ID								# ENewStruct
+	| 'new' singular_type_ ('[' expr ']')*	# ENew
 	| expr '.' expr							# EFieldAccess
 	| expr '[' expr ']'						# EArrayRef
 	| 'self'								# ESelf

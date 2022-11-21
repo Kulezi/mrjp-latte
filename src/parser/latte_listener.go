@@ -56,9 +56,6 @@ type LatteListener interface {
 	// EnterSAss is called when entering the SAss production.
 	EnterSAss(c *SAssContext)
 
-	// EnterSAssArray is called when entering the SAssArray production.
-	EnterSAssArray(c *SAssArrayContext)
-
 	// EnterSIncr is called when entering the SIncr production.
 	EnterSIncr(c *SIncrContext)
 
@@ -86,11 +83,11 @@ type LatteListener interface {
 	// EnterSExp is called when entering the SExp production.
 	EnterSExp(c *SExpContext)
 
-	// EnterTArray is called when entering the TArray production.
-	EnterTArray(c *TArrayContext)
-
 	// EnterTSingular is called when entering the TSingular production.
 	EnterTSingular(c *TSingularContext)
+
+	// EnterTArray is called when entering the TArray production.
+	EnterTArray(c *TArrayContext)
 
 	// EnterTClass is called when entering the TClass production.
 	EnterTClass(c *TClassContext)
@@ -119,9 +116,6 @@ type LatteListener interface {
 	// EnterEFunCall is called when entering the EFunCall production.
 	EnterEFunCall(c *EFunCallContext)
 
-	// EnterENewArray is called when entering the ENewArray production.
-	EnterENewArray(c *ENewArrayContext)
-
 	// EnterEArrayRef is called when entering the EArrayRef production.
 	EnterEArrayRef(c *EArrayRefContext)
 
@@ -140,9 +134,6 @@ type LatteListener interface {
 	// EnterEUnOp is called when entering the EUnOp production.
 	EnterEUnOp(c *EUnOpContext)
 
-	// EnterENewStruct is called when entering the ENewStruct production.
-	EnterENewStruct(c *ENewStructContext)
-
 	// EnterEStr is called when entering the EStr production.
 	EnterEStr(c *EStrContext)
 
@@ -157,6 +148,9 @@ type LatteListener interface {
 
 	// EnterEFalse is called when entering the EFalse production.
 	EnterEFalse(c *EFalseContext)
+
+	// EnterENew is called when entering the ENew production.
+	EnterENew(c *ENewContext)
 
 	// EnterEAddOp is called when entering the EAddOp production.
 	EnterEAddOp(c *EAddOpContext)
@@ -224,9 +218,6 @@ type LatteListener interface {
 	// ExitSAss is called when exiting the SAss production.
 	ExitSAss(c *SAssContext)
 
-	// ExitSAssArray is called when exiting the SAssArray production.
-	ExitSAssArray(c *SAssArrayContext)
-
 	// ExitSIncr is called when exiting the SIncr production.
 	ExitSIncr(c *SIncrContext)
 
@@ -254,11 +245,11 @@ type LatteListener interface {
 	// ExitSExp is called when exiting the SExp production.
 	ExitSExp(c *SExpContext)
 
-	// ExitTArray is called when exiting the TArray production.
-	ExitTArray(c *TArrayContext)
-
 	// ExitTSingular is called when exiting the TSingular production.
 	ExitTSingular(c *TSingularContext)
+
+	// ExitTArray is called when exiting the TArray production.
+	ExitTArray(c *TArrayContext)
 
 	// ExitTClass is called when exiting the TClass production.
 	ExitTClass(c *TClassContext)
@@ -287,9 +278,6 @@ type LatteListener interface {
 	// ExitEFunCall is called when exiting the EFunCall production.
 	ExitEFunCall(c *EFunCallContext)
 
-	// ExitENewArray is called when exiting the ENewArray production.
-	ExitENewArray(c *ENewArrayContext)
-
 	// ExitEArrayRef is called when exiting the EArrayRef production.
 	ExitEArrayRef(c *EArrayRefContext)
 
@@ -308,9 +296,6 @@ type LatteListener interface {
 	// ExitEUnOp is called when exiting the EUnOp production.
 	ExitEUnOp(c *EUnOpContext)
 
-	// ExitENewStruct is called when exiting the ENewStruct production.
-	ExitENewStruct(c *ENewStructContext)
-
 	// ExitEStr is called when exiting the EStr production.
 	ExitEStr(c *EStrContext)
 
@@ -325,6 +310,9 @@ type LatteListener interface {
 
 	// ExitEFalse is called when exiting the EFalse production.
 	ExitEFalse(c *EFalseContext)
+
+	// ExitENew is called when exiting the ENew production.
+	ExitENew(c *ENewContext)
 
 	// ExitEAddOp is called when exiting the EAddOp production.
 	ExitEAddOp(c *EAddOpContext)

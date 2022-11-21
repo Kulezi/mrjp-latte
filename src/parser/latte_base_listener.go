@@ -117,12 +117,6 @@ func (s *BaseLatteListener) EnterSAss(ctx *SAssContext) {}
 // ExitSAss is called when production SAss is exited.
 func (s *BaseLatteListener) ExitSAss(ctx *SAssContext) {}
 
-// EnterSAssArray is called when production SAssArray is entered.
-func (s *BaseLatteListener) EnterSAssArray(ctx *SAssArrayContext) {}
-
-// ExitSAssArray is called when production SAssArray is exited.
-func (s *BaseLatteListener) ExitSAssArray(ctx *SAssArrayContext) {}
-
 // EnterSIncr is called when production SIncr is entered.
 func (s *BaseLatteListener) EnterSIncr(ctx *SIncrContext) {}
 
@@ -177,17 +171,17 @@ func (s *BaseLatteListener) EnterSExp(ctx *SExpContext) {}
 // ExitSExp is called when production SExp is exited.
 func (s *BaseLatteListener) ExitSExp(ctx *SExpContext) {}
 
-// EnterTArray is called when production TArray is entered.
-func (s *BaseLatteListener) EnterTArray(ctx *TArrayContext) {}
-
-// ExitTArray is called when production TArray is exited.
-func (s *BaseLatteListener) ExitTArray(ctx *TArrayContext) {}
-
 // EnterTSingular is called when production TSingular is entered.
 func (s *BaseLatteListener) EnterTSingular(ctx *TSingularContext) {}
 
 // ExitTSingular is called when production TSingular is exited.
 func (s *BaseLatteListener) ExitTSingular(ctx *TSingularContext) {}
+
+// EnterTArray is called when production TArray is entered.
+func (s *BaseLatteListener) EnterTArray(ctx *TArrayContext) {}
+
+// ExitTArray is called when production TArray is exited.
+func (s *BaseLatteListener) ExitTArray(ctx *TArrayContext) {}
 
 // EnterTClass is called when production TClass is entered.
 func (s *BaseLatteListener) EnterTClass(ctx *TClassContext) {}
@@ -243,12 +237,6 @@ func (s *BaseLatteListener) EnterEFunCall(ctx *EFunCallContext) {}
 // ExitEFunCall is called when production EFunCall is exited.
 func (s *BaseLatteListener) ExitEFunCall(ctx *EFunCallContext) {}
 
-// EnterENewArray is called when production ENewArray is entered.
-func (s *BaseLatteListener) EnterENewArray(ctx *ENewArrayContext) {}
-
-// ExitENewArray is called when production ENewArray is exited.
-func (s *BaseLatteListener) ExitENewArray(ctx *ENewArrayContext) {}
-
 // EnterEArrayRef is called when production EArrayRef is entered.
 func (s *BaseLatteListener) EnterEArrayRef(ctx *EArrayRefContext) {}
 
@@ -285,12 +273,6 @@ func (s *BaseLatteListener) EnterEUnOp(ctx *EUnOpContext) {}
 // ExitEUnOp is called when production EUnOp is exited.
 func (s *BaseLatteListener) ExitEUnOp(ctx *EUnOpContext) {}
 
-// EnterENewStruct is called when production ENewStruct is entered.
-func (s *BaseLatteListener) EnterENewStruct(ctx *ENewStructContext) {}
-
-// ExitENewStruct is called when production ENewStruct is exited.
-func (s *BaseLatteListener) ExitENewStruct(ctx *ENewStructContext) {}
-
 // EnterEStr is called when production EStr is entered.
 func (s *BaseLatteListener) EnterEStr(ctx *EStrContext) {}
 
@@ -320,6 +302,12 @@ func (s *BaseLatteListener) EnterEFalse(ctx *EFalseContext) {}
 
 // ExitEFalse is called when production EFalse is exited.
 func (s *BaseLatteListener) ExitEFalse(ctx *EFalseContext) {}
+
+// EnterENew is called when production ENew is entered.
+func (s *BaseLatteListener) EnterENew(ctx *ENewContext) {}
+
+// ExitENew is called when production ENew is exited.
+func (s *BaseLatteListener) ExitENew(ctx *ENewContext) {}
 
 // EnterEAddOp is called when production EAddOp is entered.
 func (s *BaseLatteListener) EnterEAddOp(ctx *EAddOpContext) {}
