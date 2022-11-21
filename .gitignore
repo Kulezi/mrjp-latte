@@ -2,3 +2,8 @@
 .antlr
 tree_tests/
 mrjp-tests/
+*.s
+
+lattests/
+!lattests/good/*.lat
+!lattests/good/*.output
