@@ -28,12 +28,13 @@ for i in lattests/good/*.lat; do
     ./$COMPILER $i 2> $compiler_output
     exit_code=$1
     if [ $? -eq 0 ]; then
-        head -n 1 > $compiler_output_head
+        head -n 1 $compiler_output > $compiler_output_head
         cmp $compiler_output $OKFILE
         if [ $? -eq 0 ]; then
             printf "exit code ${GREEN}$?${RESET}\n"
         else 
             printf "${RED}expected $(cat $OKFILE) got $(cat $compiler_output) ${RESET}\n"
+            continue
         fi
     else
         rm $compiler_output
@@ -82,6 +83,7 @@ for i in lattests/bad/*.lat; do
             printf "exit code ${GREEN}$exit_code${RESET}\n"
         else 
             printf "${RED}expected $(cat $ERRORFILE) got $(cat $compiler_output) ${RESET}\n"
+            continue
         fi
     fi
     rm $compiler_output
