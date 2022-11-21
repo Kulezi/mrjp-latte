@@ -1,4 +1,4 @@
-module instant
+module latte
 
 go 1.19
 
