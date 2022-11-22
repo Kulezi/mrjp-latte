@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"latte/compiler"
-	"latte/parser"
 	"os"
 )
 
@@ -13,7 +12,7 @@ func checkArgs() bool {
 		return false
 	}
 
-	return parser.NewEmptyTopDefContext().GetBaseRuleContext().IsEmpty()
+	return true
 }
 
 func main() {

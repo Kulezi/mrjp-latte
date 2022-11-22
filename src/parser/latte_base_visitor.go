@@ -1,8 +1,6 @@
 package parser // Latte
 
 import (
-	"log"
-
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 )
 
@@ -11,7 +9,6 @@ type BaseLatteVisitor struct {
 }
 
 func (v *BaseLatteVisitor) VisitProgram(ctx *ProgramContext) interface{} {
-	log.Println("XD")
 	return v.VisitChildren(ctx)
 }
 
@@ -226,3 +223,5 @@ func (v *BaseLatteVisitor) VisitMulOp(ctx *MulOpContext) interface{} {
 func (v *BaseLatteVisitor) VisitRelOp(ctx *RelOpContext) interface{} {
 	return v.VisitChildren(ctx)
 }
+
+var _ LatteVisitor = &BaseLatteVisitor{}

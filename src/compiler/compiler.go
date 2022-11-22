@@ -3,7 +3,6 @@ package compiler
 import (
 	"fmt"
 	"latte/parser"
-	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -35,7 +34,28 @@ _start:   mov       rax, 1                  ; system call for write
 message:  db        "Hello, World", 10      ; note the newline at the end`
 
 type compiler struct {
-	tree parser.IProgramContext
+	tree    parser.IProgramContext
+	globals map[string]Type
+	parent  map[string]TClassRef
+}
+
+func (c *compiler) SemanticCheck() error {
+	// Evaluate method/function signatures and inheritance tree.
+	visitor := MakeGlobalDeclVisitor()
+	if err := visitor.Run(c.tree); err != nil {
+		return err
+	}
+
+	c.globals = visitor.Globals
+	c.parent = visitor.Parent
+
+	// if err := c.TypeClassMethods(); err != nil {
+	// 	return err
+	// }
+
+	fmt.Println(c.globals, c.parent)
+	// fmt.Fprintln(os.Stderr, (&TypeCheckVisitor{}).Visit(c.tree))
+	return nil
 }
 
 func (c *compiler) Parse(filename string) error {
@@ -66,9 +86,7 @@ func (c *compiler) Parse(filename string) error {
 		return err
 	}
 
-	log.Println(c.tree.Accept(TypeCheckVisitor{}))
-
-	return nil
+	return c.SemanticCheck()
 }
 
 // FIXME: generate code.
