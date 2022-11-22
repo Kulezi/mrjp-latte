@@ -14,8 +14,9 @@ import (
 // - cyclic inheritance
 type GlobalDeclVisitor struct {
 	parser.BaseLatteVisitor
-	Globals map[string]Type
-	Parent  map[string]TClassRef
+	Globals  map[string]Type
+	Parent   map[string]TClassRef
+	inMethod bool
 }
 
 func MakeGlobalDeclVisitor() *GlobalDeclVisitor {
@@ -79,12 +80,12 @@ func (v *GlobalDeclVisitor) CheckCyclicInheritance() error {
 	vis := make(map[string]visitState)
 	for _, ref := range v.Globals {
 		var ok bool
-		classRef, ok := ref.(TClassRef)
+		class, ok := ref.(TClass)
 		if !ok {
 			continue
 		}
 
-		if cycle := v.findCycle(classRef, nil, vis); cycle != nil {
+		if cycle := v.findCycle(class.AsRef(), nil, vis); cycle != nil {
 			return fmt.Errorf("found cyclic inheritance: %v", cycle)
 		}
 	}
@@ -139,7 +140,13 @@ func (v *GlobalDeclVisitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 		fun.Args = args.(map[string]Type)
 	}
 
-	return v.createGlobal(fun.ID.GetText(), fun)
+	if !v.inMethod {
+		if err := v.createGlobal(fun.ID.GetText(), fun); err != nil {
+			return err
+		}
+	}
+
+	return fun
 }
 
 func (v *GlobalDeclVisitor) VisitArg(ctx *parser.ArgContext) interface{} {
@@ -194,18 +201,78 @@ func (v *GlobalDeclVisitor) VisitTArray(ctx *parser.TArrayContext) interface{} {
 	}
 }
 
-// Returns a TClassRef.
+type field struct {
+	ID   string
+	Type Type
+}
+
+func (v *GlobalDeclVisitor) collectFields(fields []parser.IFieldContext) (map[string]Type, error) {
+	ret := make(map[string]Type)
+	for _, fieldCtx := range fields {
+		res := v.Visit(fieldCtx)
+		if err, ok := res.(error); ok {
+			return nil, err
+		}
+
+		f := res.(field)
+		ret[f.ID] = f.Type
+	}
+
+	return ret, nil
+}
+
 func (v *GlobalDeclVisitor) VisitBaseClassDef(ctx *parser.BaseClassDefContext) interface{} {
-	class := TClassRef{ID: ctx.ID()}
+	fields, err := v.collectFields(ctx.AllField())
+	if err != nil {
+		return err
+	}
+
+	class := TClass{
+		ID:     ctx.ID(),
+		Fields: fields,
+	}
+
 	return v.createGlobal(class.String(), class)
 }
 
 // Returns the function signature as a Type.
 func (v *GlobalDeclVisitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefContext) interface{} {
-	class := TClassRef{ID: ctx.ID(0)}
 	parent := TClassRef{ID: ctx.ID(1)}
+	fields, err := v.collectFields(ctx.AllField())
+	if err != nil {
+		return err
+	}
+
+	class := TClass{
+		ID:     ctx.ID(0),
+		Fields: fields,
+		Parent: &parent,
+	}
+
 	v.Parent[class.String()] = parent
 	return v.createGlobal(class.String(), class)
+}
+
+func (v *GlobalDeclVisitor) VisitClassFieldDef(ctx *parser.ClassFieldDefContext) interface{} {
+	return field{
+		ID:   ctx.ID().GetText(),
+		Type: v.Visit(ctx.Type_()).(Type),
+	}
+}
+
+func (v *GlobalDeclVisitor) VisitClassMethodDef(ctx *parser.ClassMethodDefContext) interface{} {
+	v.inMethod = true
+	res := v.Visit(ctx.Fundef())
+	v.inMethod = false
+	if err, ok := res.(error); ok {
+		return err
+	}
+
+	fun := res.(TFun)
+	return field{
+		ID:   fun.ID.GetText(),
+		Type: fun,
+	}
 }
 
 var _ parser.LatteVisitor = &GlobalDeclVisitor{}

@@ -10,6 +10,10 @@ func posFromToken(t antlr.Token) string {
 	return fmt.Sprintf("line %d, column %d", t.GetLine(), t.GetColumn())
 }
 
+func SameType(a, b Type) bool {
+	return a.String() == b.String()
+}
+
 type Type interface {
 	String() string
 	Position() string
@@ -63,31 +67,24 @@ func (t TBool) Position() string {
 	return posFromToken(t.StartToken)
 }
 
-type TBaseClass struct {
-	Name   string
+type TClass struct {
+	ID     antlr.TerminalNode
 	Fields map[string]Type
+	Parent *TClassRef
 }
 
-func (t TBaseClass) String() string {
-	return t.Name
+func (t TClass) String() string {
+	return t.ID.GetText()
 }
 
-func (TBaseClass) Position() string {
-	return "unknown"
+func (t TClass) Position() string {
+	return posFromToken(t.ID.GetSymbol())
 }
 
-type TDerivedClass struct {
-	Name   string
-	Fields map[string]Type
-	Parent TClassRef
-}
-
-func (t TDerivedClass) String() string {
-	return t.Name
-}
-
-func (TDerivedClass) Position() string {
-	return "unknown"
+func (t TClass) AsRef() TClassRef {
+	return TClassRef{
+		ID: t.ID,
+	}
 }
 
 type TClassRef struct {
@@ -95,7 +92,7 @@ type TClassRef struct {
 }
 
 func (t TClassRef) String() string {
-	return string(t.ID.GetText())
+	return t.ID.GetText()
 }
 
 func (t TClassRef) Position() string {
@@ -122,8 +119,14 @@ type TFun struct {
 }
 
 func (f TFun) String() string {
-	var res = f.Result.String() + "("
+	var res = f.Result.String() + " " + f.ID.GetText() + "("
+	comma := false
 	for _, v := range f.Args {
+		if !comma {
+			comma = true
+		} else {
+			res += ","
+		}
 		res += v.String()
 	}
 
