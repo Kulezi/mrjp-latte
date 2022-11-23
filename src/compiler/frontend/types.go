@@ -117,6 +117,7 @@ func sameType(a, b Type) bool {
 type Type interface {
 	String() string
 	Position() string
+	BaseType() Type
 }
 
 type TVoid struct {
@@ -131,6 +132,8 @@ func (t TVoid) Position() string {
 	return posFromToken(t.StartToken)
 }
 
+func (t TVoid) BaseType() Type { return t }
+
 type TInt struct {
 	StartToken antlr.Token
 }
@@ -142,6 +145,8 @@ func (TInt) String() string {
 func (t TInt) Position() string {
 	return posFromToken(t.StartToken)
 }
+
+func (t TInt) BaseType() Type { return t }
 
 type TString struct {
 	StartToken antlr.Token
@@ -155,6 +160,8 @@ func (t TString) Position() string {
 	return posFromToken(t.StartToken)
 }
 
+func (t TString) BaseType() Type { return t }
+
 type TBool struct {
 	StartToken antlr.Token
 }
@@ -166,6 +173,8 @@ func (TBool) String() string {
 func (t TBool) Position() string {
 	return posFromToken(t.StartToken)
 }
+
+func (t TBool) BaseType() Type { return t }
 
 type TClass struct {
 	ID     antlr.TerminalNode
@@ -187,6 +196,8 @@ func (t TClass) AsRef() TClassRef {
 	}
 }
 
+func (t TClass) BaseType() Type { return t }
+
 type TClassRef struct {
 	ID antlr.TerminalNode
 }
@@ -198,6 +209,8 @@ func (t TClassRef) String() string {
 func (t TClassRef) Position() string {
 	return posFromToken(t.ID.GetSymbol())
 }
+
+func (t TClassRef) BaseType() Type { return t }
 
 type TArray struct {
 	StartToken antlr.Token
@@ -212,16 +225,18 @@ func (t TArray) Position() string {
 	return posFromToken(t.StartToken)
 }
 
+func (t TArray) BaseType() Type { return t.Elem.BaseType() }
+
 type TFun struct {
 	ID     antlr.TerminalNode
 	Args   map[string]Type
 	Result Type
 }
 
-func (f TFun) String() string {
-	var res = f.Result.String() + " " + f.ID.GetText() + "("
+func (t TFun) String() string {
+	var res = t.Result.String() + " " + t.ID.GetText() + "("
 	comma := false
-	for _, v := range f.Args {
+	for _, v := range t.Args {
 		if !comma {
 			comma = true
 		} else {
@@ -237,3 +252,5 @@ func (f TFun) String() string {
 func (t TFun) Position() string {
 	return posFromToken(t.ID.GetSymbol())
 }
+
+func (t TFun) BaseType() Type { return t }

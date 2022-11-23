@@ -41,3 +41,19 @@ is not the same as
 		e.ChildMethod.Position(),
 	)
 }
+
+type UnknownVariableTypeError struct {
+	Type Type
+}
+
+func (e UnknownVariableTypeError) Error() string {
+	return fmt.Sprintf(
+		`can't declare variable(s) of type
+	%s
+	at %s
+as there is no class named %s`,
+		e.Type.String(),
+		e.Type.Position(),
+		e.Type.BaseType().String(),
+	)
+}

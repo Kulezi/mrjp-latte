@@ -17,6 +17,7 @@ type typeCheckVisitor struct {
 	state        *state
 	depth        int
 	dropperStack []varDropper
+	curType      TypeInfo
 }
 
 func makeTypeCheckVisitor(s *state) *typeCheckVisitor {
@@ -174,6 +175,51 @@ func (v *typeCheckVisitor) VisitSBlockStmt(ctx *parser.SBlockStmtContext) interf
 }
 
 func (v *typeCheckVisitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
-	//TODO:
+	typ := v.Visit(ctx.Type_()).(Type)
+	if classRef, ok := typ.BaseType().(TClassRef); ok {
+		if _, ok := v.TypeOfGlobal(classRef.String()); !ok {
+			return UnknownVariableTypeError{
+				typ,
+			}
+		}
+	}
+
+	for _, item := range ctx.AllItem() {
+		v.Visit(item)
+	}
 	return nil
+}
+
+func (v *typeCheckVisitor) VisitTSingular(ctx *parser.TSingularContext) interface{} {
+	return v.Visit(ctx.Singular_type_())
+}
+
+func (v *typeCheckVisitor) VisitTInt(ctx *parser.TIntContext) interface{} {
+	return TInt{StartToken: ctx.GetStart()}
+}
+
+func (v *typeCheckVisitor) VisitTStr(ctx *parser.TStrContext) interface{} {
+	return TString{StartToken: ctx.GetStart()}
+}
+
+func (v *typeCheckVisitor) VisitTBool(ctx *parser.TBoolContext) interface{} {
+	return TBool{StartToken: ctx.GetStart()}
+}
+
+func (v *typeCheckVisitor) VisitTVoid(ctx *parser.TVoidContext) interface{} {
+	return TVoid{StartToken: ctx.GetStart()}
+}
+
+func (v *typeCheckVisitor) VisitTClass(ctx *parser.TClassContext) interface{} {
+	return TClassRef{
+		ID: ctx.ID(),
+	}
+}
+
+func (v *typeCheckVisitor) VisitTArray(ctx *parser.TArrayContext) interface{} {
+	typ := v.Visit(ctx.Type_()).(Type)
+	return TArray{
+		StartToken: ctx.GetStart(),
+		Elem:       typ,
+	}
 }
