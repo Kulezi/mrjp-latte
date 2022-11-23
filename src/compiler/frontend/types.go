@@ -28,7 +28,7 @@ func posFromToken(t antlr.Token) string {
 	return fmt.Sprintf("line %d, column %d", t.GetLine(), t.GetColumn())
 }
 
-func SameType(a, b Type) bool {
+func sameType(a, b Type) bool {
 	return a.String() == b.String()
 }
 

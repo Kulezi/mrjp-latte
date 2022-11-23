@@ -1,11 +1,11 @@
 package frontend
 
-func (s *Signatures) inherit(child string, parent TClassRef, evaluated map[string]struct{}) (TClass, error) {
+func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[string]struct{}) (TClass, error) {
 	// Resolve parent's inheritance if it's a derived class.
 	var err error
 	if _, ok := evaluated[parent.String()]; !ok {
 		if grandparent, ok := s.Parent[parent.String()]; ok {
-			s.Globals[parent.String()], err = s.inherit(parent.String(), grandparent, evaluated)
+			s.Globals[parent.String()], err = s.inheritClass(parent.String(), grandparent, evaluated)
 			if err != nil {
 				return TClass{}, err
 			}
@@ -22,7 +22,7 @@ func (s *Signatures) inherit(child string, parent TClassRef, evaluated map[strin
 				continue
 			}
 
-			if !SameType(parentFieldType, childFieldType) {
+			if !sameType(parentFieldType, childFieldType) {
 				return TClass{}, MethodOverrideError{
 					ParentClass:  s.Globals[parent.String()],
 					ChildClass:   s.Globals[child],
@@ -40,7 +40,7 @@ func (s *Signatures) inherit(child string, parent TClassRef, evaluated map[strin
 	return childClass, nil
 }
 
-func (s *Signatures) Inherit() error {
+func (s *Signatures) inheritClasses() error {
 	evaluated := make(map[string]struct{})
 	for class, parent := range s.Parent {
 		if _, ok := evaluated[class]; ok {
@@ -48,7 +48,7 @@ func (s *Signatures) Inherit() error {
 		}
 
 		var err error
-		if s.Globals[class], err = s.inherit(class, parent, evaluated); err != nil {
+		if s.Globals[class], err = s.inheritClass(class, parent, evaluated); err != nil {
 			return err
 		}
 	}

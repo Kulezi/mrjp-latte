@@ -5,11 +5,11 @@ import (
 	"latte/parser"
 )
 
-type TypeCheckVisitor struct {
+type typeCheckVisitor struct {
 	parser.BaseLatteVisitor
 }
 
-func (v *TypeCheckVisitor) VisitProgram(ctx *parser.ProgramContext) interface{} {
+func (v *typeCheckVisitor) VisitProgram(ctx *parser.ProgramContext) interface{} {
 	fmt.Println("todo: typecheck")
 	return v.VisitChildren(ctx)
 }

@@ -6,17 +6,17 @@ import (
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 )
 
-func Run(filename string) error {
+func Run(filename string) (Signatures, error) {
 	s := state{}
 	if err := s.parse(filename); err != nil {
-		return err
+		return Signatures{}, err
 	}
 
 	if err := s.semanticCheck(); err != nil {
-		return err
+		return Signatures{}, err
 	}
 
-	return nil
+	return s.signatures, nil
 }
 
 func (s *state) parse(filename string) error {
@@ -25,14 +25,14 @@ func (s *state) parse(filename string) error {
 		return err
 	}
 
-	lexErrors := &CustomErrorListener{}
+	lexErrors := &customErrorListener{}
 	lexer := parser.NewLatteLexer(input)
 	lexer.RemoveErrorListeners()
 	lexer.AddErrorListener(lexErrors)
 
 	stream := antlr.NewCommonTokenStream(lexer, 0)
 
-	parseErrors := &CustomErrorListener{}
+	parseErrors := &customErrorListener{}
 	p := parser.NewLatteParser(stream)
 	p.RemoveErrorListeners()
 	p.AddErrorListener(parseErrors)
@@ -52,7 +52,7 @@ func (s *state) parse(filename string) error {
 
 func (s *state) semanticCheck() error {
 	// Evaluate method/function signatures and inheritance tree.
-	visitor := MakeGlobalDeclVisitor()
+	visitor := makeGlobalDeclVisitor()
 	if err := visitor.Run(s.tree); err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (s *state) semanticCheck() error {
 	s.signatures.Globals = visitor.signatures.Globals
 	s.signatures.Parent = visitor.signatures.Parent
 
-	if err := s.signatures.Inherit(); err != nil {
+	if err := s.signatures.inheritClasses(); err != nil {
 		return err
 	}
 

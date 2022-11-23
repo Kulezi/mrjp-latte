@@ -15,12 +15,12 @@ func (s *SyntaxError) Error() string {
 	return fmt.Sprintf("%s, at line: %d, column: %d", s.msg, s.line, s.column)
 }
 
-type CustomErrorListener struct {
+type customErrorListener struct {
 	*antlr.DefaultErrorListener
 	Errors []error
 }
 
-func (c *CustomErrorListener) SyntaxError(_ antlr.Recognizer, _ interface{}, line, column int, msg string, _ antlr.RecognitionException) {
+func (c *customErrorListener) SyntaxError(_ antlr.Recognizer, _ interface{}, line, column int, msg string, _ antlr.RecognitionException) {
 	c.Errors = append(c.Errors, &SyntaxError{
 		line:   line,
 		column: column,
@@ -29,7 +29,7 @@ func (c *CustomErrorListener) SyntaxError(_ antlr.Recognizer, _ interface{}, lin
 	})
 }
 
-func (c *CustomErrorListener) Check(errMsg string) error {
+func (c *customErrorListener) Check(errMsg string) error {
 	if len(c.Errors) > 0 {
 		return fmt.Errorf("%s\n%v", errMsg, c.Errors)
 	}

@@ -1,6 +1,9 @@
 package compiler
 
-import "latte/compiler/frontend"
+import (
+	"fmt"
+	"latte/compiler/frontend"
+)
 
 const sampleASM = `; ----------------------------------------------------------------------------------------
 ; Writes "Hello, World" to the console using only system calls. Runs on 64-bit Linux only.
@@ -26,9 +29,11 @@ message:  db        "Hello, World", 10      ; note the newline at the end`
 
 // FIXME: generate code.
 func genX64(filename string) (string, error) {
-	if err := frontend.Run(filename); err != nil {
+	signatures, err := frontend.Run(filename)
+	if err != nil {
 		return "", err
 	}
 
+	fmt.Println(signatures)
 	return sampleASM, nil
 }
