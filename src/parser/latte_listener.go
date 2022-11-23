@@ -35,14 +35,26 @@ type LatteListener interface {
 	// EnterBlock is called when entering the block production.
 	EnterBlock(c *BlockContext)
 
+	// EnterRVFunCall is called when entering the RVFunCall production.
+	EnterRVFunCall(c *RVFunCallContext)
+
+	// EnterRVArrayRef is called when entering the RVArrayRef production.
+	EnterRVArrayRef(c *RVArrayRefContext)
+
+	// EnterRVID is called when entering the RVID production.
+	EnterRVID(c *RVIDContext)
+
+	// EnterRVField is called when entering the RVField production.
+	EnterRVField(c *RVFieldContext)
+
+	// EnterLVField is called when entering the LVField production.
+	EnterLVField(c *LVFieldContext)
+
 	// EnterLVArrayRef is called when entering the LVArrayRef production.
 	EnterLVArrayRef(c *LVArrayRefContext)
 
 	// EnterLVId is called when entering the LVId production.
 	EnterLVId(c *LVIdContext)
-
-	// EnterLVField is called when entering the LVField production.
-	EnterLVField(c *LVFieldContext)
 
 	// EnterSEmpty is called when entering the SEmpty production.
 	EnterSEmpty(c *SEmptyContext)
@@ -197,14 +209,26 @@ type LatteListener interface {
 	// ExitBlock is called when exiting the block production.
 	ExitBlock(c *BlockContext)
 
+	// ExitRVFunCall is called when exiting the RVFunCall production.
+	ExitRVFunCall(c *RVFunCallContext)
+
+	// ExitRVArrayRef is called when exiting the RVArrayRef production.
+	ExitRVArrayRef(c *RVArrayRefContext)
+
+	// ExitRVID is called when exiting the RVID production.
+	ExitRVID(c *RVIDContext)
+
+	// ExitRVField is called when exiting the RVField production.
+	ExitRVField(c *RVFieldContext)
+
+	// ExitLVField is called when exiting the LVField production.
+	ExitLVField(c *LVFieldContext)
+
 	// ExitLVArrayRef is called when exiting the LVArrayRef production.
 	ExitLVArrayRef(c *LVArrayRefContext)
 
 	// ExitLVId is called when exiting the LVId production.
 	ExitLVId(c *LVIdContext)
-
-	// ExitLVField is called when exiting the LVField production.
-	ExitLVField(c *LVFieldContext)
 
 	// ExitSEmpty is called when exiting the SEmpty production.
 	ExitSEmpty(c *SEmptyContext)

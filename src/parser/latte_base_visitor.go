@@ -1,8 +1,8 @@
+// Code generated from java-escape by ANTLR 4.11.1. DO NOT EDIT.
+
 package parser // Latte
 
-import (
-	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
-)
+import "github.com/antlr/antlr4/runtime/Go/antlr/v4"
 
 type BaseLatteVisitor struct {
 	*antlr.BaseParseTreeVisitor
@@ -44,15 +44,31 @@ func (v *BaseLatteVisitor) VisitBlock(ctx *BlockContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
+func (v *BaseLatteVisitor) VisitRVFunCall(ctx *RVFunCallContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseLatteVisitor) VisitRVArrayRef(ctx *RVArrayRefContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseLatteVisitor) VisitRVID(ctx *RVIDContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseLatteVisitor) VisitRVField(ctx *RVFieldContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseLatteVisitor) VisitLVField(ctx *LVFieldContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
 func (v *BaseLatteVisitor) VisitLVArrayRef(ctx *LVArrayRefContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
 func (v *BaseLatteVisitor) VisitLVId(ctx *LVIdContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseLatteVisitor) VisitLVField(ctx *LVFieldContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
@@ -223,5 +239,3 @@ func (v *BaseLatteVisitor) VisitMulOp(ctx *MulOpContext) interface{} {
 func (v *BaseLatteVisitor) VisitRelOp(ctx *RelOpContext) interface{} {
 	return v.VisitChildren(ctx)
 }
-
-var _ LatteVisitor = &BaseLatteVisitor{}
