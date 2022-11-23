@@ -25,14 +25,14 @@ func makeGlobalDeclVisitor() *globalDeclVisitor {
 }
 
 func (v *globalDeclVisitor) createGlobal(id string, t Type) error {
-	if v, ok := v.signatures.Globals[id]; ok {
+	if v, ok := v.signatures.ConflictGlobal(id); ok {
 		return DuplicateIdentifierError{
 			Ident: id,
 			Pos1:  v.Position(),
 			Pos2:  t.Position(),
 		}
 	}
-	v.signatures.Globals[id] = t
+	v.signatures.ReplaceGlobal(id, t)
 	return nil
 }
 
@@ -78,7 +78,7 @@ func (v *globalDeclVisitor) CheckCyclicInheritance() error {
 	vis := make(map[string]visitState)
 	for _, ref := range v.signatures.Globals {
 		var ok bool
-		class, ok := ref.(TClass)
+		class, ok := ref.Type.(TClass)
 		if !ok {
 			continue
 		}
@@ -91,12 +91,12 @@ func (v *globalDeclVisitor) CheckCyclicInheritance() error {
 	return nil
 }
 
-func (v *globalDeclVisitor) Run(tree antlr.ParseTree) error {
+func (v *globalDeclVisitor) Run(tree antlr.ParseTree) (Signatures, error) {
 	if err, ok := v.Visit(tree).(error); ok && err != nil {
-		return err
+		return Signatures{}, err
 	}
 
-	return v.CheckCyclicInheritance()
+	return v.signatures, v.CheckCyclicInheritance()
 }
 
 func (v *globalDeclVisitor) Visit(tree antlr.ParseTree) interface{} {
@@ -213,6 +213,14 @@ func (v *globalDeclVisitor) collectFields(fields []parser.IFieldContext) (map[st
 		}
 
 		f := res.(field)
+		if conflicting, ok := ret[f.ID]; ok {
+			return nil, DuplicateIdentifierError{
+				Ident: f.ID,
+				Pos1:  conflicting.Position(),
+				Pos2:  f.Type.Position(),
+			}
+		}
+
 		ret[f.ID] = f.Type
 	}
 

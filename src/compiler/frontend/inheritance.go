@@ -1,20 +1,20 @@
 package frontend
 
-func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[string]struct{}) (TClass, error) {
+func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[string]struct{}) error {
 	// Resolve parent's inheritance if it's a derived class.
 	var err error
 	if _, ok := evaluated[parent.String()]; !ok {
 		if grandparent, ok := s.Parent[parent.String()]; ok {
-			s.Globals[parent.String()], err = s.inheritClass(parent.String(), grandparent, evaluated)
+			err = s.inheritClass(parent.String(), grandparent, evaluated)
 			if err != nil {
-				return TClass{}, err
+				return err
 			}
 		}
 	}
 
-	childClass := s.Globals[child].(TClass)
+	childClass := s.Globals[child].Type.(TClass)
 	childFields := childClass.Fields
-	parentFields := s.Globals[parent.String()].(TClass).Fields
+	parentFields := s.Globals[parent.String()].Type.(TClass).Fields
 	for ident, parentFieldType := range parentFields {
 		if childFieldType, ok := childFields[ident]; ok {
 			parentFieldType, ok := parentFieldType.(TFun)
@@ -23,7 +23,7 @@ func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[
 			}
 
 			if !sameType(parentFieldType, childFieldType) {
-				return TClass{}, MethodOverrideError{
+				return MethodOverrideError{
 					ParentClass:  s.Globals[parent.String()],
 					ChildClass:   s.Globals[child],
 					ParentMethod: parentFieldType,
@@ -37,7 +37,8 @@ func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[
 	}
 
 	evaluated[child] = struct{}{}
-	return childClass, nil
+	s.ReplaceGlobal(child, childClass)
+	return nil
 }
 
 func (s *Signatures) inheritClasses() error {
@@ -48,7 +49,7 @@ func (s *Signatures) inheritClasses() error {
 		}
 
 		var err error
-		if s.Globals[class], err = s.inheritClass(class, parent, evaluated); err != nil {
+		if err = s.inheritClass(class, parent, evaluated); err != nil {
 			return err
 		}
 	}

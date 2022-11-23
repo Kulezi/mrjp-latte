@@ -51,19 +51,34 @@ func (s *state) parse(filename string) error {
 }
 
 func (s *state) semanticCheck() error {
+	var err error
 	// Evaluate method/function signatures and inheritance tree.
-	visitor := makeGlobalDeclVisitor()
-	if err := visitor.Run(s.tree); err != nil {
+
+	if err = s.evalGlobalSignatures(); err != nil {
 		return err
 	}
 
-	s.signatures.Globals = visitor.signatures.Globals
-	s.signatures.Parent = visitor.signatures.Parent
-
-	if err := s.signatures.inheritClasses(); err != nil {
+	if err = s.signatures.inheritClasses(); err != nil {
 		return err
 	}
 
-	// fmt.Fprintln(os.Stderr, (&TypeCheckVisitor{}).Visit(c.tree))
+	if err = s.typeCheck(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *state) evalGlobalSignatures() error {
+	var err error
+	s.signatures, err = makeGlobalDeclVisitor().Run(s.tree)
+	return err
+}
+
+func (s *state) typeCheck() error {
+	if err, ok := makeTypeCheckVisitor(s).Visit(s.tree).(error); ok {
+		return err
+	}
+
 	return nil
 }
