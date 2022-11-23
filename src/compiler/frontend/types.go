@@ -1,10 +1,28 @@
-package compiler
+package frontend
 
 import (
 	"fmt"
+	"latte/parser"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 )
+
+type state struct {
+	tree       parser.IProgramContext
+	signatures Signatures
+}
+
+type Signatures struct {
+	Globals map[string]Type
+	Parent  map[string]TClassRef
+}
+
+func MakeSignatures() Signatures {
+	return Signatures{
+		Globals: make(map[string]Type),
+		Parent:  make(map[string]TClassRef),
+	}
+}
 
 func posFromToken(t antlr.Token) string {
 	return fmt.Sprintf("line %d, column %d", t.GetLine(), t.GetColumn())

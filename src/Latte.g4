@@ -16,9 +16,15 @@ field: type_ ID ';' # ClassFieldDef | fundef # ClassMethodDef;
 
 block: '{' stmt* '}';
 
+rvalue:
+	rvalue '.' rvalue					# RVField
+	| rvalue '[' expr ']'				# RVArrayRef
+	| ID								# RVID
+	| ID '(' ( expr ( ',' expr)*)? ')'	# RVFunCall;
+
 lvalue:
-	lvalue '.' lvalue		# LVField
-	| lvalue '[' expr ']'	# LVArrayRef
+	rvalue '.' lvalue		# LVField
+	| rvalue '[' expr ']'	# LVArrayRef
 	| ID					# LVId;
 
 stmt:
@@ -61,7 +67,7 @@ expr: ('-' | '!') expr						# EUnOp
 	| INT									# EInt
 	| 'true'								# ETrue
 	| 'false'								# EFalse
-	| expr '(' ( expr ( ',' expr)*)? ')'	# EFunCall
+	| rvalue '(' ( expr ( ',' expr)*)? ')'	# EFunCall
 	| STR									# EStr
 	| '(' ID ')' 'null'						# ENull
 	| '(' expr ')'							# EParen;

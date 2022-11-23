@@ -1,4 +1,4 @@
-package compiler
+package frontend
 
 import (
 	"fmt"
@@ -14,27 +14,25 @@ import (
 // - cyclic inheritance
 type GlobalDeclVisitor struct {
 	parser.BaseLatteVisitor
-	Globals  map[string]Type
-	Parent   map[string]TClassRef
-	inMethod bool
+	signatures Signatures
+	inMethod   bool
 }
 
 func MakeGlobalDeclVisitor() *GlobalDeclVisitor {
 	return &GlobalDeclVisitor{
-		Globals: make(map[string]Type),
-		Parent:  make(map[string]TClassRef),
+		signatures: MakeSignatures(),
 	}
 }
 
 func (v *GlobalDeclVisitor) createGlobal(id string, t Type) error {
-	if v, ok := v.Globals[id]; ok {
+	if v, ok := v.signatures.Globals[id]; ok {
 		return DuplicateIdentifierError{
 			Ident: id,
 			Pos1:  v.Position(),
 			Pos2:  t.Position(),
 		}
 	}
-	v.Globals[id] = t
+	v.signatures.Globals[id] = t
 	return nil
 }
 
@@ -53,7 +51,7 @@ func (v *GlobalDeclVisitor) findCycle(class TClassRef, stack []TClassRef, vis ma
 	}
 
 	// Inheritance graph has only closed simple cycles, so non-inheriting class can't be on it.
-	if _, ok := v.Parent[class.String()]; !ok {
+	if _, ok := v.signatures.Parent[class.String()]; !ok {
 		return nil
 	}
 
@@ -61,7 +59,7 @@ func (v *GlobalDeclVisitor) findCycle(class TClassRef, stack []TClassRef, vis ma
 	case unvisited:
 		vis[class.String()] = onStack
 		stack = append(stack, class)
-		if cycle := v.findCycle(v.Parent[class.String()], stack, vis); cycle != nil {
+		if cycle := v.findCycle(v.signatures.Parent[class.String()], stack, vis); cycle != nil {
 			return cycle
 		}
 		vis[class.String()] = popped
@@ -78,7 +76,7 @@ func (v *GlobalDeclVisitor) findCycle(class TClassRef, stack []TClassRef, vis ma
 
 func (v *GlobalDeclVisitor) CheckCyclicInheritance() error {
 	vis := make(map[string]visitState)
-	for _, ref := range v.Globals {
+	for _, ref := range v.signatures.Globals {
 		var ok bool
 		class, ok := ref.(TClass)
 		if !ok {
@@ -249,7 +247,7 @@ func (v *GlobalDeclVisitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefCont
 		Parent: &parent,
 	}
 
-	v.Parent[class.String()] = parent
+	v.signatures.Parent[class.String()] = parent
 	return v.createGlobal(class.String(), class)
 }
 
