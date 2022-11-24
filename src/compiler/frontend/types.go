@@ -42,7 +42,7 @@ func (s *Signatures) ConflictGlobal(ident string) (TypeInfo, bool) {
 }
 
 func (s *Signatures) ConflictLocal(ident string, depth int) (TypeInfo, bool) {
-	if v, ok := s.Globals[ident]; ok {
+	if v, ok := s.Locals[ident]; ok {
 		if v.Depth == depth {
 			return v, true
 		}
@@ -112,6 +112,20 @@ func posFromToken(t antlr.Token) string {
 
 func sameType(a, b Type) bool {
 	return a.String() == b.String()
+}
+
+var validRelOpArg = map[string]struct{}{
+	"int":    {},
+	"string": {},
+}
+
+var validAddOpArg = validRelOpArg
+var validSubOpArg = map[string]struct{}{
+	"int": {},
+}
+
+var validMulOpArg = map[string]struct{}{
+	"int": {},
 }
 
 type Type interface {
@@ -227,9 +241,14 @@ func (t TArray) Position() string {
 
 func (t TArray) BaseType() Type { return t.Elem.BaseType() }
 
+type FArg struct {
+	Ident string
+	Type  Type
+}
+
 type TFun struct {
 	ID     antlr.TerminalNode
-	Args   map[string]Type
+	Args   []FArg
 	Result Type
 }
 
@@ -242,7 +261,7 @@ func (t TFun) String() string {
 		} else {
 			res += ","
 		}
-		res += v.String()
+		res += v.Type.String()
 	}
 
 	res += ")"

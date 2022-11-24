@@ -35,27 +35,6 @@ type LatteListener interface {
 	// EnterBlock is called when entering the block production.
 	EnterBlock(c *BlockContext)
 
-	// EnterRVFunCall is called when entering the RVFunCall production.
-	EnterRVFunCall(c *RVFunCallContext)
-
-	// EnterRVArrayRef is called when entering the RVArrayRef production.
-	EnterRVArrayRef(c *RVArrayRefContext)
-
-	// EnterRVID is called when entering the RVID production.
-	EnterRVID(c *RVIDContext)
-
-	// EnterRVField is called when entering the RVField production.
-	EnterRVField(c *RVFieldContext)
-
-	// EnterLVField is called when entering the LVField production.
-	EnterLVField(c *LVFieldContext)
-
-	// EnterLVArrayRef is called when entering the LVArrayRef production.
-	EnterLVArrayRef(c *LVArrayRefContext)
-
-	// EnterLVId is called when entering the LVId production.
-	EnterLVId(c *LVIdContext)
-
 	// EnterSEmpty is called when entering the SEmpty production.
 	EnterSEmpty(c *SEmptyContext)
 
@@ -143,17 +122,20 @@ type LatteListener interface {
 	// EnterEInt is called when entering the EInt production.
 	EnterEInt(c *EIntContext)
 
-	// EnterEUnOp is called when entering the EUnOp production.
-	EnterEUnOp(c *EUnOpContext)
-
 	// EnterEStr is called when entering the EStr production.
 	EnterEStr(c *EStrContext)
+
+	// EnterENotOp is called when entering the ENotOp production.
+	EnterENotOp(c *ENotOpContext)
 
 	// EnterEMulOp is called when entering the EMulOp production.
 	EnterEMulOp(c *EMulOpContext)
 
 	// EnterEAnd is called when entering the EAnd production.
 	EnterEAnd(c *EAndContext)
+
+	// EnterENegOp is called when entering the ENegOp production.
+	EnterENegOp(c *ENegOpContext)
 
 	// EnterEParen is called when entering the EParen production.
 	EnterEParen(c *EParenContext)
@@ -208,27 +190,6 @@ type LatteListener interface {
 
 	// ExitBlock is called when exiting the block production.
 	ExitBlock(c *BlockContext)
-
-	// ExitRVFunCall is called when exiting the RVFunCall production.
-	ExitRVFunCall(c *RVFunCallContext)
-
-	// ExitRVArrayRef is called when exiting the RVArrayRef production.
-	ExitRVArrayRef(c *RVArrayRefContext)
-
-	// ExitRVID is called when exiting the RVID production.
-	ExitRVID(c *RVIDContext)
-
-	// ExitRVField is called when exiting the RVField production.
-	ExitRVField(c *RVFieldContext)
-
-	// ExitLVField is called when exiting the LVField production.
-	ExitLVField(c *LVFieldContext)
-
-	// ExitLVArrayRef is called when exiting the LVArrayRef production.
-	ExitLVArrayRef(c *LVArrayRefContext)
-
-	// ExitLVId is called when exiting the LVId production.
-	ExitLVId(c *LVIdContext)
 
 	// ExitSEmpty is called when exiting the SEmpty production.
 	ExitSEmpty(c *SEmptyContext)
@@ -317,17 +278,20 @@ type LatteListener interface {
 	// ExitEInt is called when exiting the EInt production.
 	ExitEInt(c *EIntContext)
 
-	// ExitEUnOp is called when exiting the EUnOp production.
-	ExitEUnOp(c *EUnOpContext)
-
 	// ExitEStr is called when exiting the EStr production.
 	ExitEStr(c *EStrContext)
+
+	// ExitENotOp is called when exiting the ENotOp production.
+	ExitENotOp(c *ENotOpContext)
 
 	// ExitEMulOp is called when exiting the EMulOp production.
 	ExitEMulOp(c *EMulOpContext)
 
 	// ExitEAnd is called when exiting the EAnd production.
 	ExitEAnd(c *EAndContext)
+
+	// ExitENegOp is called when exiting the ENegOp production.
+	ExitENegOp(c *ENegOpContext)
 
 	// ExitEParen is called when exiting the EParen production.
 	ExitEParen(c *EParenContext)

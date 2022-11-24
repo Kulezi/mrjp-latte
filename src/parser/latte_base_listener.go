@@ -75,48 +75,6 @@ func (s *BaseLatteListener) EnterBlock(ctx *BlockContext) {}
 // ExitBlock is called when production block is exited.
 func (s *BaseLatteListener) ExitBlock(ctx *BlockContext) {}
 
-// EnterRVFunCall is called when production RVFunCall is entered.
-func (s *BaseLatteListener) EnterRVFunCall(ctx *RVFunCallContext) {}
-
-// ExitRVFunCall is called when production RVFunCall is exited.
-func (s *BaseLatteListener) ExitRVFunCall(ctx *RVFunCallContext) {}
-
-// EnterRVArrayRef is called when production RVArrayRef is entered.
-func (s *BaseLatteListener) EnterRVArrayRef(ctx *RVArrayRefContext) {}
-
-// ExitRVArrayRef is called when production RVArrayRef is exited.
-func (s *BaseLatteListener) ExitRVArrayRef(ctx *RVArrayRefContext) {}
-
-// EnterRVID is called when production RVID is entered.
-func (s *BaseLatteListener) EnterRVID(ctx *RVIDContext) {}
-
-// ExitRVID is called when production RVID is exited.
-func (s *BaseLatteListener) ExitRVID(ctx *RVIDContext) {}
-
-// EnterRVField is called when production RVField is entered.
-func (s *BaseLatteListener) EnterRVField(ctx *RVFieldContext) {}
-
-// ExitRVField is called when production RVField is exited.
-func (s *BaseLatteListener) ExitRVField(ctx *RVFieldContext) {}
-
-// EnterLVField is called when production LVField is entered.
-func (s *BaseLatteListener) EnterLVField(ctx *LVFieldContext) {}
-
-// ExitLVField is called when production LVField is exited.
-func (s *BaseLatteListener) ExitLVField(ctx *LVFieldContext) {}
-
-// EnterLVArrayRef is called when production LVArrayRef is entered.
-func (s *BaseLatteListener) EnterLVArrayRef(ctx *LVArrayRefContext) {}
-
-// ExitLVArrayRef is called when production LVArrayRef is exited.
-func (s *BaseLatteListener) ExitLVArrayRef(ctx *LVArrayRefContext) {}
-
-// EnterLVId is called when production LVId is entered.
-func (s *BaseLatteListener) EnterLVId(ctx *LVIdContext) {}
-
-// ExitLVId is called when production LVId is exited.
-func (s *BaseLatteListener) ExitLVId(ctx *LVIdContext) {}
-
 // EnterSEmpty is called when production SEmpty is entered.
 func (s *BaseLatteListener) EnterSEmpty(ctx *SEmptyContext) {}
 
@@ -291,17 +249,17 @@ func (s *BaseLatteListener) EnterEInt(ctx *EIntContext) {}
 // ExitEInt is called when production EInt is exited.
 func (s *BaseLatteListener) ExitEInt(ctx *EIntContext) {}
 
-// EnterEUnOp is called when production EUnOp is entered.
-func (s *BaseLatteListener) EnterEUnOp(ctx *EUnOpContext) {}
-
-// ExitEUnOp is called when production EUnOp is exited.
-func (s *BaseLatteListener) ExitEUnOp(ctx *EUnOpContext) {}
-
 // EnterEStr is called when production EStr is entered.
 func (s *BaseLatteListener) EnterEStr(ctx *EStrContext) {}
 
 // ExitEStr is called when production EStr is exited.
 func (s *BaseLatteListener) ExitEStr(ctx *EStrContext) {}
+
+// EnterENotOp is called when production ENotOp is entered.
+func (s *BaseLatteListener) EnterENotOp(ctx *ENotOpContext) {}
+
+// ExitENotOp is called when production ENotOp is exited.
+func (s *BaseLatteListener) ExitENotOp(ctx *ENotOpContext) {}
 
 // EnterEMulOp is called when production EMulOp is entered.
 func (s *BaseLatteListener) EnterEMulOp(ctx *EMulOpContext) {}
@@ -314,6 +272,12 @@ func (s *BaseLatteListener) EnterEAnd(ctx *EAndContext) {}
 
 // ExitEAnd is called when production EAnd is exited.
 func (s *BaseLatteListener) ExitEAnd(ctx *EAndContext) {}
+
+// EnterENegOp is called when production ENegOp is entered.
+func (s *BaseLatteListener) EnterENegOp(ctx *ENegOpContext) {}
+
+// ExitENegOp is called when production ENegOp is exited.
+func (s *BaseLatteListener) ExitENegOp(ctx *ENegOpContext) {}
 
 // EnterEParen is called when production EParen is entered.
 func (s *BaseLatteListener) EnterEParen(ctx *EParenContext) {}

@@ -126,7 +126,6 @@ func (v *globalDeclVisitor) VisitTopDef(ctx *parser.TopDefContext) interface{} {
 func (v *globalDeclVisitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	fun := TFun{
 		ID:     ctx.ID(),
-		Args:   make(map[string]Type),
 		Result: v.Visit(ctx.Type_()).(Type),
 	}
 
@@ -135,7 +134,7 @@ func (v *globalDeclVisitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 		if err, ok := args.(error); ok {
 			return err
 		}
-		fun.Args = args.(map[string]Type)
+		fun.Args = args.([]FArg)
 	}
 
 	if !v.inMethod {
@@ -149,20 +148,27 @@ func (v *globalDeclVisitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 
 func (v *globalDeclVisitor) VisitArg(ctx *parser.ArgContext) interface{} {
 	args := make(map[string]Type)
+	var ret []FArg
 	for i, id := range ctx.AllID() {
-		typ := ctx.Type_(i)
 		if v, ok := args[id.GetText()]; ok {
+			t := ctx.Type_(i)
 			return DuplicateIdentifierError{
 				Ident: id.GetText(),
 				Pos1:  v.Position(),
-				Pos2:  posFromToken(typ.GetStart()),
+				Pos2:  posFromToken(t.GetStart()),
 			}
 		}
 		// FIXME: eval type
-		args[id.GetText()] = v.Visit(typ).(Type)
+		ident := id.GetText()
+		t := v.Visit(ctx.Type_(i)).(Type)
+		args[ident] = t
+		ret = append(ret, FArg{
+			Ident: ident,
+			Type:  t,
+		})
 	}
 
-	return args
+	return ret
 }
 
 func (v *globalDeclVisitor) VisitTSingular(ctx *parser.TSingularContext) interface{} {

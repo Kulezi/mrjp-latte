@@ -16,24 +16,13 @@ field: type_ ID ';' # ClassFieldDef | fundef # ClassMethodDef;
 
 block: '{' stmt* '}';
 
-rvalue:
-	rvalue '.' rvalue					# RVField
-	| rvalue '[' expr ']'				# RVArrayRef
-	| ID								# RVID
-	| ID '(' ( expr ( ',' expr)*)? ')'	# RVFunCall;
-
-lvalue:
-	rvalue '.' lvalue		# LVField
-	| rvalue '[' expr ']'	# LVArrayRef
-	| ID					# LVId;
-
 stmt:
 	';'										# SEmpty
 	| block									# SBlockStmt
 	| type_ item ( ',' item)* ';'			# SDecl
-	| lvalue '=' expr ';'					# SAss
-	| lvalue '++' ';'						# SIncr
-	| lvalue '--' ';'						# SDecr
+	| expr '=' expr ';'						# SAss
+	| expr '++' ';'							# SIncr
+	| expr '--' ';'							# SDecr
 	| 'return' expr ';'						# SRet
 	| 'return' ';'							# SVRet
 	| 'if' '(' expr ')' stmt				# SCond
@@ -53,7 +42,9 @@ singular_type_:
 
 item: ID | ID '=' expr;
 
-expr: ('-' | '!') expr						# EUnOp
+expr:
+	'-' expr								# ENegOp
+	| '!' expr								# ENotOp
 	| expr mulOp expr						# EMulOp
 	| expr addOp expr						# EAddOp
 	| expr relOp expr						# ERelOp
@@ -67,7 +58,7 @@ expr: ('-' | '!') expr						# EUnOp
 	| INT									# EInt
 	| 'true'								# ETrue
 	| 'false'								# EFalse
-	| rvalue '(' ( expr ( ',' expr)*)? ')'	# EFunCall
+	| expr '(' ( expr ( ',' expr)*)? ')'	# EFunCall
 	| STR									# EStr
 	| '(' ID ')' 'null'						# ENull
 	| '(' expr ')'							# EParen;

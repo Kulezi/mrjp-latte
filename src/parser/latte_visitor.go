@@ -35,27 +35,6 @@ type LatteVisitor interface {
 	// Visit a parse tree produced by LatteParser#block.
 	VisitBlock(ctx *BlockContext) interface{}
 
-	// Visit a parse tree produced by LatteParser#RVFunCall.
-	VisitRVFunCall(ctx *RVFunCallContext) interface{}
-
-	// Visit a parse tree produced by LatteParser#RVArrayRef.
-	VisitRVArrayRef(ctx *RVArrayRefContext) interface{}
-
-	// Visit a parse tree produced by LatteParser#RVID.
-	VisitRVID(ctx *RVIDContext) interface{}
-
-	// Visit a parse tree produced by LatteParser#RVField.
-	VisitRVField(ctx *RVFieldContext) interface{}
-
-	// Visit a parse tree produced by LatteParser#LVField.
-	VisitLVField(ctx *LVFieldContext) interface{}
-
-	// Visit a parse tree produced by LatteParser#LVArrayRef.
-	VisitLVArrayRef(ctx *LVArrayRefContext) interface{}
-
-	// Visit a parse tree produced by LatteParser#LVId.
-	VisitLVId(ctx *LVIdContext) interface{}
-
 	// Visit a parse tree produced by LatteParser#SEmpty.
 	VisitSEmpty(ctx *SEmptyContext) interface{}
 
@@ -143,17 +122,20 @@ type LatteVisitor interface {
 	// Visit a parse tree produced by LatteParser#EInt.
 	VisitEInt(ctx *EIntContext) interface{}
 
-	// Visit a parse tree produced by LatteParser#EUnOp.
-	VisitEUnOp(ctx *EUnOpContext) interface{}
-
 	// Visit a parse tree produced by LatteParser#EStr.
 	VisitEStr(ctx *EStrContext) interface{}
+
+	// Visit a parse tree produced by LatteParser#ENotOp.
+	VisitENotOp(ctx *ENotOpContext) interface{}
 
 	// Visit a parse tree produced by LatteParser#EMulOp.
 	VisitEMulOp(ctx *EMulOpContext) interface{}
 
 	// Visit a parse tree produced by LatteParser#EAnd.
 	VisitEAnd(ctx *EAndContext) interface{}
+
+	// Visit a parse tree produced by LatteParser#ENegOp.
+	VisitENegOp(ctx *ENegOpContext) interface{}
 
 	// Visit a parse tree produced by LatteParser#EParen.
 	VisitEParen(ctx *EParenContext) interface{}
