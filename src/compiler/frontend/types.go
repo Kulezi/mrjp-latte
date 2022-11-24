@@ -27,9 +27,43 @@ type Signatures struct {
 
 func MakeSignatures() Signatures {
 	return Signatures{
-		Globals: make(Env),
-		Locals:  make(Env),
-		Parent:  make(map[string]TClassRef),
+		Globals: Env{
+			"printInt": TypeInfo{
+				Type: TFun{
+					Args: []FArg{{
+						Ident: "x",
+						Type:  TInt{},
+					}},
+					Result: TVoid{},
+				},
+			},
+			"printString": TypeInfo{
+				Type: TFun{
+					Args: []FArg{{
+						Ident: "x",
+						Type:  TString{},
+					}},
+					Result: TVoid{},
+				},
+			},
+			"error": TypeInfo{
+				Type: TFun{
+					Result: TVoid{},
+				},
+			},
+			"readInt": TypeInfo{
+				Type: TFun{
+					Result: TInt{},
+				},
+			},
+			"readString": TypeInfo{
+				Type: TFun{
+					Result: TString{},
+				},
+			},
+		},
+		Locals: make(Env),
+		Parent: make(map[string]TClassRef),
 	}
 }
 
