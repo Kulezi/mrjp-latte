@@ -90,8 +90,8 @@ but expression
 evaluates to type 
 	%s
 	at %s`,
-		e.Expr.GetText(),
 		e.Expected,
+		e.Expr.GetText(),
 		e.Got,
 		posFromToken(e.Expr.GetStart()),
 	)
@@ -169,6 +169,24 @@ func (e ExpectedClassError) Error() string {
 		`expected the expression
 	%s
 to evaluate to a class, but got
+	%s
+	at %s`,
+		e.Expr.GetText(),
+		e.Got,
+		posFromToken(e.Expr.GetStart()),
+	)
+}
+
+type ExpectedArrayError struct {
+	Expr antlr.ParseTree
+	Got  Type
+}
+
+func (e ExpectedArrayError) Error() string {
+	return fmt.Sprintf(
+		`expected the expression
+	%s
+to evaluate to an array, but got
 	%s
 	at %s`,
 		e.Expr.GetText(),

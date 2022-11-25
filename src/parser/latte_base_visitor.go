@@ -44,6 +44,18 @@ func (v *BaseLatteVisitor) VisitBlock(ctx *BlockContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
+func (v *BaseLatteVisitor) VisitLVField(ctx *LVFieldContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseLatteVisitor) VisitLVArrayRef(ctx *LVArrayRefContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseLatteVisitor) VisitLVId(ctx *LVIdContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
 func (v *BaseLatteVisitor) VisitSEmpty(ctx *SEmptyContext) interface{} {
 	return v.VisitChildren(ctx)
 }

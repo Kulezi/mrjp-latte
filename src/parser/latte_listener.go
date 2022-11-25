@@ -35,6 +35,15 @@ type LatteListener interface {
 	// EnterBlock is called when entering the block production.
 	EnterBlock(c *BlockContext)
 
+	// EnterLVField is called when entering the LVField production.
+	EnterLVField(c *LVFieldContext)
+
+	// EnterLVArrayRef is called when entering the LVArrayRef production.
+	EnterLVArrayRef(c *LVArrayRefContext)
+
+	// EnterLVId is called when entering the LVId production.
+	EnterLVId(c *LVIdContext)
+
 	// EnterSEmpty is called when entering the SEmpty production.
 	EnterSEmpty(c *SEmptyContext)
 
@@ -190,6 +199,15 @@ type LatteListener interface {
 
 	// ExitBlock is called when exiting the block production.
 	ExitBlock(c *BlockContext)
+
+	// ExitLVField is called when exiting the LVField production.
+	ExitLVField(c *LVFieldContext)
+
+	// ExitLVArrayRef is called when exiting the LVArrayRef production.
+	ExitLVArrayRef(c *LVArrayRefContext)
+
+	// ExitLVId is called when exiting the LVId production.
+	ExitLVId(c *LVIdContext)
 
 	// ExitSEmpty is called when exiting the SEmpty production.
 	ExitSEmpty(c *SEmptyContext)

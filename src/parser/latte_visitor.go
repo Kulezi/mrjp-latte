@@ -35,6 +35,15 @@ type LatteVisitor interface {
 	// Visit a parse tree produced by LatteParser#block.
 	VisitBlock(ctx *BlockContext) interface{}
 
+	// Visit a parse tree produced by LatteParser#LVField.
+	VisitLVField(ctx *LVFieldContext) interface{}
+
+	// Visit a parse tree produced by LatteParser#LVArrayRef.
+	VisitLVArrayRef(ctx *LVArrayRefContext) interface{}
+
+	// Visit a parse tree produced by LatteParser#LVId.
+	VisitLVId(ctx *LVIdContext) interface{}
+
 	// Visit a parse tree produced by LatteParser#SEmpty.
 	VisitSEmpty(ctx *SEmptyContext) interface{}
 

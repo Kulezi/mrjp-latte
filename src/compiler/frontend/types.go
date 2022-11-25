@@ -141,6 +141,9 @@ func (s *Signatures) ShadowLocal(ident string, t Type, depth int) (drop func()) 
 }
 
 func posFromToken(t antlr.Token) string {
+	if t == nil {
+		return "unknown position"
+	}
 	return fmt.Sprintf("line %d, column %d", t.GetLine(), t.GetColumn())
 }
 
@@ -149,8 +152,9 @@ func sameType(a, b Type) bool {
 }
 
 var validRelOpArg = map[string]struct{}{
-	"int":    {},
-	"string": {},
+	"int":     {},
+	"string":  {},
+	"boolean": {}, // TODO: does boolean work with <= or just ==, != ?
 }
 
 var validAddOpArg = validRelOpArg

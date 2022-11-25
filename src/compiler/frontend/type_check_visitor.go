@@ -49,7 +49,6 @@ func (v *typeCheckVisitor) ExpectType(expected Type, ctx parser.IExprContext) er
 	}
 
 	got, err := v.evalType(ctx)
-	fmt.Println(got)
 	if err != nil {
 		return err
 	}
@@ -221,15 +220,12 @@ func (v *typeCheckVisitor) VisitSBlockStmt(ctx *parser.SBlockStmtContext) interf
 }
 
 func (v *typeCheckVisitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
-	typ := v.Visit(ctx.Type_()).(Type)
-	if classRef, ok := typ.BaseType().(TClassRef); ok {
-		if _, ok := v.TypeOfGlobal(classRef.String()); !ok {
-			return UnknownVariableTypeError{
-				typ,
-			}
-		}
+	t := v.Visit(ctx.Type_())
+	if err, ok := t.(error); ok {
+		return err
 	}
 
+	typ := t.(Type)
 	for _, item := range ctx.AllItem() {
 		item, ok := item.(*parser.ItemContext)
 		if !ok {
@@ -257,6 +253,66 @@ func (v *typeCheckVisitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 	return nil
 }
 
+func (v *typeCheckVisitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
+	t, err := v.evalType(ctx.Expr())
+	if err != nil {
+		return err
+	}
+
+	if class, ok := t.(TClass); ok {
+		defer v.EnterClass(class)()
+	} else if _, ok = t.(TArray); ok {
+		defer v.ShadowLocal("length", TInt{})()
+	}
+
+	return v.Visit(ctx.Lvalue())
+}
+
+func (v *typeCheckVisitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
+	typ, err := v.evalType(ctx.Expr(0))
+	if err != nil {
+		return err
+	}
+
+	arr, ok := typ.(TArray)
+	if !ok {
+		return ExpectedArrayError{
+			Expr: ctx,
+			Got:  typ,
+		}
+	}
+
+	if err := v.ExpectType(TInt{}, ctx.Expr(1)); err != nil {
+		return err
+	}
+	return arr.Elem
+}
+
+func (v *typeCheckVisitor) VisitLVId(ctx *parser.LVIdContext) interface{} {
+	t, ok := v.TypeOf(ctx.ID().GetText())
+	if !ok {
+		return UndeclaredIdentifierError{
+			Ident: ctx.ID(),
+		}
+	}
+
+	return t.Type
+}
+
+func (v *typeCheckVisitor) VisitSAss(ctx *parser.SAssContext) interface{} {
+	res := v.Visit(ctx.Lvalue())
+	if err, ok := res.(error); ok {
+		return err
+	}
+
+	t := res.(Type)
+	return v.ExpectType(t, ctx.Expr())
+}
+
+func (v *typeCheckVisitor) VisitSExp(ctx *parser.SExpContext) interface{} {
+	return v.Visit(ctx.Expr())
+}
+
 func (v *typeCheckVisitor) evalType(tree parser.IExprContext) (Type, error) {
 	res := v.Visit(tree)
 	if err, ok := res.(error); ok {
@@ -268,10 +324,6 @@ func (v *typeCheckVisitor) evalType(tree parser.IExprContext) (Type, error) {
 	}
 
 	panic("evalType called in wrong context, visiting the tree should return a type")
-}
-
-func (v *typeCheckVisitor) VisitSExp(ctx *parser.SExpContext) interface{} {
-	return v.Visit(ctx.Expr())
 }
 
 func (v *typeCheckVisitor) VisitENotOp(ctx *parser.ENotOpContext) interface{} {
@@ -406,7 +458,12 @@ func (v *typeCheckVisitor) VisitEOr(ctx *parser.EOrContext) interface{} {
 }
 
 func (v *typeCheckVisitor) VisitENew(ctx *parser.ENewContext) interface{} {
-	typ := v.Visit(ctx.Singular_type_()).(Type)
+	t := v.Visit(ctx.Singular_type_())
+	if err, ok := t.(error); ok {
+		return err
+	}
+
+	typ := t.(Type)
 	for _, e := range ctx.AllExpr() {
 		idxType, err := v.evalType(e)
 		if err != nil {
@@ -429,21 +486,17 @@ func (v *typeCheckVisitor) VisitENew(ctx *parser.ENewContext) interface{} {
 }
 
 func (v *typeCheckVisitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
-	lhsType, err := v.evalType(ctx.Expr(0))
+	t, err := v.evalType(ctx.Expr(0))
 	if err != nil {
 		return err
 	}
 
-	class, ok := lhsType.(TClass)
-	if !ok {
-		return ExpectedClassError{
-			Expr: ctx,
-			Got:  lhsType,
-		}
+	class, ok := t.(TClass)
+	if ok {
+		defer v.EnterClass(class)()
+	} else if _, ok = t.(TArray); ok {
+		defer v.ShadowLocal("length", TInt{})()
 	}
-
-	// Put left-hand side class fields into environment, defer undoing this.
-	defer v.EnterClass(class)()
 
 	// Evaluate right-hand side in this environment.
 	return v.Visit(ctx.Expr(1))
@@ -455,32 +508,19 @@ func (v *typeCheckVisitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interfac
 		return err
 	}
 
-	returnType := typ
-	for _, e := range ctx.AllExpr()[1:] {
-		arr, ok := typ.(TArray)
-		if !ok {
-			return ArrayDimensionsMismatchError{
-				Expr: ctx,
-				Type: typ,
-			}
+	arr, ok := typ.(TArray)
+	if !ok {
+		return ExpectedArrayError{
+			Expr: ctx,
+			Got:  typ,
 		}
-
-		index, err := v.evalType(e)
-		if err != nil {
-			return err
-		}
-
-		if _, ok := index.(TInt); !ok {
-			return ArrayIndexTypeError{
-				Expr: e,
-				Type: index,
-			}
-		}
-
-		returnType = arr.Elem
 	}
 
-	return returnType
+	if err := v.ExpectType(TInt{}, ctx.Expr(1)); err != nil {
+		return err
+	}
+
+	return arr.Elem
 }
 
 func (v *typeCheckVisitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
@@ -542,6 +582,10 @@ func (v *typeCheckVisitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{
 		}
 	}
 
+	if classRef, ok := signature.Result.(TClassRef); ok {
+		class, _ := v.TypeOfGlobal(classRef.String())
+		return class.Type.(TClass)
+	}
 	return signature.Result
 }
 
@@ -580,15 +624,32 @@ func (v *typeCheckVisitor) VisitTVoid(ctx *parser.TVoidContext) interface{} {
 }
 
 func (v *typeCheckVisitor) VisitTClass(ctx *parser.TClassContext) interface{} {
-	return TClassRef{
-		ID: ctx.ID(),
+	ident := ctx.ID().GetText()
+	t, ok := v.TypeOfGlobal(ident)
+	if !ok {
+		return UnknownClassError{
+			Type: t,
+		}
 	}
+
+	class, ok := t.Type.(TClass)
+	if !ok {
+		return UnknownClassError{
+			Type: t,
+		}
+	}
+
+	return class
 }
 
 func (v *typeCheckVisitor) VisitTArray(ctx *parser.TArrayContext) interface{} {
-	typ := v.Visit(ctx.Type_()).(Type)
+	t := v.Visit(ctx.Type_())
+	if err, ok := t.(error); ok {
+		return err
+	}
+
 	return TArray{
 		StartToken: ctx.GetStart(),
-		Elem:       typ,
+		Elem:       t.(Type),
 	}
 }

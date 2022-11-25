@@ -16,11 +16,16 @@ field: type_ ID ';' # ClassFieldDef | fundef # ClassMethodDef;
 
 block: '{' stmt* '}';
 
+lvalue:
+	expr '.' lvalue		# LVField
+	| expr '[' expr ']'	# LVArrayRef
+	| ID				# LVId;
+
 stmt:
 	';'										# SEmpty
 	| block									# SBlockStmt
 	| type_ item ( ',' item)* ';'			# SDecl
-	| expr '=' expr ';'						# SAss
+	| lvalue '=' expr ';'					# SAss
 	| expr '++' ';'							# SIncr
 	| expr '--' ';'							# SDecr
 	| 'return' expr ';'						# SRet

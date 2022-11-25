@@ -75,6 +75,24 @@ func (s *BaseLatteListener) EnterBlock(ctx *BlockContext) {}
 // ExitBlock is called when production block is exited.
 func (s *BaseLatteListener) ExitBlock(ctx *BlockContext) {}
 
+// EnterLVField is called when production LVField is entered.
+func (s *BaseLatteListener) EnterLVField(ctx *LVFieldContext) {}
+
+// ExitLVField is called when production LVField is exited.
+func (s *BaseLatteListener) ExitLVField(ctx *LVFieldContext) {}
+
+// EnterLVArrayRef is called when production LVArrayRef is entered.
+func (s *BaseLatteListener) EnterLVArrayRef(ctx *LVArrayRefContext) {}
+
+// ExitLVArrayRef is called when production LVArrayRef is exited.
+func (s *BaseLatteListener) ExitLVArrayRef(ctx *LVArrayRefContext) {}
+
+// EnterLVId is called when production LVId is entered.
+func (s *BaseLatteListener) EnterLVId(ctx *LVIdContext) {}
+
+// ExitLVId is called when production LVId is exited.
+func (s *BaseLatteListener) ExitLVId(ctx *LVIdContext) {}
+
 // EnterSEmpty is called when production SEmpty is entered.
 func (s *BaseLatteListener) EnterSEmpty(ctx *SEmptyContext) {}
 
