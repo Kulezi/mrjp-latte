@@ -49,6 +49,7 @@ func (v *typeCheckVisitor) ExpectType(expected Type, ctx parser.IExprContext) er
 	}
 
 	got, err := v.evalType(ctx)
+	fmt.Println(got)
 	if err != nil {
 		return err
 	}
@@ -106,20 +107,25 @@ func (v *typeCheckVisitor) TypeOfGlobal(ident string) (TypeInfo, bool) {
 	return res, ok
 }
 
+func (v *typeCheckVisitor) TypeOf(ident string) (TypeInfo, bool) {
+	if res, ok := v.TypeOfLocal(ident); ok {
+		return res, ok
+	}
+
+	return v.TypeOfGlobal(ident)
+}
+
 func (v *typeCheckVisitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	ident := ctx.ID().GetText()
-	// First try searching for a method in local identifiers, then for a function.
-	t, ok := v.TypeOfLocal(ident)
+
+	t, ok := v.TypeOf(ident)
 	if !ok {
-		t, ok = v.TypeOfGlobal(ident)
-		if !ok {
-			panic(fmt.Sprintf("typecheck: found undeclared function/method %s at %s", ctx.ID().GetText(), posFromToken(ctx.GetStart())))
-		}
+		panic(fmt.Sprintf("undeclared identifier %s found at %s", ident, posFromToken(ctx.GetStart())))
 	}
 
 	signature, ok := t.Type.(TFun)
 	if !ok {
-		panic(fmt.Sprintf("typecheck: identifier %s is not a function/method, at %s", ctx.ID().GetText(), posFromToken(ctx.GetStart())))
+		panic(fmt.Sprintf("typecheck: identifier %s is not a function/method, at %s", ident, posFromToken(ctx.GetStart())))
 	}
 
 	v.depth++
@@ -483,14 +489,11 @@ func (v *typeCheckVisitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
 
 func (v *typeCheckVisitor) VisitEId(ctx *parser.EIdContext) interface{} {
 	ident := ctx.ID().GetText()
-	typ, ok := v.TypeOfLocal(ident)
-	if !ok {
-		if typ, ok = v.TypeOfGlobal(ident); !ok {
-			return UndeclaredVariableError{Type: typ}
-		}
+	if typ, ok := v.TypeOf(ident); ok {
+		return typ.Type
 	}
 
-	return typ.Type
+	return UndeclaredIdentifierError{Ident: ctx.ID()}
 }
 
 func (v *typeCheckVisitor) VisitEInt(ctx *parser.EIntContext) interface{} {
@@ -510,32 +513,30 @@ func (v *typeCheckVisitor) VisitEStr(ctx *parser.EStrContext) interface{} {
 }
 
 func (v *typeCheckVisitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
-	for i, v := range ctx.AllExpr() {
-		fmt.Println(i, v.GetText())
-	}
-
-	t, err := v.evalType(ctx.Expr(0))
-	fmt.Println(t)
-	if err != nil {
-		return err
-	}
-
-	signature, ok := t.(TFun)
+	ident := ctx.ID().GetText()
+	t, ok := v.TypeOf(ident)
 	if !ok {
-		return ExpectedFunctionError{
-			Expr: ctx,
-			Type: t,
+		return UndeclaredIdentifierError{
+			Ident: ctx.ID(),
 		}
 	}
 
-	if len(signature.Args) != len(ctx.AllExpr())-1 {
+	signature, ok := t.Type.(TFun)
+	if !ok {
+		return NotAFunctionError{
+			Ident: ctx.ID(),
+			Type:  t.Type,
+		}
+	}
+
+	if len(signature.Args) != len(ctx.AllExpr()) {
 		return InvalidFunctionArgumentCountError{
 			Expr: ctx,
 			Fun:  signature,
 		}
 	}
 
-	for i, e := range ctx.AllExpr()[1:] {
+	for i, e := range ctx.AllExpr() {
 		if err := v.ExpectType(signature.Args[i].Type, e); err != nil {
 			return err
 		}

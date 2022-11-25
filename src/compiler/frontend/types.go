@@ -303,6 +303,10 @@ func (t TFun) String() string {
 }
 
 func (t TFun) Position() string {
+	if t.ID == nil {
+		return "unknown position"
+	}
+
 	return posFromToken(t.ID.GetSymbol())
 }
 

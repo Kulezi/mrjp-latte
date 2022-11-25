@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"fmt"
 	"latte/compiler/frontend"
 )
 
@@ -29,11 +28,10 @@ message:  db        "Hello, World", 10      ; note the newline at the end`
 
 // FIXME: generate code.
 func genX64(filename string) (string, error) {
-	signatures, err := frontend.Run(filename)
+	_, err := frontend.Run(filename)
 	if err != nil {
 		return "", err
 	}
 
-	fmt.Println(signatures)
 	return sampleASM, nil
 }

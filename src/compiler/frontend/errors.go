@@ -3,6 +3,8 @@ package frontend
 import (
 	"fmt"
 	"latte/parser"
+
+	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 )
 
 type DuplicateIdentifierError struct {
@@ -95,16 +97,16 @@ evaluates to type
 	)
 }
 
-type UndeclaredVariableError struct {
-	Type Type
+type UndeclaredIdentifierError struct {
+	Ident antlr.TerminalNode
 }
 
-func (e UndeclaredVariableError) Error() string {
+func (e UndeclaredIdentifierError) Error() string {
 	return fmt.Sprintf(
-		`undeclared variable %s found
+		`undeclared identifier %s found
 	at %s`,
-		e.Type,
-		e.Type.Position(),
+		e.Ident,
+		posFromToken(e.Ident.GetSymbol()),
 	)
 }
 
@@ -250,10 +252,22 @@ expects %d arguments, but %d were provided in call
 	at %s`,
 		e.Fun,
 		len(e.Fun.Args),
-		len(e.Expr.AllExpr())-1,
+		len(e.Expr.AllExpr()),
 		e.Expr.GetText(),
 		posFromToken(e.Expr.GetStart()),
 	)
 }
 
-var _ error = &InvalidFunctionArgumentCountError{}
+type NotAFunctionError struct {
+	Ident antlr.TerminalNode
+	Type  Type
+}
+
+func (e NotAFunctionError) Error() string {
+	return fmt.Sprintf(
+		`identifier %s can't be called as it's not a function, but a value of type
+	%s`,
+		posFromToken(e.Ident.GetSymbol()),
+		e.Type,
+	)
+}
