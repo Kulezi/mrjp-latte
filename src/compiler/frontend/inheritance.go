@@ -15,13 +15,14 @@ func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[
 	childClass := s.Globals[child].Type.(TClass)
 	childFields := childClass.Fields
 	parentFields := s.Globals[parent.String()].Type.(TClass).Fields
-	for ident, parentFieldType := range parentFields {
-		if childFieldType, ok := childFields[ident]; ok {
-			parentFieldType, ok := parentFieldType.(TFun)
-			if !ok {
-				continue
-			}
 
+	for ident, parentFieldType := range parentFields {
+		parentFieldType, ok := parentFieldType.(TFun)
+		if !ok {
+			continue
+		}
+
+		if childFieldType, ok := childFields[ident]; ok {
 			if !sameType(parentFieldType, childFieldType) {
 				return MethodOverrideError{
 					ParentClass:  s.Globals[parent.String()],
@@ -31,12 +32,12 @@ func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[
 					MethodName:   ident,
 				}
 			}
-
-			childFields[ident] = parentFieldType
 		}
+		childFields[ident] = parentFieldType
 	}
 
 	evaluated[child] = struct{}{}
+
 	s.ReplaceGlobal(child, childClass)
 	return nil
 }

@@ -125,8 +125,9 @@ func (v *globalDeclVisitor) VisitTopDef(ctx *parser.TopDefContext) interface{} {
 // Returns the function signature as a Type.
 func (v *globalDeclVisitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	fun := TFun{
-		ID:     ctx.ID(),
-		Result: v.Visit(ctx.Type_()).(Type),
+		Ident:    ctx.ID().GetText(),
+		Terminal: ctx.ID(),
+		Result:   v.Visit(ctx.Type_()).(Type),
 	}
 
 	if ctx.Arg() != nil {
@@ -138,7 +139,7 @@ func (v *globalDeclVisitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	}
 
 	if !v.inMethod {
-		if err := v.createGlobal(fun.ID.GetText(), fun); err != nil {
+		if err := v.createGlobal(fun.Ident, fun); err != nil {
 			return err
 		}
 	}
@@ -282,7 +283,7 @@ func (v *globalDeclVisitor) VisitClassMethodDef(ctx *parser.ClassMethodDefContex
 
 	fun := res.(TFun)
 	return field{
-		ID:   fun.ID.GetText(),
+		ID:   fun.Ident,
 		Type: fun,
 	}
 }

@@ -43,6 +43,21 @@ func (v *typeCheckVisitor) VisitProgram(ctx *parser.ProgramContext) interface{} 
 	return res
 }
 
+func (v *typeCheckVisitor) isSubClass(expected, child Type) bool {
+	class, ok := child.(TClass)
+	if !ok {
+		return false
+	}
+
+	for !sameType(expected, class) && class.Parent != nil {
+		parentRef := *class.Parent
+		parent, _ := v.TypeOfGlobal(parentRef.String())
+		class = parent.Type.(TClass)
+	}
+
+	return sameType(expected, class)
+}
+
 func (v *typeCheckVisitor) ExpectType(expected Type, ctx parser.IExprContext) error {
 	if ctx == nil {
 		return nil
@@ -53,7 +68,7 @@ func (v *typeCheckVisitor) ExpectType(expected Type, ctx parser.IExprContext) er
 		return err
 	}
 
-	if !sameType(expected, got) {
+	if !sameType(expected, got) && !v.isSubClass(expected, got) {
 		return UnexpectedTypeError{
 			Expr:     ctx,
 			Expected: expected,
@@ -65,6 +80,7 @@ func (v *typeCheckVisitor) ExpectType(expected Type, ctx parser.IExprContext) er
 }
 
 func (v *typeCheckVisitor) EnterClass(signature TClass) (exit func()) {
+	// fmt.Printf("enter class %s\n", signature)
 	v.depth++
 	// Put all fields into enviroment.
 	var exits []func()
@@ -73,6 +89,7 @@ func (v *typeCheckVisitor) EnterClass(signature TClass) (exit func()) {
 	}
 
 	return func() {
+		// fmt.Printf("exit class %s\n", signature)
 		for _, exit := range exits {
 			exit()
 		}
@@ -317,6 +334,11 @@ func (v *typeCheckVisitor) evalType(tree parser.IExprContext) (Type, error) {
 	res := v.Visit(tree)
 	if err, ok := res.(error); ok {
 		return nil, err
+	}
+
+	if classRef, ok := res.(TClassRef); ok {
+		class, _ := v.TypeOfGlobal(classRef.String())
+		return class.Type, nil
 	}
 
 	if typ, ok := res.(Type); ok {

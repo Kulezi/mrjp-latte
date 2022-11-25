@@ -30,6 +30,7 @@ func MakeSignatures() Signatures {
 		Globals: Env{
 			"printInt": TypeInfo{
 				Type: TFun{
+					Ident: "printInt",
 					Args: []FArg{{
 						Ident: "x",
 						Type:  TInt{},
@@ -39,6 +40,7 @@ func MakeSignatures() Signatures {
 			},
 			"printString": TypeInfo{
 				Type: TFun{
+					Ident: "printString",
 					Args: []FArg{{
 						Ident: "x",
 						Type:  TString{},
@@ -48,16 +50,19 @@ func MakeSignatures() Signatures {
 			},
 			"error": TypeInfo{
 				Type: TFun{
+					Ident:  "error",
 					Result: TVoid{},
 				},
 			},
 			"readInt": TypeInfo{
 				Type: TFun{
+					Ident:  "readInt",
 					Result: TInt{},
 				},
 			},
 			"readString": TypeInfo{
 				Type: TFun{
+					Ident:  "readString",
 					Result: TString{},
 				},
 			},
@@ -242,6 +247,13 @@ func (t TClass) Position() string {
 	return posFromToken(t.ID.GetSymbol())
 }
 
+func (t TClass) Print() {
+	fmt.Println("class", t)
+	for name, value := range t.Fields {
+		fmt.Println("\t", name, value)
+	}
+}
+
 func (t TClass) AsRef() TClassRef {
 	return TClassRef{
 		ID: t.ID,
@@ -285,13 +297,14 @@ type FArg struct {
 }
 
 type TFun struct {
-	ID     antlr.TerminalNode
-	Args   []FArg
-	Result Type
+	Ident    string
+	Terminal antlr.TerminalNode
+	Args     []FArg
+	Result   Type
 }
 
 func (t TFun) String() string {
-	var res = t.Result.String() + " " + t.ID.GetText() + "("
+	var res = t.Result.String() + " " + t.Ident + "("
 	comma := false
 	for _, v := range t.Args {
 		if !comma {
@@ -307,11 +320,11 @@ func (t TFun) String() string {
 }
 
 func (t TFun) Position() string {
-	if t.ID == nil {
+	if t.Terminal == nil {
 		return "unknown position"
 	}
 
-	return posFromToken(t.ID.GetSymbol())
+	return posFromToken(t.Terminal.GetSymbol())
 }
 
 func (t TFun) BaseType() Type { return t }

@@ -62,6 +62,14 @@ func (s *state) semanticCheck() error {
 		return err
 	}
 
+	// for _, v := range s.signatures.Globals {
+	// 	if class, ok := v.Type.(TClass); ok {
+	// 		class.Print()
+	// 		continue
+	// 	}
+	// 	fmt.Println(v.Type)
+	// }
+
 	if err = s.typeCheck(); err != nil {
 		return err
 	}
