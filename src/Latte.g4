@@ -58,7 +58,7 @@ expr:
 	| INT									# EInt
 	| 'true'								# ETrue
 	| 'false'								# EFalse
-	| expr '(' ( expr ( ',' expr)*)? ')'	# EFunCall
+	| ID '(' ( expr ( ',' expr)*)? ')'		# EFunCall
 	| STR									# EStr
 	| '(' ID ')' 'null'						# ENull
 	| '(' expr ')'							# EParen;
