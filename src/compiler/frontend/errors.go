@@ -347,3 +347,17 @@ to be an array`,
 		posFromToken(e.Ctx.GetStart()),
 	)
 }
+
+type MissingReturnError struct {
+	Fun TFun
+}
+
+func (e MissingReturnError) Error() string {
+	return fmt.Sprintf(
+		`missing return in function
+	%s
+	declared at %s`,
+		e.Fun,
+		e.Fun.Position(),
+	)
+}

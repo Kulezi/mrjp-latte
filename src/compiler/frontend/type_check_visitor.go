@@ -69,7 +69,6 @@ func (v *typeCheckVisitor) ExpectType(expected Type, ctx parser.IExprContext) er
 	if err != nil {
 		return err
 	}
-
 	if !sameType(expected, got) && !v.isSubClass(expected, got) {
 		return UnexpectedTypeError{
 			Expr:     ctx,
@@ -162,7 +161,19 @@ func (v *typeCheckVisitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 
 	v.curFun = &signature
 	defer func() { v.curFun = nil }()
-	return v.Visit(ctx.Block())
+	res := v.Visit(ctx.Block())
+	if err, ok := res.(error); ok {
+		return err
+	}
+
+	returns := res.(bool)
+	if !returns && !sameType(TVoid{}, signature.Result) {
+		return MissingReturnError{
+			Fun: signature,
+		}
+	}
+
+	return nil
 }
 
 func (v *typeCheckVisitor) VisitBaseClassDef(ctx *parser.BaseClassDefContext) interface{} {
@@ -225,10 +236,13 @@ func (v *typeCheckVisitor) VisitClassMethodDef(ctx *parser.ClassMethodDefContext
 func (v *typeCheckVisitor) VisitBlock(ctx *parser.BlockContext) interface{} {
 	v.depth++
 	defer func() { v.depth-- }()
+	returns := false
 	for _, stmt := range ctx.AllStmt() {
-		if err, ok := v.Visit(stmt).(error); ok {
+		stmtReturns, err := v.evalStmt(stmt)
+		if err != nil {
 			return err
 		}
+		returns = stmtReturns || returns
 	}
 
 	for len(v.dropperStack) > 0 {
@@ -241,7 +255,21 @@ func (v *typeCheckVisitor) VisitBlock(ctx *parser.BlockContext) interface{} {
 		v.dropperStack = v.dropperStack[:len(v.dropperStack)-1]
 	}
 
-	return nil
+	return returns
+}
+
+func (v *typeCheckVisitor) evalStmt(ctx parser.IStmtContext) (returns bool, err error) {
+	ret := v.Visit(ctx)
+	if err, ok := ret.(error); ok {
+		return false, err
+	}
+
+	b, ok := ret.(bool)
+	if !ok {
+		panic("all stmt's should evaluate to bool")
+	}
+
+	return b, nil
 }
 
 func (v *typeCheckVisitor) VisitSBlockStmt(ctx *parser.SBlockStmtContext) interface{} {
@@ -285,7 +313,7 @@ func (v *typeCheckVisitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 			depth: v.depth,
 		})
 	}
-	return nil
+	return false
 }
 
 func (v *typeCheckVisitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
@@ -339,7 +367,10 @@ func (v *typeCheckVisitor) VisitSAss(ctx *parser.SAssContext) interface{} {
 	if err != nil {
 		return err
 	}
-	return v.ExpectType(t, ctx.Expr())
+	if err := v.ExpectType(t, ctx.Expr()); err != nil {
+		return err
+	}
+	return false
 }
 
 func (v *typeCheckVisitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
@@ -356,7 +387,7 @@ func (v *typeCheckVisitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
 		}
 	}
 
-	return nil
+	return false
 }
 
 func (v *typeCheckVisitor) VisitSDecr(ctx *parser.SDecrContext) interface{} {
@@ -373,11 +404,14 @@ func (v *typeCheckVisitor) VisitSDecr(ctx *parser.SDecrContext) interface{} {
 		}
 	}
 
-	return nil
+	return false
 }
 
 func (v *typeCheckVisitor) VisitSRet(ctx *parser.SRetContext) interface{} {
-	return v.ExpectType(v.curFun.Result, ctx.Expr())
+	if err := v.ExpectType(v.curFun.Result, ctx.Expr()); err != nil {
+		return err
+	}
+	return true
 }
 
 func (v *typeCheckVisitor) VisitSVRet(ctx *parser.SVRetContext) interface{} {
@@ -387,7 +421,7 @@ func (v *typeCheckVisitor) VisitSVRet(ctx *parser.SVRetContext) interface{} {
 			Expected: v.curFun.Result,
 		}
 	}
-	return nil
+	return true
 }
 
 func (v *typeCheckVisitor) VisitSCond(ctx *parser.SCondContext) interface{} {
@@ -396,7 +430,7 @@ func (v *typeCheckVisitor) VisitSCond(ctx *parser.SCondContext) interface{} {
 		return err
 	}
 
-	_, ok := t.(TBool)
+	b, ok := t.(TBool)
 	if !ok {
 		return UnexpectedTypeError{
 			Expr:     ctx,
@@ -405,7 +439,17 @@ func (v *typeCheckVisitor) VisitSCond(ctx *parser.SCondContext) interface{} {
 		}
 	}
 
-	return v.Visit(ctx.Stmt())
+	blockReturns, err := v.evalStmt(ctx.Stmt())
+	if err != nil {
+		return err
+	}
+
+	// If it always executes we are sure of the return.
+	if b.constValue != nil && *b.constValue {
+		return blockReturns
+	}
+
+	return false
 }
 
 func (v *typeCheckVisitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
@@ -414,7 +458,7 @@ func (v *typeCheckVisitor) VisitSCondElse(ctx *parser.SCondElseContext) interfac
 		return err
 	}
 
-	_, ok := t.(TBool)
+	b, ok := t.(TBool)
 	if !ok {
 		return UnexpectedTypeError{
 			Expr:     ctx,
@@ -423,11 +467,25 @@ func (v *typeCheckVisitor) VisitSCondElse(ctx *parser.SCondElseContext) interfac
 		}
 	}
 
-	r1 := v.Visit(ctx.Stmt(0))
-	if err, ok := r1.(error); ok {
+	retTrue, err := v.evalStmt(ctx.Stmt(0))
+	if err != nil {
 		return err
 	}
-	return v.Visit(ctx.Stmt(1))
+
+	retFalse, err := v.evalStmt(ctx.Stmt(1))
+	if err != nil {
+		return err
+	}
+
+	if b.constValue != nil {
+		if *b.constValue {
+			return retTrue
+		} else {
+			return retFalse
+		}
+	}
+
+	return retTrue && retFalse
 }
 
 func (v *typeCheckVisitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
@@ -436,7 +494,7 @@ func (v *typeCheckVisitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 		return err
 	}
 
-	_, ok := t.(TBool)
+	b, ok := t.(TBool)
 	if !ok {
 		return UnexpectedTypeError{
 			Expr:     ctx,
@@ -445,7 +503,16 @@ func (v *typeCheckVisitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 		}
 	}
 
-	return v.Visit(ctx.Stmt())
+	returns, err := v.evalStmt(ctx.Stmt())
+	if err != nil {
+		return err
+	}
+
+	if b.constValue != nil && *b.constValue {
+		return returns
+	}
+
+	return false
 }
 
 func (v *typeCheckVisitor) VisitSFor(ctx *parser.SForContext) interface{} {
@@ -482,7 +549,10 @@ func (v *typeCheckVisitor) VisitSFor(ctx *parser.SForContext) interface{} {
 }
 
 func (v *typeCheckVisitor) VisitSExp(ctx *parser.SExpContext) interface{} {
-	return v.Visit(ctx.Expr())
+	if _, err := v.evalType(ctx.Expr()); err != nil {
+		return err
+	}
+	return false
 }
 
 func (v *typeCheckVisitor) evalLVType(ctx parser.ILvalueContext) (Type, error) {
@@ -682,19 +752,22 @@ func (v *typeCheckVisitor) VisitEAnd(ctx *parser.EAndContext) interface{} {
 		return err
 	}
 
-	if !sameType(t1, t2) {
-		return ArgTypeMismatchError{
-			Expr:  ctx,
-			Type1: t1,
-			Type2: t2,
+	if !sameType(t1, TBool{}) {
+		return UnexpectedTypeError{
+			Expr:     ctx,
+			Expected: TBool{},
+			Got:      t1,
 		}
 	}
 
-	for _, e := range ctx.AllExpr() {
-		if err := v.ExpectType(TBool{}, e); err != nil {
-			return err
+	if !sameType(t2, TBool{}) {
+		return UnexpectedTypeError{
+			Expr:     ctx,
+			Expected: TBool{},
+			Got:      t2,
 		}
 	}
+
 	return TBool{
 		StartToken: ctx.GetStart(),
 		constValue: evalConstBoolBinOp("&&", t1, t2),
@@ -712,17 +785,19 @@ func (v *typeCheckVisitor) VisitEOr(ctx *parser.EOrContext) interface{} {
 		return err
 	}
 
-	if !sameType(t1, t2) {
-		return ArgTypeMismatchError{
-			Expr:  ctx,
-			Type1: t1,
-			Type2: t2,
+	if !sameType(t1, TBool{}) {
+		return UnexpectedTypeError{
+			Expr:     ctx,
+			Expected: TBool{},
+			Got:      t1,
 		}
 	}
 
-	for _, e := range ctx.AllExpr() {
-		if err := v.ExpectType(TBool{}, e); err != nil {
-			return err
+	if !sameType(t2, TBool{}) {
+		return UnexpectedTypeError{
+			Expr:     ctx,
+			Expected: TBool{},
+			Got:      t2,
 		}
 	}
 	return TBool{
@@ -798,7 +873,6 @@ func (v *typeCheckVisitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interfac
 }
 
 func (v *typeCheckVisitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
-	fmt.Println("curclass:", v.curClass)
 	return v.curClass
 }
 
