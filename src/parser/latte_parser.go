@@ -119,8 +119,8 @@ func latteParserInit() {
 		0, 0, 121, 122, 1, 0, 0, 0, 122, 124, 1, 0, 0, 0, 123, 121, 1, 0, 0, 0,
 		124, 125, 5, 8, 0, 0, 125, 178, 1, 0, 0, 0, 126, 127, 3, 14, 7, 0, 127,
 		128, 5, 12, 0, 0, 128, 129, 3, 24, 12, 0, 129, 130, 5, 8, 0, 0, 130, 178,
-		1, 0, 0, 0, 131, 132, 3, 24, 12, 0, 132, 133, 5, 13, 0, 0, 133, 134, 5,
-		8, 0, 0, 134, 178, 1, 0, 0, 0, 135, 136, 3, 24, 12, 0, 136, 137, 5, 14,
+		1, 0, 0, 0, 131, 132, 3, 14, 7, 0, 132, 133, 5, 13, 0, 0, 133, 134, 5,
+		8, 0, 0, 134, 178, 1, 0, 0, 0, 135, 136, 3, 14, 7, 0, 136, 137, 5, 14,
 		0, 0, 137, 138, 5, 8, 0, 0, 138, 178, 1, 0, 0, 0, 139, 140, 5, 15, 0, 0,
 		140, 141, 3, 24, 12, 0, 141, 142, 5, 8, 0, 0, 142, 178, 1, 0, 0, 0, 143,
 		144, 5, 15, 0, 0, 144, 178, 5, 8, 0, 0, 145, 146, 5, 16, 0, 0, 146, 147,
@@ -131,7 +131,7 @@ func latteParserInit() {
 		159, 160, 5, 18, 0, 0, 160, 161, 5, 1, 0, 0, 161, 162, 3, 24, 12, 0, 162,
 		163, 5, 2, 0, 0, 163, 164, 3, 16, 8, 0, 164, 178, 1, 0, 0, 0, 165, 166,
 		5, 19, 0, 0, 166, 167, 5, 1, 0, 0, 167, 168, 3, 18, 9, 0, 168, 169, 5,
-		48, 0, 0, 169, 170, 5, 20, 0, 0, 170, 171, 5, 48, 0, 0, 171, 172, 5, 2,
+		48, 0, 0, 169, 170, 5, 20, 0, 0, 170, 171, 3, 24, 12, 0, 171, 172, 5, 2,
 		0, 0, 172, 173, 3, 16, 8, 0, 173, 178, 1, 0, 0, 0, 174, 175, 3, 24, 12,
 		0, 175, 176, 5, 8, 0, 0, 176, 178, 1, 0, 0, 0, 177, 113, 1, 0, 0, 0, 177,
 		114, 1, 0, 0, 0, 177, 115, 1, 0, 0, 0, 177, 126, 1, 0, 0, 0, 177, 131,
@@ -147,8 +147,8 @@ func latteParserInit() {
 		0, 194, 193, 1, 0, 0, 0, 195, 21, 1, 0, 0, 0, 196, 201, 5, 48, 0, 0, 197,
 		198, 5, 48, 0, 0, 198, 199, 5, 12, 0, 0, 199, 201, 3, 24, 12, 0, 200, 196,
 		1, 0, 0, 0, 200, 197, 1, 0, 0, 0, 201, 23, 1, 0, 0, 0, 202, 203, 6, 12,
-		-1, 0, 203, 204, 5, 26, 0, 0, 204, 246, 3, 24, 12, 19, 205, 206, 5, 27,
-		0, 0, 206, 246, 3, 24, 12, 18, 207, 208, 5, 30, 0, 0, 208, 215, 3, 20,
+		-1, 0, 203, 204, 5, 26, 0, 0, 204, 246, 3, 24, 12, 17, 205, 206, 5, 27,
+		0, 0, 206, 246, 3, 24, 12, 16, 207, 208, 5, 30, 0, 0, 208, 215, 3, 20,
 		10, 0, 209, 210, 5, 10, 0, 0, 210, 211, 3, 24, 12, 0, 211, 212, 5, 11,
 		0, 0, 212, 214, 1, 0, 0, 0, 213, 209, 1, 0, 0, 0, 214, 217, 1, 0, 0, 0,
 		215, 213, 1, 0, 0, 0, 215, 216, 1, 0, 0, 0, 216, 246, 1, 0, 0, 0, 217,
@@ -165,16 +165,16 @@ func latteParserInit() {
 		207, 1, 0, 0, 0, 245, 218, 1, 0, 0, 0, 245, 219, 1, 0, 0, 0, 245, 220,
 		1, 0, 0, 0, 245, 221, 1, 0, 0, 0, 245, 222, 1, 0, 0, 0, 245, 223, 1, 0,
 		0, 0, 245, 236, 1, 0, 0, 0, 245, 237, 1, 0, 0, 0, 245, 241, 1, 0, 0, 0,
-		246, 275, 1, 0, 0, 0, 247, 248, 10, 17, 0, 0, 248, 249, 3, 28, 14, 0, 249,
-		250, 3, 24, 12, 18, 250, 274, 1, 0, 0, 0, 251, 252, 10, 16, 0, 0, 252,
-		253, 3, 26, 13, 0, 253, 254, 3, 24, 12, 17, 254, 274, 1, 0, 0, 0, 255,
-		256, 10, 15, 0, 0, 256, 257, 3, 30, 15, 0, 257, 258, 3, 24, 12, 16, 258,
-		274, 1, 0, 0, 0, 259, 260, 10, 14, 0, 0, 260, 261, 5, 28, 0, 0, 261, 274,
-		3, 24, 12, 14, 262, 263, 10, 13, 0, 0, 263, 264, 5, 29, 0, 0, 264, 274,
-		3, 24, 12, 13, 265, 266, 10, 11, 0, 0, 266, 267, 5, 9, 0, 0, 267, 274,
-		3, 24, 12, 12, 268, 269, 10, 10, 0, 0, 269, 270, 5, 10, 0, 0, 270, 271,
+		246, 275, 1, 0, 0, 0, 247, 248, 10, 19, 0, 0, 248, 249, 5, 9, 0, 0, 249,
+		274, 3, 24, 12, 20, 250, 251, 10, 15, 0, 0, 251, 252, 3, 28, 14, 0, 252,
+		253, 3, 24, 12, 16, 253, 274, 1, 0, 0, 0, 254, 255, 10, 14, 0, 0, 255,
+		256, 3, 26, 13, 0, 256, 257, 3, 24, 12, 15, 257, 274, 1, 0, 0, 0, 258,
+		259, 10, 13, 0, 0, 259, 260, 3, 30, 15, 0, 260, 261, 3, 24, 12, 14, 261,
+		274, 1, 0, 0, 0, 262, 263, 10, 12, 0, 0, 263, 264, 5, 28, 0, 0, 264, 274,
+		3, 24, 12, 12, 265, 266, 10, 11, 0, 0, 266, 267, 5, 29, 0, 0, 267, 274,
+		3, 24, 12, 11, 268, 269, 10, 18, 0, 0, 269, 270, 5, 10, 0, 0, 270, 271,
 		3, 24, 12, 0, 271, 272, 5, 11, 0, 0, 272, 274, 1, 0, 0, 0, 273, 247, 1,
-		0, 0, 0, 273, 251, 1, 0, 0, 0, 273, 255, 1, 0, 0, 0, 273, 259, 1, 0, 0,
+		0, 0, 0, 273, 250, 1, 0, 0, 0, 273, 254, 1, 0, 0, 0, 273, 258, 1, 0, 0,
 		0, 273, 262, 1, 0, 0, 0, 273, 265, 1, 0, 0, 0, 273, 268, 1, 0, 0, 0, 274,
 		277, 1, 0, 0, 0, 275, 273, 1, 0, 0, 0, 275, 276, 1, 0, 0, 0, 276, 25, 1,
 		0, 0, 0, 277, 275, 1, 0, 0, 0, 278, 279, 7, 0, 0, 0, 279, 27, 1, 0, 0,
@@ -2707,12 +2707,24 @@ func (s *SForContext) Type_() IType_Context {
 	return t.(IType_Context)
 }
 
-func (s *SForContext) AllID() []antlr.TerminalNode {
-	return s.GetTokens(LatteParserID)
+func (s *SForContext) ID() antlr.TerminalNode {
+	return s.GetToken(LatteParserID, 0)
 }
 
-func (s *SForContext) ID(i int) antlr.TerminalNode {
-	return s.GetToken(LatteParserID, i)
+func (s *SForContext) Expr() IExprContext {
+	var t antlr.RuleContext
+	for _, ctx := range s.GetChildren() {
+		if _, ok := ctx.(IExprContext); ok {
+			t = ctx.(antlr.RuleContext)
+			break
+		}
+	}
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IExprContext)
 }
 
 func (s *SForContext) Stmt() IStmtContext {
@@ -2771,10 +2783,10 @@ func (s *SDecrContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *SDecrContext) Expr() IExprContext {
+func (s *SDecrContext) Lvalue() ILvalueContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IExprContext); ok {
+		if _, ok := ctx.(ILvalueContext); ok {
 			t = ctx.(antlr.RuleContext)
 			break
 		}
@@ -2784,7 +2796,7 @@ func (s *SDecrContext) Expr() IExprContext {
 		return nil
 	}
 
-	return t.(IExprContext)
+	return t.(ILvalueContext)
 }
 
 func (s *SDecrContext) EnterRule(listener antlr.ParseTreeListener) {
@@ -2827,10 +2839,10 @@ func (s *SIncrContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *SIncrContext) Expr() IExprContext {
+func (s *SIncrContext) Lvalue() ILvalueContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
-		if _, ok := ctx.(IExprContext); ok {
+		if _, ok := ctx.(ILvalueContext); ok {
 			t = ctx.(antlr.RuleContext)
 			break
 		}
@@ -2840,7 +2852,7 @@ func (s *SIncrContext) Expr() IExprContext {
 		return nil
 	}
 
-	return t.(IExprContext)
+	return t.(ILvalueContext)
 }
 
 func (s *SIncrContext) EnterRule(listener antlr.ParseTreeListener) {
@@ -3007,7 +3019,7 @@ func (p *LatteParser) Stmt() (localctx IStmtContext) {
 		p.EnterOuterAlt(localctx, 5)
 		{
 			p.SetState(131)
-			p.expr(0)
+			p.Lvalue()
 		}
 		{
 			p.SetState(132)
@@ -3023,7 +3035,7 @@ func (p *LatteParser) Stmt() (localctx IStmtContext) {
 		p.EnterOuterAlt(localctx, 6)
 		{
 			p.SetState(135)
-			p.expr(0)
+			p.Lvalue()
 		}
 		{
 			p.SetState(136)
@@ -3167,7 +3179,7 @@ func (p *LatteParser) Stmt() (localctx IStmtContext) {
 		}
 		{
 			p.SetState(170)
-			p.Match(LatteParserID)
+			p.expr(0)
 		}
 		{
 			p.SetState(171)
@@ -5263,7 +5275,7 @@ func (p *LatteParser) expr(_p int) (localctx IExprContext) {
 		}
 		{
 			p.SetState(204)
-			p.expr(19)
+			p.expr(17)
 		}
 
 	case 2:
@@ -5276,7 +5288,7 @@ func (p *LatteParser) expr(_p int) (localctx IExprContext) {
 		}
 		{
 			p.SetState(206)
-			p.expr(18)
+			p.expr(16)
 		}
 
 	case 3:
@@ -5470,92 +5482,92 @@ func (p *LatteParser) expr(_p int) (localctx IExprContext) {
 			p.GetErrorHandler().Sync(p)
 			switch p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 19, p.GetParserRuleContext()) {
 			case 1:
-				localctx = NewEMulOpContext(p, NewExprContext(p, _parentctx, _parentState))
+				localctx = NewEFieldAccessContext(p, NewExprContext(p, _parentctx, _parentState))
 				p.PushNewRecursionContext(localctx, _startState, LatteParserRULE_expr)
 				p.SetState(247)
 
-				if !(p.Precpred(p.GetParserRuleContext(), 17)) {
-					panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 17)", ""))
+				if !(p.Precpred(p.GetParserRuleContext(), 19)) {
+					panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 19)", ""))
 				}
 				{
 					p.SetState(248)
-					p.MulOp()
+					p.Match(LatteParserT__8)
 				}
 				{
 					p.SetState(249)
-					p.expr(18)
+					p.expr(20)
 				}
 
 			case 2:
-				localctx = NewEAddOpContext(p, NewExprContext(p, _parentctx, _parentState))
+				localctx = NewEMulOpContext(p, NewExprContext(p, _parentctx, _parentState))
 				p.PushNewRecursionContext(localctx, _startState, LatteParserRULE_expr)
-				p.SetState(251)
-
-				if !(p.Precpred(p.GetParserRuleContext(), 16)) {
-					panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 16)", ""))
-				}
-				{
-					p.SetState(252)
-					p.AddOp()
-				}
-				{
-					p.SetState(253)
-					p.expr(17)
-				}
-
-			case 3:
-				localctx = NewERelOpContext(p, NewExprContext(p, _parentctx, _parentState))
-				p.PushNewRecursionContext(localctx, _startState, LatteParserRULE_expr)
-				p.SetState(255)
+				p.SetState(250)
 
 				if !(p.Precpred(p.GetParserRuleContext(), 15)) {
 					panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 15)", ""))
 				}
 				{
-					p.SetState(256)
-					p.RelOp()
+					p.SetState(251)
+					p.MulOp()
 				}
 				{
-					p.SetState(257)
+					p.SetState(252)
 					p.expr(16)
 				}
 
-			case 4:
-				localctx = NewEAndContext(p, NewExprContext(p, _parentctx, _parentState))
+			case 3:
+				localctx = NewEAddOpContext(p, NewExprContext(p, _parentctx, _parentState))
 				p.PushNewRecursionContext(localctx, _startState, LatteParserRULE_expr)
-				p.SetState(259)
+				p.SetState(254)
 
 				if !(p.Precpred(p.GetParserRuleContext(), 14)) {
 					panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 14)", ""))
 				}
 				{
-					p.SetState(260)
-					p.Match(LatteParserT__27)
+					p.SetState(255)
+					p.AddOp()
 				}
 				{
-					p.SetState(261)
-					p.expr(14)
+					p.SetState(256)
+					p.expr(15)
 				}
 
-			case 5:
-				localctx = NewEOrContext(p, NewExprContext(p, _parentctx, _parentState))
+			case 4:
+				localctx = NewERelOpContext(p, NewExprContext(p, _parentctx, _parentState))
 				p.PushNewRecursionContext(localctx, _startState, LatteParserRULE_expr)
-				p.SetState(262)
+				p.SetState(258)
 
 				if !(p.Precpred(p.GetParserRuleContext(), 13)) {
 					panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 13)", ""))
 				}
 				{
+					p.SetState(259)
+					p.RelOp()
+				}
+				{
+					p.SetState(260)
+					p.expr(14)
+				}
+
+			case 5:
+				localctx = NewEAndContext(p, NewExprContext(p, _parentctx, _parentState))
+				p.PushNewRecursionContext(localctx, _startState, LatteParserRULE_expr)
+				p.SetState(262)
+
+				if !(p.Precpred(p.GetParserRuleContext(), 12)) {
+					panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 12)", ""))
+				}
+				{
 					p.SetState(263)
-					p.Match(LatteParserT__28)
+					p.Match(LatteParserT__27)
 				}
 				{
 					p.SetState(264)
-					p.expr(13)
+					p.expr(12)
 				}
 
 			case 6:
-				localctx = NewEFieldAccessContext(p, NewExprContext(p, _parentctx, _parentState))
+				localctx = NewEOrContext(p, NewExprContext(p, _parentctx, _parentState))
 				p.PushNewRecursionContext(localctx, _startState, LatteParserRULE_expr)
 				p.SetState(265)
 
@@ -5564,11 +5576,11 @@ func (p *LatteParser) expr(_p int) (localctx IExprContext) {
 				}
 				{
 					p.SetState(266)
-					p.Match(LatteParserT__8)
+					p.Match(LatteParserT__28)
 				}
 				{
 					p.SetState(267)
-					p.expr(12)
+					p.expr(11)
 				}
 
 			case 7:
@@ -5576,8 +5588,8 @@ func (p *LatteParser) expr(_p int) (localctx IExprContext) {
 				p.PushNewRecursionContext(localctx, _startState, LatteParserRULE_expr)
 				p.SetState(268)
 
-				if !(p.Precpred(p.GetParserRuleContext(), 10)) {
-					panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 10)", ""))
+				if !(p.Precpred(p.GetParserRuleContext(), 18)) {
+					panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 18)", ""))
 				}
 				{
 					p.SetState(269)
@@ -5964,25 +5976,25 @@ func (p *LatteParser) Expr_Sempred(localctx antlr.RuleContext, predIndex int) bo
 
 	switch predIndex {
 	case 1:
-		return p.Precpred(p.GetParserRuleContext(), 17)
+		return p.Precpred(p.GetParserRuleContext(), 19)
 
 	case 2:
-		return p.Precpred(p.GetParserRuleContext(), 16)
-
-	case 3:
 		return p.Precpred(p.GetParserRuleContext(), 15)
 
-	case 4:
+	case 3:
 		return p.Precpred(p.GetParserRuleContext(), 14)
 
-	case 5:
+	case 4:
 		return p.Precpred(p.GetParserRuleContext(), 13)
+
+	case 5:
+		return p.Precpred(p.GetParserRuleContext(), 12)
 
 	case 6:
 		return p.Precpred(p.GetParserRuleContext(), 11)
 
 	case 7:
-		return p.Precpred(p.GetParserRuleContext(), 10)
+		return p.Precpred(p.GetParserRuleContext(), 18)
 
 	default:
 		panic("No predicate with index: " + fmt.Sprint(predIndex))

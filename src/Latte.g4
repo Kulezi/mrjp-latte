@@ -26,14 +26,14 @@ stmt:
 	| block									# SBlockStmt
 	| type_ item ( ',' item)* ';'			# SDecl
 	| lvalue '=' expr ';'					# SAss
-	| expr '++' ';'							# SIncr
-	| expr '--' ';'							# SDecr
+	| lvalue '++' ';'						# SIncr
+	| lvalue '--' ';'						# SDecr
 	| 'return' expr ';'						# SRet
 	| 'return' ';'							# SVRet
 	| 'if' '(' expr ')' stmt				# SCond
 	| 'if' '(' expr ')' stmt 'else' stmt	# SCondElse
 	| 'while' '(' expr ')' stmt				# SWhile
-	| 'for' '(' type_ ID ':' ID ')' stmt	# SFor
+	| 'for' '(' type_ ID ':' expr ')' stmt	# SFor
 	| expr ';'								# SExp;
 
 type_: type_ '[]' # TArray | singular_type_ # TSingular;
@@ -48,7 +48,9 @@ singular_type_:
 item: ID | ID '=' expr;
 
 expr:
-	'-' expr								# ENegOp
+	expr '.' expr							# EFieldAccess
+	| expr '[' expr ']'						# EArrayRef
+	| '-' expr								# ENegOp
 	| '!' expr								# ENotOp
 	| expr mulOp expr						# EMulOp
 	| expr addOp expr						# EAddOp
@@ -56,8 +58,6 @@ expr:
 	| <assoc = right> expr '&&' expr		# EAnd
 	| <assoc = right> expr '||' expr		# EOr
 	| 'new' singular_type_ ('[' expr ']')*	# ENew
-	| expr '.' expr							# EFieldAccess
-	| expr '[' expr ']'						# EArrayRef
 	| 'self'								# ESelf
 	| ID									# EId
 	| INT									# EInt

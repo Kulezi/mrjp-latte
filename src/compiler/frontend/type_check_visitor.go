@@ -3,6 +3,7 @@ package frontend
 import (
 	"fmt"
 	"latte/parser"
+	"strconv"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 )
@@ -18,6 +19,7 @@ type typeCheckVisitor struct {
 	depth        int
 	dropperStack []varDropper
 	curClass     *TClass
+	curFun       *TFun
 }
 
 func makeTypeCheckVisitor(s *state) *typeCheckVisitor {
@@ -144,12 +146,22 @@ func (v *typeCheckVisitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 		panic(fmt.Sprintf("typecheck: identifier %s is not a function/method, at %s", ident, posFromToken(ctx.GetStart())))
 	}
 
+	if _, ok := signature.Result.(TClassRef); ok {
+		if _, ok := v.TypeOfGlobal(signature.Result.String()); !ok {
+			return UnknownClassError{
+				Type: signature.Result,
+			}
+		}
+	}
+
 	v.depth++
 	for _, arg := range signature.Args {
 		defer v.ShadowLocal(arg.Ident, arg.Type)()
 	}
 	v.depth--
 
+	v.curFun = &signature
+	defer func() { v.curFun = nil }()
 	return v.Visit(ctx.Block())
 }
 
@@ -203,7 +215,7 @@ func (v *typeCheckVisitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefConte
 }
 
 func (v *typeCheckVisitor) VisitClassFieldDef(ctx *parser.ClassFieldDefContext) interface{} {
-	return nil
+	return v.Visit(ctx.Type_())
 }
 
 func (v *typeCheckVisitor) VisitClassMethodDef(ctx *parser.ClassMethodDefContext) interface{} {
@@ -243,6 +255,12 @@ func (v *typeCheckVisitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 	}
 
 	typ := t.(Type)
+	if sameType(TVoid{}, typ) {
+		return VoidDeclarationError{
+			Ctx: ctx,
+		}
+	}
+
 	for _, item := range ctx.AllItem() {
 		item, ok := item.(*parser.ItemContext)
 		if !ok {
@@ -317,17 +335,163 @@ func (v *typeCheckVisitor) VisitLVId(ctx *parser.LVIdContext) interface{} {
 }
 
 func (v *typeCheckVisitor) VisitSAss(ctx *parser.SAssContext) interface{} {
-	res := v.Visit(ctx.Lvalue())
-	if err, ok := res.(error); ok {
+	t, err := v.evalLVType(ctx.Lvalue())
+	if err != nil {
+		return err
+	}
+	return v.ExpectType(t, ctx.Expr())
+}
+
+func (v *typeCheckVisitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
+	t, err := v.evalLVType(ctx.Lvalue())
+	if err != nil {
 		return err
 	}
 
-	t := res.(Type)
-	return v.ExpectType(t, ctx.Expr())
+	if !sameType(t, TInt{}) {
+		return UnexpectedTypeError{
+			Expr:     ctx,
+			Expected: TInt{},
+			Got:      t,
+		}
+	}
+
+	return nil
+}
+
+func (v *typeCheckVisitor) VisitSDecr(ctx *parser.SDecrContext) interface{} {
+	t, err := v.evalLVType(ctx.Lvalue())
+	if err != nil {
+		return err
+	}
+
+	if !sameType(t, TInt{}) {
+		return UnexpectedTypeError{
+			Expr:     ctx,
+			Expected: TInt{},
+			Got:      t,
+		}
+	}
+
+	return nil
+}
+
+func (v *typeCheckVisitor) VisitSRet(ctx *parser.SRetContext) interface{} {
+	return v.ExpectType(v.curFun.Result, ctx.Expr())
+}
+
+func (v *typeCheckVisitor) VisitSVRet(ctx *parser.SVRetContext) interface{} {
+	if !sameType(v.curFun.Result, TVoid{}) {
+		return MissingReturnValueError{
+			Ctx:      ctx,
+			Expected: v.curFun.Result,
+		}
+	}
+	return nil
+}
+
+func (v *typeCheckVisitor) VisitSCond(ctx *parser.SCondContext) interface{} {
+	t, err := v.evalType(ctx.Expr())
+	if err != nil {
+		return err
+	}
+
+	_, ok := t.(TBool)
+	if !ok {
+		return UnexpectedTypeError{
+			Expr:     ctx,
+			Expected: TBool{},
+			Got:      t,
+		}
+	}
+
+	return v.Visit(ctx.Stmt())
+}
+
+func (v *typeCheckVisitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
+	t, err := v.evalType(ctx.Expr())
+	if err != nil {
+		return err
+	}
+
+	_, ok := t.(TBool)
+	if !ok {
+		return UnexpectedTypeError{
+			Expr:     ctx,
+			Expected: TBool{},
+			Got:      t,
+		}
+	}
+
+	r1 := v.Visit(ctx.Stmt(0))
+	if err, ok := r1.(error); ok {
+		return err
+	}
+	return v.Visit(ctx.Stmt(1))
+}
+
+func (v *typeCheckVisitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
+	t, err := v.evalType(ctx.Expr())
+	if err != nil {
+		return err
+	}
+
+	_, ok := t.(TBool)
+	if !ok {
+		return UnexpectedTypeError{
+			Expr:     ctx,
+			Expected: TBool{},
+			Got:      t,
+		}
+	}
+
+	return v.Visit(ctx.Stmt())
+}
+
+func (v *typeCheckVisitor) VisitSFor(ctx *parser.SForContext) interface{} {
+	typ := v.Visit(ctx.Type_())
+	if err, ok := typ.(error); ok {
+		return err
+	}
+
+	t := typ.(Type)
+
+	arrType, err := v.evalType(ctx.Expr())
+	if err != nil {
+		return err
+	}
+
+	arr, ok := arrType.(TArray)
+	if !ok {
+		return NotAnArrayError{
+			Ctx:   ctx,
+			Ident: ctx.ID(),
+		}
+	}
+
+	if !sameType(t, arr.Elem) && !v.isSubClass(t, arr.Elem) {
+		return UnexpectedTypeError{
+			Expr:     ctx,
+			Expected: arr.Elem,
+			Got:      t,
+		}
+	}
+
+	defer v.ShadowLocal(ctx.ID().GetText(), arr.Elem)()
+	return v.Visit(ctx.Stmt())
 }
 
 func (v *typeCheckVisitor) VisitSExp(ctx *parser.SExpContext) interface{} {
 	return v.Visit(ctx.Expr())
+}
+
+func (v *typeCheckVisitor) evalLVType(ctx parser.ILvalueContext) (Type, error) {
+	res := v.Visit(ctx)
+	if err, ok := res.(error); ok {
+		return nil, err
+	}
+
+	return res.(Type), nil
 }
 
 func (v *typeCheckVisitor) evalType(tree parser.IExprContext) (Type, error) {
@@ -353,7 +517,20 @@ func (v *typeCheckVisitor) VisitENotOp(ctx *parser.ENotOpContext) interface{} {
 	if err != nil {
 		return err
 	}
-	return TBool{ctx.GetStart()}
+
+	t, _ := v.evalType(ctx.Expr())
+	cv, ok := t.ConstValue()
+	if ok {
+		cv := !cv.(bool)
+		return TBool{
+			StartToken: ctx.GetStart(),
+			constValue: &cv,
+		}
+	}
+
+	return TBool{
+		StartToken: ctx.GetStart(),
+	}
 }
 
 func (v *typeCheckVisitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
@@ -361,7 +538,20 @@ func (v *typeCheckVisitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
 	if err != nil {
 		return err
 	}
-	return TInt{ctx.GetStart()}
+
+	t, _ := v.evalType(ctx.Expr())
+	cv, ok := t.ConstValue()
+	if ok {
+		cv := -cv.(int)
+		return TInt{
+			StartToken: ctx.GetStart(),
+			constValue: &cv,
+		}
+	}
+
+	return TInt{
+		StartToken: ctx.GetStart(),
+	}
 }
 
 func (v *typeCheckVisitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
@@ -391,7 +581,10 @@ func (v *typeCheckVisitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
 		}
 	}
 
-	return t1
+	return TInt{
+		StartToken: ctx.GetStart(),
+		constValue: evalConstIntBinOp(ctx.MulOp().GetText(), t1, t2),
+	}
 }
 
 func (v *typeCheckVisitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
@@ -426,10 +619,59 @@ func (v *typeCheckVisitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
 		}
 	}
 
-	return t1
+	switch t1.(type) {
+	case TInt:
+		return TInt{
+			StartToken: ctx.GetStart(),
+			constValue: evalConstIntBinOp(ctx.AddOp().GetText(), t1, t2),
+		}
+	case TString:
+		return TString{
+			StartToken: ctx.GetStart(),
+			constValue: evalConstStringBinOp(ctx.AddOp().GetText(), t1, t2),
+		}
+	default:
+		panic("unexpected addOp type")
+	}
 }
 
 func (v *typeCheckVisitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
+	t1, err := v.evalType(ctx.Expr(0))
+	if err != nil {
+		return err
+	}
+
+	t2, err := v.evalType(ctx.Expr(1))
+	if err != nil {
+		return err
+	}
+
+	if !sameType(t1, t2) && !(v.isSubClass(t1, t2) || v.isSubClass(t2, t1)) {
+		return ArgTypeMismatchError{
+			Expr:  ctx,
+			Type1: t1,
+			Type2: t2,
+		}
+	}
+
+	switch ctx.RelOp().GetText() {
+	case "<", ">", "<=", ">=":
+		if _, ok := validInequalityOpArg[t1.String()]; !ok {
+			return InvalidOpArgsError{
+				Expr:       ctx,
+				Type:       t1,
+				ValidTypes: validInequalityOpArg,
+			}
+		}
+	}
+
+	return TBool{
+		StartToken: ctx.GetStart(),
+		constValue: evalConstBoolBinOp(ctx.RelOp().GetText(), t1, t2),
+	}
+}
+
+func (v *typeCheckVisitor) VisitEAnd(ctx *parser.EAndContext) interface{} {
 	t1, err := v.evalType(ctx.Expr(0))
 	if err != nil {
 		return err
@@ -448,35 +690,45 @@ func (v *typeCheckVisitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
 		}
 	}
 
-	if _, ok := validRelOpArg[t1.String()]; !ok {
-		return InvalidOpArgsError{
-			Expr:       ctx,
-			Type:       t1,
-			ValidTypes: validRelOpArg,
-		}
-	}
-
-	return TBool{ctx.GetStart()}
-}
-
-func (v *typeCheckVisitor) VisitEAnd(ctx *parser.EAndContext) interface{} {
 	for _, e := range ctx.AllExpr() {
 		if err := v.ExpectType(TBool{}, e); err != nil {
 			return err
 		}
 	}
-
-	return TBool{ctx.GetStart()}
+	return TBool{
+		StartToken: ctx.GetStart(),
+		constValue: evalConstBoolBinOp("&&", t1, t2),
+	}
 }
 
 func (v *typeCheckVisitor) VisitEOr(ctx *parser.EOrContext) interface{} {
+	t1, err := v.evalType(ctx.Expr(0))
+	if err != nil {
+		return err
+	}
+
+	t2, err := v.evalType(ctx.Expr(1))
+	if err != nil {
+		return err
+	}
+
+	if !sameType(t1, t2) {
+		return ArgTypeMismatchError{
+			Expr:  ctx,
+			Type1: t1,
+			Type2: t2,
+		}
+	}
+
 	for _, e := range ctx.AllExpr() {
 		if err := v.ExpectType(TBool{}, e); err != nil {
 			return err
 		}
 	}
-
-	return TBool{ctx.GetStart()}
+	return TBool{
+		StartToken: ctx.GetStart(),
+		constValue: evalConstBoolBinOp("||", t1, t2),
+	}
 }
 
 func (v *typeCheckVisitor) VisitENew(ctx *parser.ENewContext) interface{} {
@@ -546,6 +798,7 @@ func (v *typeCheckVisitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interfac
 }
 
 func (v *typeCheckVisitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
+	fmt.Println("curclass:", v.curClass)
 	return v.curClass
 }
 
@@ -559,19 +812,39 @@ func (v *typeCheckVisitor) VisitEId(ctx *parser.EIdContext) interface{} {
 }
 
 func (v *typeCheckVisitor) VisitEInt(ctx *parser.EIntContext) interface{} {
-	return TInt{ctx.GetStart()}
+	n, err := strconv.Atoi(ctx.INT().GetText())
+	if err != nil {
+		return err
+	}
+
+	return TInt{
+		StartToken: ctx.GetStart(),
+		constValue: &n,
+	}
 }
 
 func (v *typeCheckVisitor) VisitETrue(ctx *parser.ETrueContext) interface{} {
-	return TBool{ctx.GetStart()}
+	b := true
+	return TBool{
+		StartToken: ctx.GetStart(),
+		constValue: &b,
+	}
 }
 
 func (v *typeCheckVisitor) VisitEFalse(ctx *parser.EFalseContext) interface{} {
-	return TBool{ctx.GetStart()}
+	b := false
+	return TBool{
+		StartToken: ctx.GetStart(),
+		constValue: &b,
+	}
 }
 
 func (v *typeCheckVisitor) VisitEStr(ctx *parser.EStrContext) interface{} {
-	return TString{ctx.GetStart()}
+	s := ctx.STR().GetText()
+	return TString{
+		StartToken: ctx.GetStart(),
+		constValue: &s,
+	}
 }
 
 func (v *typeCheckVisitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
@@ -650,7 +923,9 @@ func (v *typeCheckVisitor) VisitTClass(ctx *parser.TClassContext) interface{} {
 	t, ok := v.TypeOfGlobal(ident)
 	if !ok {
 		return UnknownClassError{
-			Type: t,
+			Type: TClassRef{
+				ID: ctx.ID(),
+			},
 		}
 	}
 

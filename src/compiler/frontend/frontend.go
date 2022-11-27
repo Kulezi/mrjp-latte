@@ -1,6 +1,7 @@
 package frontend
 
 import (
+	"fmt"
 	"latte/parser"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
@@ -56,6 +57,18 @@ func (s *state) semanticCheck() error {
 
 	if err = s.evalGlobalSignatures(); err != nil {
 		return err
+	}
+
+	if main, ok := s.signatures.Globals["main"]; !ok {
+		return fmt.Errorf("missing main function")
+	} else if !sameType(main.Type, TFun{Ident: "main", Result: TInt{}}) {
+		return fmt.Errorf(`
+main should have signature
+	int main()
+but has
+	%s`,
+			main.Type,
+		)
 	}
 
 	if err = s.signatures.inheritClasses(); err != nil {

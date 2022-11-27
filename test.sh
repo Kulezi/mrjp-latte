@@ -14,6 +14,7 @@ if [ $? -eq 0 ]; then
     printf "${GREEN}make succeeded${RESET}\n"
 else 
     printf "${RED}make failed${RESET}\n"
+    exit 1
 fi
 
 PASSED_GOOD=0

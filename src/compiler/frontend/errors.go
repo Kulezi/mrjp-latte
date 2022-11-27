@@ -76,7 +76,7 @@ func (e UnknownClassError) Error() string {
 }
 
 type UnexpectedTypeError struct {
-	Expr     parser.IExprContext
+	Expr     antlr.ParserRuleContext
 	Expected Type
 	Got      Type
 }
@@ -287,5 +287,63 @@ func (e NotAFunctionError) Error() string {
 	%s`,
 		posFromToken(e.Ident.GetSymbol()),
 		e.Type,
+	)
+}
+
+type VoidDeclarationError struct {
+	Ctx antlr.ParserRuleContext
+}
+
+func (e VoidDeclarationError) Error() string {
+	return fmt.Sprintf(
+		`found void declaration statement 
+	%s
+	at %s`,
+		e.Ctx.GetText(),
+		posFromToken(e.Ctx.GetStart()),
+	)
+}
+
+type VoidUsedAsValueError struct {
+	Ctx antlr.ParserRuleContext
+}
+
+func (e VoidUsedAsValueError) Error() string {
+	return fmt.Sprintf(
+		`void used as value
+	at %s`,
+		posFromToken(e.Ctx.GetStart()),
+	)
+}
+
+type MissingReturnValueError struct {
+	Ctx      antlr.ParserRuleContext
+	Expected Type
+}
+
+func (e MissingReturnValueError) Error() string {
+	return fmt.Sprintf(
+		`missing return value
+	at %s
+expected a value of type
+	%s`,
+		posFromToken(e.Ctx.GetStart()),
+		e.Expected,
+	)
+}
+
+type NotAnArrayError struct {
+	Ctx   antlr.ParserRuleContext
+	Ident antlr.TerminalNode
+}
+
+func (e NotAnArrayError) Error() string {
+	return fmt.Sprintf(
+		`expected identifier
+	%s
+	at %s
+to be an array`,
+		e.Ident.GetText(),
+		posFromToken(e.Ctx.GetStart()),
 	)
 }
