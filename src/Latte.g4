@@ -10,9 +10,9 @@ classdef:
 	'class' ID '{' field* '}'					# BaseClassDef
 	| 'class' ID 'extends' ID '{' field* '}'	# DerivedClassDef;
 
-arg: type_ ID ( ',' type_ ID)*;
+arg: nvtype_ ID ( ',' nvtype_ ID)*;
 
-field: type_ ID ';' # ClassFieldDef | fundef # ClassMethodDef;
+field: nvtype_ ID ';' # ClassFieldDef | fundef # ClassMethodDef;
 
 block: '{' stmt* '}';
 
@@ -24,7 +24,7 @@ lvalue:
 stmt:
 	';'										# SEmpty
 	| block									# SBlockStmt
-	| type_ item ( ',' item)* ';'			# SDecl
+	| nvtype_ item ( ',' item)* ';'			# SDecl
 	| lvalue '=' expr ';'					# SAss
 	| lvalue '++' ';'						# SIncr
 	| lvalue '--' ';'						# SDecr
@@ -36,37 +36,41 @@ stmt:
 	| 'for' '(' type_ ID ':' expr ')' stmt	# SFor
 	| expr ';'								# SExp;
 
-type_: type_ '[]' # TArray | singular_type_ # TSingular;
+type_: nvtype_ # TNonVoid | 'void' # TVoid;
+
+nvtype_:
+	singular_type_ '[]'	# TArray
+	| singular_type_	# TSingular;
 
 singular_type_:
 	ID			# TClass
 	| 'int'		# TInt
 	| 'string'	# TStr
-	| 'boolean'	# TBool
-	| 'void'	# TVoid;
+	| 'boolean'	# TBool;
 
 item: ID | ID '=' expr;
 
 expr:
-	expr '.' expr							# EFieldAccess
-	| expr '[' expr ']'						# EArrayRef
-	| '-' expr								# ENegOp
-	| '!' expr								# ENotOp
-	| expr mulOp expr						# EMulOp
-	| expr addOp expr						# EAddOp
-	| expr relOp expr						# ERelOp
-	| <assoc = right> expr '&&' expr		# EAnd
-	| <assoc = right> expr '||' expr		# EOr
-	| 'new' singular_type_ ('[' expr ']')*	# ENew
-	| 'self'								# ESelf
-	| ID									# EId
-	| INT									# EInt
-	| 'true'								# ETrue
-	| 'false'								# EFalse
-	| ID '(' ( expr ( ',' expr)*)? ')'		# EFunCall
-	| STR									# EStr
-	| '(' ID ')' 'null'						# ENull
-	| '(' expr ')'							# EParen;
+	expr '.' expr						# EFieldAccess
+	| expr '[' expr ']'					# EArrayRef
+	| '-' expr							# ENegOp
+	| '!' expr							# ENotOp
+	| expr mulOp expr					# EMulOp
+	| expr addOp expr					# EAddOp
+	| expr relOp expr					# ERelOp
+	| <assoc = right> expr '&&' expr	# EAnd
+	| <assoc = right> expr '||' expr	# EOr
+	| 'new' singular_type_ '[' expr ']'	# ENewArray
+	| 'new' singular_type_				# ENew
+	| 'self'							# ESelf
+	| ID								# EId
+	| INT								# EInt
+	| 'true'							# ETrue
+	| 'false'							# EFalse
+	| ID '(' ( expr ( ',' expr)*)? ')'	# EFunCall
+	| STR								# EStr
+	| '(' ID ')' 'null'					# ENull
+	| '(' expr ')'						# EParen;
 
 addOp: '+' | '-';
 

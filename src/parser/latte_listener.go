@@ -83,11 +83,17 @@ type LatteListener interface {
 	// EnterSExp is called when entering the SExp production.
 	EnterSExp(c *SExpContext)
 
-	// EnterTSingular is called when entering the TSingular production.
-	EnterTSingular(c *TSingularContext)
+	// EnterTNonVoid is called when entering the TNonVoid production.
+	EnterTNonVoid(c *TNonVoidContext)
+
+	// EnterTVoid is called when entering the TVoid production.
+	EnterTVoid(c *TVoidContext)
 
 	// EnterTArray is called when entering the TArray production.
 	EnterTArray(c *TArrayContext)
+
+	// EnterTSingular is called when entering the TSingular production.
+	EnterTSingular(c *TSingularContext)
 
 	// EnterTClass is called when entering the TClass production.
 	EnterTClass(c *TClassContext)
@@ -101,9 +107,6 @@ type LatteListener interface {
 	// EnterTBool is called when entering the TBool production.
 	EnterTBool(c *TBoolContext)
 
-	// EnterTVoid is called when entering the TVoid production.
-	EnterTVoid(c *TVoidContext)
-
 	// EnterItem is called when entering the item production.
 	EnterItem(c *ItemContext)
 
@@ -115,6 +118,9 @@ type LatteListener interface {
 
 	// EnterEFunCall is called when entering the EFunCall production.
 	EnterEFunCall(c *EFunCallContext)
+
+	// EnterENewArray is called when entering the ENewArray production.
+	EnterENewArray(c *ENewArrayContext)
 
 	// EnterEArrayRef is called when entering the EArrayRef production.
 	EnterEArrayRef(c *EArrayRefContext)
@@ -248,11 +254,17 @@ type LatteListener interface {
 	// ExitSExp is called when exiting the SExp production.
 	ExitSExp(c *SExpContext)
 
-	// ExitTSingular is called when exiting the TSingular production.
-	ExitTSingular(c *TSingularContext)
+	// ExitTNonVoid is called when exiting the TNonVoid production.
+	ExitTNonVoid(c *TNonVoidContext)
+
+	// ExitTVoid is called when exiting the TVoid production.
+	ExitTVoid(c *TVoidContext)
 
 	// ExitTArray is called when exiting the TArray production.
 	ExitTArray(c *TArrayContext)
+
+	// ExitTSingular is called when exiting the TSingular production.
+	ExitTSingular(c *TSingularContext)
 
 	// ExitTClass is called when exiting the TClass production.
 	ExitTClass(c *TClassContext)
@@ -266,9 +278,6 @@ type LatteListener interface {
 	// ExitTBool is called when exiting the TBool production.
 	ExitTBool(c *TBoolContext)
 
-	// ExitTVoid is called when exiting the TVoid production.
-	ExitTVoid(c *TVoidContext)
-
 	// ExitItem is called when exiting the item production.
 	ExitItem(c *ItemContext)
 
@@ -280,6 +289,9 @@ type LatteListener interface {
 
 	// ExitEFunCall is called when exiting the EFunCall production.
 	ExitEFunCall(c *EFunCallContext)
+
+	// ExitENewArray is called when exiting the ENewArray production.
+	ExitENewArray(c *ENewArrayContext)
 
 	// ExitEArrayRef is called when exiting the EArrayRef production.
 	ExitEArrayRef(c *EArrayRefContext)

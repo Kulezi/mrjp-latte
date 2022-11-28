@@ -108,11 +108,19 @@ func (v *BaseLatteVisitor) VisitSExp(ctx *SExpContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseLatteVisitor) VisitTSingular(ctx *TSingularContext) interface{} {
+func (v *BaseLatteVisitor) VisitTNonVoid(ctx *TNonVoidContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseLatteVisitor) VisitTVoid(ctx *TVoidContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
 func (v *BaseLatteVisitor) VisitTArray(ctx *TArrayContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseLatteVisitor) VisitTSingular(ctx *TSingularContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
@@ -132,10 +140,6 @@ func (v *BaseLatteVisitor) VisitTBool(ctx *TBoolContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseLatteVisitor) VisitTVoid(ctx *TVoidContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
 func (v *BaseLatteVisitor) VisitItem(ctx *ItemContext) interface{} {
 	return v.VisitChildren(ctx)
 }
@@ -149,6 +153,10 @@ func (v *BaseLatteVisitor) VisitESelf(ctx *ESelfContext) interface{} {
 }
 
 func (v *BaseLatteVisitor) VisitEFunCall(ctx *EFunCallContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseLatteVisitor) VisitENewArray(ctx *ENewArrayContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 

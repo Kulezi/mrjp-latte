@@ -83,11 +83,17 @@ type LatteVisitor interface {
 	// Visit a parse tree produced by LatteParser#SExp.
 	VisitSExp(ctx *SExpContext) interface{}
 
-	// Visit a parse tree produced by LatteParser#TSingular.
-	VisitTSingular(ctx *TSingularContext) interface{}
+	// Visit a parse tree produced by LatteParser#TNonVoid.
+	VisitTNonVoid(ctx *TNonVoidContext) interface{}
+
+	// Visit a parse tree produced by LatteParser#TVoid.
+	VisitTVoid(ctx *TVoidContext) interface{}
 
 	// Visit a parse tree produced by LatteParser#TArray.
 	VisitTArray(ctx *TArrayContext) interface{}
+
+	// Visit a parse tree produced by LatteParser#TSingular.
+	VisitTSingular(ctx *TSingularContext) interface{}
 
 	// Visit a parse tree produced by LatteParser#TClass.
 	VisitTClass(ctx *TClassContext) interface{}
@@ -101,9 +107,6 @@ type LatteVisitor interface {
 	// Visit a parse tree produced by LatteParser#TBool.
 	VisitTBool(ctx *TBoolContext) interface{}
 
-	// Visit a parse tree produced by LatteParser#TVoid.
-	VisitTVoid(ctx *TVoidContext) interface{}
-
 	// Visit a parse tree produced by LatteParser#item.
 	VisitItem(ctx *ItemContext) interface{}
 
@@ -115,6 +118,9 @@ type LatteVisitor interface {
 
 	// Visit a parse tree produced by LatteParser#EFunCall.
 	VisitEFunCall(ctx *EFunCallContext) interface{}
+
+	// Visit a parse tree produced by LatteParser#ENewArray.
+	VisitENewArray(ctx *ENewArrayContext) interface{}
 
 	// Visit a parse tree produced by LatteParser#EArrayRef.
 	VisitEArrayRef(ctx *EArrayRefContext) interface{}
