@@ -13,6 +13,9 @@ type varDropper struct {
 	depth int
 }
 
+type doesReturn struct {
+	always, sometimes bool
+}
 type typeCheckVisitor struct {
 	parser.BaseLatteVisitor
 	state        *state
@@ -166,8 +169,8 @@ func (v *typeCheckVisitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 		return err
 	}
 
-	returns := res.(bool)
-	if !returns && !sameType(TVoid{}, signature.Result) {
+	returns := res.(doesReturn)
+	if !returns.always && !sameType(TVoid{}, signature.Result) {
 		return MissingReturnError{
 			Fun: signature,
 		}
@@ -236,13 +239,16 @@ func (v *typeCheckVisitor) VisitClassMethodDef(ctx *parser.ClassMethodDefContext
 func (v *typeCheckVisitor) VisitBlock(ctx *parser.BlockContext) interface{} {
 	v.depth++
 	defer func() { v.depth-- }()
-	returns := false
+	returns := doesReturn{}
 	for _, stmt := range ctx.AllStmt() {
 		stmtReturns, err := v.evalStmt(stmt)
 		if err != nil {
 			return err
 		}
-		returns = stmtReturns || returns
+		returns = doesReturn{
+			always:    returns.always || stmtReturns.always,
+			sometimes: returns.sometimes || stmtReturns.sometimes,
+		}
 	}
 
 	for len(v.dropperStack) > 0 {
@@ -258,18 +264,22 @@ func (v *typeCheckVisitor) VisitBlock(ctx *parser.BlockContext) interface{} {
 	return returns
 }
 
-func (v *typeCheckVisitor) evalStmt(ctx parser.IStmtContext) (returns bool, err error) {
+func (v *typeCheckVisitor) evalStmt(ctx parser.IStmtContext) (returns doesReturn, err error) {
 	ret := v.Visit(ctx)
 	if err, ok := ret.(error); ok {
-		return false, err
+		return doesReturn{}, err
 	}
 
-	b, ok := ret.(bool)
+	b, ok := ret.(doesReturn)
 	if !ok {
-		panic("all stmt's should evaluate to bool")
+		panic("all stmt's should evaluate to doesReturn")
 	}
 
 	return b, nil
+}
+
+func (v *typeCheckVisitor) VisitSEmpty(ctx *parser.SEmptyContext) interface{} {
+	return doesReturn{}
 }
 
 func (v *typeCheckVisitor) VisitSBlockStmt(ctx *parser.SBlockStmtContext) interface{} {
@@ -313,7 +323,7 @@ func (v *typeCheckVisitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 			depth: v.depth,
 		})
 	}
-	return false
+	return doesReturn{}
 }
 
 func (v *typeCheckVisitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
@@ -370,7 +380,7 @@ func (v *typeCheckVisitor) VisitSAss(ctx *parser.SAssContext) interface{} {
 	if err := v.ExpectType(t, ctx.Expr()); err != nil {
 		return err
 	}
-	return false
+	return doesReturn{}
 }
 
 func (v *typeCheckVisitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
@@ -387,7 +397,7 @@ func (v *typeCheckVisitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
 		}
 	}
 
-	return false
+	return doesReturn{}
 }
 
 func (v *typeCheckVisitor) VisitSDecr(ctx *parser.SDecrContext) interface{} {
@@ -404,14 +414,17 @@ func (v *typeCheckVisitor) VisitSDecr(ctx *parser.SDecrContext) interface{} {
 		}
 	}
 
-	return false
+	return doesReturn{}
 }
 
 func (v *typeCheckVisitor) VisitSRet(ctx *parser.SRetContext) interface{} {
 	if err := v.ExpectType(v.curFun.Result, ctx.Expr()); err != nil {
 		return err
 	}
-	return true
+	return doesReturn{
+		always:    true,
+		sometimes: true,
+	}
 }
 
 func (v *typeCheckVisitor) VisitSVRet(ctx *parser.SVRetContext) interface{} {
@@ -421,7 +434,10 @@ func (v *typeCheckVisitor) VisitSVRet(ctx *parser.SVRetContext) interface{} {
 			Expected: v.curFun.Result,
 		}
 	}
-	return true
+	return doesReturn{
+		always:    true,
+		sometimes: true,
+	}
 }
 
 func (v *typeCheckVisitor) VisitSCond(ctx *parser.SCondContext) interface{} {
@@ -449,7 +465,10 @@ func (v *typeCheckVisitor) VisitSCond(ctx *parser.SCondContext) interface{} {
 		return blockReturns
 	}
 
-	return false
+	return doesReturn{
+		always:    false,
+		sometimes: blockReturns.sometimes,
+	}
 }
 
 func (v *typeCheckVisitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
@@ -485,7 +504,10 @@ func (v *typeCheckVisitor) VisitSCondElse(ctx *parser.SCondElseContext) interfac
 		}
 	}
 
-	return retTrue && retFalse
+	return doesReturn{
+		always:    retFalse.always || retTrue.always,
+		sometimes: retFalse.sometimes || retTrue.sometimes,
+	}
 }
 
 func (v *typeCheckVisitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
@@ -509,10 +531,16 @@ func (v *typeCheckVisitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 	}
 
 	if b.constValue != nil && *b.constValue {
-		return returns
+		return doesReturn{
+			always:    returns.sometimes,
+			sometimes: returns.sometimes,
+		}
 	}
 
-	return false
+	return doesReturn{
+		always:    false,
+		sometimes: returns.sometimes,
+	}
 }
 
 func (v *typeCheckVisitor) VisitSFor(ctx *parser.SForContext) interface{} {
@@ -545,14 +573,25 @@ func (v *typeCheckVisitor) VisitSFor(ctx *parser.SForContext) interface{} {
 	}
 
 	defer v.ShadowLocal(ctx.ID().GetText(), arr.Elem)()
-	return v.Visit(ctx.Stmt())
+	returns, err := v.evalStmt(ctx.Stmt())
+	if err != nil {
+		return err
+	}
+
+	return doesReturn{
+		always:    false,
+		sometimes: returns.sometimes,
+	}
 }
 
 func (v *typeCheckVisitor) VisitSExp(ctx *parser.SExpContext) interface{} {
 	if _, err := v.evalType(ctx.Expr()); err != nil {
 		return err
 	}
-	return false
+	return doesReturn{
+		always:    false,
+		sometimes: false,
+	}
 }
 
 func (v *typeCheckVisitor) evalLVType(ctx parser.ILvalueContext) (Type, error) {
