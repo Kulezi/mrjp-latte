@@ -229,7 +229,7 @@ func (v *typeCheckVisitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefConte
 }
 
 func (v *typeCheckVisitor) VisitClassFieldDef(ctx *parser.ClassFieldDefContext) interface{} {
-	return v.Visit(ctx.Type_())
+	return v.Visit(ctx.Nvtype_())
 }
 
 func (v *typeCheckVisitor) VisitClassMethodDef(ctx *parser.ClassMethodDefContext) interface{} {
@@ -287,18 +287,12 @@ func (v *typeCheckVisitor) VisitSBlockStmt(ctx *parser.SBlockStmtContext) interf
 }
 
 func (v *typeCheckVisitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
-	t := v.Visit(ctx.Type_())
+	t := v.Visit(ctx.Nvtype_())
 	if err, ok := t.(error); ok {
 		return err
 	}
 
 	typ := t.(Type)
-	if sameType(TVoid{}, typ) {
-		return VoidDeclarationError{
-			Ctx: ctx,
-		}
-	}
-
 	for _, item := range ctx.AllItem() {
 		item, ok := item.(*parser.ItemContext)
 		if !ok {
@@ -334,8 +328,6 @@ func (v *typeCheckVisitor) VisitLVField(ctx *parser.LVFieldContext) interface{} 
 
 	if class, ok := t.(TClass); ok {
 		defer v.EnterClass(class)()
-	} else if _, ok = t.(TArray); ok {
-		defer v.ShadowLocal("length", TInt{})()
 	}
 
 	return v.Visit(ctx.Lvalue())
@@ -362,7 +354,7 @@ func (v *typeCheckVisitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interf
 }
 
 func (v *typeCheckVisitor) VisitLVId(ctx *parser.LVIdContext) interface{} {
-	t, ok := v.TypeOf(ctx.ID().GetText())
+	t, ok := v.TypeOfLocal(ctx.ID().GetText())
 	if !ok {
 		return UndeclaredIdentifierError{
 			Ident: ctx.ID(),
@@ -418,9 +410,17 @@ func (v *typeCheckVisitor) VisitSDecr(ctx *parser.SDecrContext) interface{} {
 }
 
 func (v *typeCheckVisitor) VisitSRet(ctx *parser.SRetContext) interface{} {
+	if sameType(v.curFun.Result, TVoid{}) {
+		return VoidReturnWithValueError{
+			Ctx: ctx,
+			Fun: *v.curFun,
+		}
+	}
+
 	if err := v.ExpectType(v.curFun.Result, ctx.Expr()); err != nil {
 		return err
 	}
+
 	return doesReturn{
 		always:    true,
 		sometimes: true,
@@ -559,8 +559,9 @@ func (v *typeCheckVisitor) VisitSFor(ctx *parser.SForContext) interface{} {
 	arr, ok := arrType.(TArray)
 	if !ok {
 		return NotAnArrayError{
-			Ctx:   ctx,
-			Ident: ctx.ID(),
+			Ctx:  ctx,
+			Expr: ctx.Expr(),
+			Type: arrType,
 		}
 	}
 
@@ -845,28 +846,43 @@ func (v *typeCheckVisitor) VisitEOr(ctx *parser.EOrContext) interface{} {
 	}
 }
 
-func (v *typeCheckVisitor) VisitENew(ctx *parser.ENewContext) interface{} {
+func (v *typeCheckVisitor) VisitENewArray(ctx *parser.ENewArrayContext) interface{} {
 	t := v.Visit(ctx.Singular_type_())
 	if err, ok := t.(error); ok {
 		return err
 	}
 
 	typ := t.(Type)
-	for _, e := range ctx.AllExpr() {
-		idxType, err := v.evalType(e)
-		if err != nil {
-			return err
-		}
+	e := ctx.Expr()
+	idxType, err := v.evalType(e)
+	if err != nil {
+		return err
+	}
 
-		if _, ok := idxType.(TInt); !ok {
-			return ArrayIndexTypeError{
-				Expr: e,
-				Type: idxType,
-			}
+	if _, ok := idxType.(TInt); !ok {
+		return ArraySizeTypeError{
+			Expr: e,
+			Type: idxType,
 		}
+	}
 
-		typ = TArray{
-			Elem: typ,
+	typ = TArray{
+		Elem: typ,
+	}
+
+	return typ
+}
+
+func (v *typeCheckVisitor) VisitENew(ctx *parser.ENewContext) interface{} {
+	t := v.Visit(ctx.Singular_type_())
+	if err, ok := t.(error); ok {
+		return err
+	}
+
+	typ, ok := t.(TClass)
+	if !ok {
+		return UnknownClassError{
+			Type: t.(Type),
 		}
 	}
 
@@ -917,7 +933,7 @@ func (v *typeCheckVisitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
 
 func (v *typeCheckVisitor) VisitEId(ctx *parser.EIdContext) interface{} {
 	ident := ctx.ID().GetText()
-	if typ, ok := v.TypeOf(ident); ok {
+	if typ, ok := v.TypeOfLocal(ident); ok {
 		return typ.Type
 	}
 
@@ -999,16 +1015,26 @@ func (v *typeCheckVisitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{
 
 func (v *typeCheckVisitor) VisitENull(ctx *parser.ENullContext) interface{} {
 	classRef := TClassRef{ctx.ID()}
-	class, ok := v.TypeOfGlobal(classRef.String())
+	t, ok := v.TypeOfGlobal(classRef.String())
 	if !ok {
 		return UnknownClassError{classRef}
 	}
 
+	class, ok := t.Type.(TClass)
+	if !ok {
+		return UnknownClassError{
+			Type: t,
+		}
+	}
 	return class
 }
 
 func (v *typeCheckVisitor) VisitEParen(ctx *parser.EParenContext) interface{} {
 	return v.Visit(ctx.Expr())
+}
+
+func (v *typeCheckVisitor) VisitTNonVoid(ctx *parser.TNonVoidContext) interface{} {
+	return v.Visit(ctx.Nvtype_())
 }
 
 func (v *typeCheckVisitor) VisitTSingular(ctx *parser.TSingularContext) interface{} {
@@ -1053,7 +1079,7 @@ func (v *typeCheckVisitor) VisitTClass(ctx *parser.TClassContext) interface{} {
 }
 
 func (v *typeCheckVisitor) VisitTArray(ctx *parser.TArrayContext) interface{} {
-	t := v.Visit(ctx.Type_())
+	t := v.Visit(ctx.Singular_type_())
 	if err, ok := t.(error); ok {
 		return err
 	}

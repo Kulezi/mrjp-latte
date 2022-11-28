@@ -152,7 +152,7 @@ func (v *globalDeclVisitor) VisitArg(ctx *parser.ArgContext) interface{} {
 	var ret []FArg
 	for i, id := range ctx.AllID() {
 		if v, ok := args[id.GetText()]; ok {
-			t := ctx.Type_(i)
+			t := ctx.Nvtype_(i)
 			return DuplicateIdentifierError{
 				Ident: id.GetText(),
 				Pos1:  v.Position(),
@@ -161,7 +161,7 @@ func (v *globalDeclVisitor) VisitArg(ctx *parser.ArgContext) interface{} {
 		}
 		// FIXME: eval type
 		ident := id.GetText()
-		t := v.Visit(ctx.Type_(i)).(Type)
+		t := v.Visit(ctx.Nvtype_(i)).(Type)
 		args[ident] = t
 		ret = append(ret, FArg{
 			Ident: ident,
@@ -170,6 +170,10 @@ func (v *globalDeclVisitor) VisitArg(ctx *parser.ArgContext) interface{} {
 	}
 
 	return ret
+}
+
+func (v *globalDeclVisitor) VisitTNonVoid(ctx *parser.TNonVoidContext) interface{} {
+	return v.Visit(ctx.Nvtype_())
 }
 
 func (v *globalDeclVisitor) VisitTSingular(ctx *parser.TSingularContext) interface{} {
@@ -199,7 +203,7 @@ func (v *globalDeclVisitor) VisitTClass(ctx *parser.TClassContext) interface{} {
 }
 
 func (v *globalDeclVisitor) VisitTArray(ctx *parser.TArrayContext) interface{} {
-	typ := v.Visit(ctx.Type_()).(Type)
+	typ := v.Visit(ctx.Singular_type_()).(Type)
 	return TArray{
 		StartToken: ctx.GetStart(),
 		Elem:       typ,
@@ -269,7 +273,7 @@ func (v *globalDeclVisitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefCont
 func (v *globalDeclVisitor) VisitClassFieldDef(ctx *parser.ClassFieldDefContext) interface{} {
 	return field{
 		ID:   ctx.ID().GetText(),
-		Type: v.Visit(ctx.Type_()).(Type),
+		Type: v.Visit(ctx.Nvtype_()).(Type),
 	}
 }
 

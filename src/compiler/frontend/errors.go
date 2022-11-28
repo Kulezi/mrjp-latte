@@ -46,22 +46,6 @@ is not the same as
 	)
 }
 
-type UnknownVariableTypeError struct {
-	Type Type
-}
-
-func (e UnknownVariableTypeError) Error() string {
-	return fmt.Sprintf(
-		`can't declare variable(s) of type
-	%s
-	at %s
-as there is no class named %s`,
-		e.Type.String(),
-		e.Type.Position(),
-		e.Type.BaseType().String(),
-	)
-}
-
 type UnknownClassError struct {
 	Type Type
 }
@@ -110,70 +94,23 @@ func (e UndeclaredIdentifierError) Error() string {
 	)
 }
 
-func countDimensions(t Type) int {
-	if arr, ok := t.(TArray); ok {
-		return countDimensions(arr.Elem) + 1
-	}
-
-	return 0
-}
-
-type ArrayDimensionsMismatchError struct {
-	Expr *parser.EArrayRefContext
-	Type Type
-}
-
-func (e ArrayDimensionsMismatchError) Error() string {
-	return fmt.Sprintf(
-		`invalid array access in expression
-	%s
-	at %s,
-array of type
-	%s
-has only %d dimensions while the expression provides %d dimensions`,
-		e.Expr.GetText(),
-		posFromToken(e.Expr.GetStart()),
-		e.Type,
-		countDimensions(e.Type),
-		len(e.Expr.AllExpr())-1,
-	)
-}
-
-type ArrayIndexTypeError struct {
+type ArraySizeTypeError struct {
 	Expr parser.IExprContext
 	Type Type
 }
 
-func (e ArrayIndexTypeError) Error() string {
+func (e ArraySizeTypeError) Error() string {
 	return fmt.Sprintf(
 		`expression
 	%s
 needs to evaluate to type
 	int
-to be a valid array index, but evalues to type 
+to be a valid array size, but evalues to type 
 	%s
 	at %s`,
 		e.Expr.GetText(),
 		e.Type,
 		e.Type.Position(),
-	)
-}
-
-type ExpectedClassError struct {
-	Expr parser.IExprContext
-	Got  Type
-}
-
-func (e ExpectedClassError) Error() string {
-	return fmt.Sprintf(
-		`expected the expression
-	%s
-to evaluate to a class, but got
-	%s
-	at %s`,
-		e.Expr.GetText(),
-		e.Got,
-		posFromToken(e.Expr.GetStart()),
 	)
 }
 
@@ -238,24 +175,6 @@ func (e InvalidOpArgsError) Error() string {
 	)
 }
 
-type ExpectedFunctionError struct {
-	Expr parser.IExprContext
-	Type Type
-}
-
-func (e ExpectedFunctionError) Error() string {
-	return fmt.Sprintf(
-		`expected a function but expression
-	%s
-evaluates to type
-	%s
-	at %s`,
-		e.Expr.GetText(),
-		e.Type,
-		posFromToken(e.Expr.GetStart()),
-	)
-}
-
 type InvalidFunctionArgumentCountError struct {
 	Expr *parser.EFunCallContext
 	Fun  TFun
@@ -284,35 +203,11 @@ type NotAFunctionError struct {
 func (e NotAFunctionError) Error() string {
 	return fmt.Sprintf(
 		`identifier %s can't be called as it's not a function, but a value of type
-	%s`,
-		posFromToken(e.Ident.GetSymbol()),
-		e.Type,
-	)
-}
-
-type VoidDeclarationError struct {
-	Ctx antlr.ParserRuleContext
-}
-
-func (e VoidDeclarationError) Error() string {
-	return fmt.Sprintf(
-		`found void declaration statement 
 	%s
 	at %s`,
-		e.Ctx.GetText(),
-		posFromToken(e.Ctx.GetStart()),
-	)
-}
-
-type VoidUsedAsValueError struct {
-	Ctx antlr.ParserRuleContext
-}
-
-func (e VoidUsedAsValueError) Error() string {
-	return fmt.Sprintf(
-		`void used as value
-	at %s`,
-		posFromToken(e.Ctx.GetStart()),
+		e.Ident,
+		e.Type,
+		posFromToken(e.Ident.GetSymbol()),
 	)
 }
 
@@ -333,18 +228,20 @@ expected a value of type
 }
 
 type NotAnArrayError struct {
-	Ctx   antlr.ParserRuleContext
-	Ident antlr.TerminalNode
+	Ctx, Expr antlr.ParserRuleContext
+	Type      Type
 }
 
 func (e NotAnArrayError) Error() string {
 	return fmt.Sprintf(
-		`expected identifier
+		`expected expression
 	%s
 	at %s
-to be an array`,
-		e.Ident.GetText(),
+to evaluate to an array, but got value of type
+	%s`,
+		e.Expr.GetText(),
 		posFromToken(e.Ctx.GetStart()),
+		e.Type,
 	)
 }
 
@@ -359,5 +256,23 @@ func (e MissingReturnError) Error() string {
 	declared at %s`,
 		e.Fun,
 		e.Fun.Position(),
+	)
+}
+
+type VoidReturnWithValueError struct {
+	Ctx antlr.ParserRuleContext
+	Fun TFun
+}
+
+func (e VoidReturnWithValueError) Error() string {
+	return fmt.Sprintf(
+		`can't return from function
+	%s
+	as its return type is void, but found
+	%s
+	at %s`,
+		e.Fun,
+		e.Ctx.GetText(),
+		posFromToken(e.Ctx.GetStart()),
 	)
 }

@@ -32,8 +32,9 @@ func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[
 					MethodName:   ident,
 				}
 			}
+		} else {
+			childFields[ident] = parentFieldType
 		}
-		childFields[ident] = parentFieldType
 	}
 
 	evaluated[child] = struct{}{}
