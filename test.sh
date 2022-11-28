@@ -4,6 +4,25 @@ RED='\033[0;31m'
 GREEN='\033[0;32m' 
 RESET='\033[0m'
 OKFILE=$(mktemp)
+
+if [ $# -ne 2 ]; then
+    echo "usage: ./test.sh <good_dir> <bad_dir>"
+    exit 1
+fi
+
+GOOD=$1
+
+if [ ! -d $GOOD ]; then
+    echo "$GOOD is not a directory"
+    exit 1
+fi
+BAD=$2
+
+if [ ! -d $BAD ]; then
+    echo "$BAD is not a directory"
+    exit 1
+fi
+
 echo "OK" > $OKFILE
 ERRORFILE=$(mktemp)
 echo "ERROR" > $ERRORFILE
@@ -21,7 +40,7 @@ PASSED_GOOD=0
 TOTAL_GOOD=0
 
 echo "running good tests"
-for i in lattests/good/*.lat; do
+for i in $GOOD/*.lat; do
     TOTAL_GOOD=$((TOTAL_GOOD+1))
     printf "$i: "
     compiler_output=$(mktemp)
@@ -66,7 +85,7 @@ TOTAL_BAD=0
 
 
 echo "running bad tests"
-for i in lattests/bad/*.lat; do
+for i in $BAD/*.lat; do
     TOTAL_BAD=$((TOTAL_BAD+1))
     printf "$i: "
     compiler_output=$(mktemp)
