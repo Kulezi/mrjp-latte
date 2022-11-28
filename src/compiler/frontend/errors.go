@@ -7,6 +7,34 @@ import (
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 )
 
+// https://stackoverflow.com/questions/26524302/how-to-preserve-whitespace-when-we-use-text-attribute-in-antlr4
+func showSource(ctx antlr.ParserRuleContext) string {
+	if ctx.GetStart() == nil || ctx.GetStop() == nil ||
+		ctx.GetStart().GetStart() < 0 || ctx.GetStop().GetStop() < 0 {
+		return ctx.GetText()
+	}
+
+	return ctx.GetStart().GetInputStream().GetText(
+		ctx.GetStart().GetStart(),
+		ctx.GetStop().GetStop(),
+	)
+}
+
+func showTypes(m map[string]struct{}) string {
+	res := "["
+	comma := false
+	for v, _ := range m {
+		if comma {
+			res += ","
+		} else {
+			comma = true
+		}
+		res += v
+	}
+
+	return res + "]"
+}
+
 type DuplicateIdentifierError struct {
 	Ident      string
 	Pos1, Pos2 string
@@ -75,7 +103,7 @@ evaluates to type
 	%s
 	at %s`,
 		e.Expected,
-		e.Expr.GetText(),
+		showSource(e.Expr),
 		e.Got,
 		posFromToken(e.Expr.GetStart()),
 	)
@@ -108,14 +136,14 @@ needs to evaluate to type
 to be a valid array size, but evalues to type 
 	%s
 	at %s`,
-		e.Expr.GetText(),
+		showSource(e.Expr),
 		e.Type,
 		e.Type.Position(),
 	)
 }
 
 type ExpectedArrayError struct {
-	Expr antlr.ParseTree
+	Expr antlr.ParserRuleContext
 	Got  Type
 }
 
@@ -126,7 +154,8 @@ func (e ExpectedArrayError) Error() string {
 to evaluate to an array, but got
 	%s
 	at %s`,
-		e.Expr.GetText(),
+		showSource(e.Expr),
+
 		e.Got,
 		e.Got.Position(),
 	)
@@ -146,7 +175,7 @@ arguments to have same type, but got
 	!=
 	%s
 	at %s`,
-		e.Expr.GetText(),
+		showSource(e.Expr),
 		e.Type1,
 		e.Type2,
 		posFromToken(e.Expr.GetStart()),
@@ -163,14 +192,14 @@ func (e InvalidOpArgsError) Error() string {
 	return fmt.Sprintf(
 		`operator arguments need to have a type from
 	%s
-	but are of type
+but are of type
 	%s
-	in expression
+in expression
 	%s
 	at %s`,
-		e.ValidTypes,
+		showTypes(e.ValidTypes),
 		e.Type,
-		e.Expr.GetText(),
+		showSource(e.Expr),
 		posFromToken(e.Expr.GetStart()),
 	)
 }
@@ -190,7 +219,7 @@ expects %d arguments, but %d were provided in call
 		e.Fun,
 		len(e.Fun.Args),
 		len(e.Expr.AllExpr()),
-		e.Expr.GetText(),
+		showSource(e.Expr),
 		posFromToken(e.Expr.GetStart()),
 	)
 }
@@ -239,7 +268,7 @@ func (e NotAnArrayError) Error() string {
 	at %s
 to evaluate to an array, but got value of type
 	%s`,
-		e.Expr.GetText(),
+		showSource(e.Expr),
 		posFromToken(e.Ctx.GetStart()),
 		e.Type,
 	)
@@ -272,7 +301,22 @@ func (e VoidReturnWithValueError) Error() string {
 	%s
 	at %s`,
 		e.Fun,
-		e.Ctx.GetText(),
+		showSource(e.Ctx),
 		posFromToken(e.Ctx.GetStart()),
 	)
+}
+
+type MainInvalidSignatureError struct {
+	Type Type
+}
+
+func (e MainInvalidSignatureError) Error() string {
+	return fmt.Sprintf(
+		`main should have signature
+	int main()
+but has
+	%s`,
+		e.Type,
+	)
+
 }

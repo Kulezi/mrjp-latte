@@ -62,13 +62,7 @@ func (s *state) semanticCheck() error {
 	if main, ok := s.signatures.Globals["main"]; !ok {
 		return fmt.Errorf("missing main function")
 	} else if !sameType(main.Type, TFun{Ident: "main", Result: TInt{}}) {
-		return fmt.Errorf(`
-main should have signature
-	int main()
-but has
-	%s`,
-			main.Type,
-		)
+		return MainInvalidSignatureError{Type: main.Type}
 	}
 
 	if err = s.signatures.inheritClasses(); err != nil {

@@ -8,6 +8,8 @@ import (
 
 var goodDirs = []string{
 	"../../lattests/good",
+	"../../mgtests/lattests/tests/margdoc",
+	"../../mgtests/lattests/tests/margdoc/lvalues",
 	"../../mrjp-tests/good/basic",
 	"../../mrjp-tests/good/arrays",
 	"../../mrjp-tests/good/hardcore",
@@ -18,6 +20,8 @@ var goodDirs = []string{
 var badDirs = []string{
 	"../../lattests/bad",
 	"../../mrjp-tests/bad/semantic",
+	"../../mgtests/lattests/tests/margdoc/bad",
+	"../../mgtests/lattests/tests/margdoc/casting",
 }
 
 func TestGood(t *testing.T) {

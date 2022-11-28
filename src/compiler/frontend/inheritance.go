@@ -2,6 +2,12 @@ package frontend
 
 func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[string]struct{}) error {
 	// Resolve parent's inheritance if it's a derived class.
+	if _, ok := s.Globals[parent.String()]; !ok {
+		return UnknownClassError{
+			Type: parent,
+		}
+	}
+
 	var err error
 	if _, ok := evaluated[parent.String()]; !ok {
 		if grandparent, ok := s.Parent[parent.String()]; ok {

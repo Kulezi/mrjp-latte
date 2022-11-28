@@ -29,10 +29,6 @@ func makeTypeCheckVisitor(s *state) *typeCheckVisitor {
 	return &typeCheckVisitor{state: s}
 }
 
-func (v *typeCheckVisitor) Run() error {
-	return v.Visit(v.state.tree).(error)
-}
-
 func (v *typeCheckVisitor) Visit(tree antlr.ParseTree) interface{} {
 	return tree.Accept(v)
 }
@@ -969,7 +965,8 @@ func (v *typeCheckVisitor) VisitEFalse(ctx *parser.EFalseContext) interface{} {
 }
 
 func (v *typeCheckVisitor) VisitEStr(ctx *parser.EStrContext) interface{} {
-	s := ctx.STR().GetText()
+	withBraces := ctx.STR().GetText()
+	s := withBraces[1 : len(withBraces)-1]
 	return TString{
 		StartToken: ctx.GetStart(),
 		constValue: &s,
