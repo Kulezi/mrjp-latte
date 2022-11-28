@@ -1,24 +1,43 @@
-(+4) Frontend:
-    Parsowanie przy użyciu ANTLR w Go.
-    Analiza semantyczna (type-check, banialuki).
+Semantyka języka:
+* Rozszerzenie: tablice jednowymiarowe.
+    * Tablice można stworzyć używając `new T[rozmiar]`
+    * Można iterować się po elementach tablicy `T[] arr` przy użyciu `for (T x : arr)`
+* Rozszerzenie: obiekty z metodami wirtualnymi.
+    * Klasy mogą dziedziczyć po maksymalnie jednej klasie.
+    * Przy dziedziczeniu metody nadklasy są nadpisywane przez metody podklasy,
+        po zrzutowaniu w górę nadal obowiązuje metoda podklasy.
+    * Zmienne nadklasy nie są widoczne w podklasie, widać je dopiero po zrzutowaniu podklasy w górę.
+    * Zmienna typu obiektu to referencja do obiektu zaalokowanego na stercie,
+        może ona przyjąć wartość `null`.
+    * Null jest silnie typowany, tzn. nie można napisać `A x = null`, 
+        zawsze trzeba napisać `A x = (A)null`;
+    * Można uzyskać referencję na obecną klasę używając `self`.
+    * Obiekt typu `c` można stworzyć używając `new c`
 
-    Co pamiętać:
-        - ma działać wyrażenie typu human[3].withName('foo').children[5].copy();
-        - ma działać przypisanie typu human[3].children[5] = new child;
+Plan na 29.11.2022:
+
+* (+4) Frontend:
+    * Parsowanie przy użyciu ANTLR w Go.
+    * Analiza semantyczna
+        * Type check
+        * Return check
+
+Plan na 08.01.2023:
+* (+10) Backend:
+    * Generator kodu x86_64 (NASM)
+
+* (+11) Bazowe Latte plus następujące rozszerzenia:
+    * (+1) Tablice jednowymiarowe
+    * (+10) Obiekty
+        * (+2) Pola i metody
+        * (+4) Metody wirtualne 
+        * (+4) Dziedziczenie (bez wielodziedziczenia) z nadpisywaniem metod wirtualnych
+
+Plan na 23.01.2023:
+
+* (+8) Optymalizacje:
+    * (+5) Wykorzystanie rejestrów
+    * (+3) Local Common Subexpression Elimination
 
 
-(+10) Backend:
-    Kompilator produkuje kod x64 (AT&T)
-
-(+8) Optymalizacje:
-    - (+5) Wykorzystanie rejestrów
-    - (+3) Local Common Subexpression Elimination
-
-(+11) Bazowe Latte plus następujące rozszerzenia:
-    - (+1) Tablice
-    - (+10) Obiekty
-        - (+2) Pola i metody
-        - (+4) Metody wirtualne 
-        - (+4) Dziedziczenie (bez wielodziedziczenia) z nadpisywaniem metod wirtualnych
-
-Łącznie: 4 + 10 + 8 + 13 = 33
+Łącznie: 4 + 10 + 8 + 11 = 31
