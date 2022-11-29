@@ -3,13 +3,40 @@ Wymagane jest go 1.19.
 Aby skompilować rozwiązanie należy użyć polecenia `make`, rezulatem powinien być
 plik wykonywalny latc_x86_64.
 
-
 `./latc_x86_64 <program.lat>` wykona analizę semantyczną podanego pliku,  
 jeśli jest poprawny wypisze w pierwszej linii standardowego wyjścia błędu:  
 `OK`  
 wpp. wypisze w niej  
 `ERROR`  
 i w następnych liniach adekwatny komunikat pozwalający na zlokalizowanie błędu.
+
+## Struktura katalogów
+.
+├── Makefile
+├── README
+└── src
+    ├── compiler
+    │   ├── build.go - funkcje mające zbudować binarkę x86_64 (nieużywane, na przyszłość)
+    │   ├── compiler.go 
+    │   ├── compiler_test.go
+    │   ├── frontend
+    │   │   ├── errors.go
+    │   │   ├── frontend.go
+    │   │   ├── inheritance.go - obsługuje dziedziczenie metod w klasach.
+    │   │   ├── syntax_error_listener.go - listener wyłapujący błędy parsera/leksera
+    │   │   ├── top_def_visitor.go - rozwiązywanie nazw globalnych
+    │   │   ├── type_check_visitor.go - tu dzieje się większość analizy semantycznej z użyciem visitor pattern
+    │   │   └── types.go - deklaracje typów dostępnych w języku Latte
+    │   └── gen.go
+    ├── go.mod
+    ├── go.sum
+    ├── Latte.g4 - opis gramatyki języka Latte z rozszerzeniami dla ANTLRv4
+    ├── main.go
+    └── parser/ - parser wygenerowany automatycznie przy użyciu ANTLRv4
+
+
+
+
 ## Rozszerzenie: tablice jednowymiarowe.
 * Tablice można stworzyć używając `new T[rozmiar]`
 * Można iterować się po elementach tablicy `T[] arr` przy użyciu `for (T x : arr)`
