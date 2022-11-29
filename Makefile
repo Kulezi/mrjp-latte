@@ -1,9 +1,9 @@
 .PHONY: all
-all: latc_x86_64
+all: latc
 
-.PHONY: latc_x86_64
-latc_x86_64:
-	cd src; go build -o ../latc_x86_64 main.go
+.PHONY: latc
+latc:
+	cd src; go build -o ../latc main.go
 
 clean:
-	rm latc_x86_64
+	rm latc
