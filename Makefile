@@ -7,9 +7,3 @@ latc_x86_64:
 
 clean:
 	rm latc_x86_64
-
-test: 
-	@cd src/compiler; go test . -coverpkg=./frontend
-	
-cover: 
-	@cd src/compiler; go test . -coverprofile=coverage.out -coverpkg=./frontend; go tool cover -html=coverage.out
