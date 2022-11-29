@@ -62,6 +62,8 @@ func TestBad(t *testing.T) {
 						err := CompileX64(filename)
 						if err == nil {
 							t.Fatal("test didn't fail!")
+						} else {
+							t.Log(err)
 						}
 					})
 				}

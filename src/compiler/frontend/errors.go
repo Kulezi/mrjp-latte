@@ -320,3 +320,31 @@ but has
 	)
 
 }
+
+type DeclarationWithoutBlockError struct {
+	Ctx antlr.ParserRuleContext
+}
+
+func (e DeclarationWithoutBlockError) Error() string {
+	return fmt.Sprintf(
+		`found variable declaration that needs a new block in
+	%s
+	at %s`,
+		showSource(e.Ctx),
+		posFromToken(e.Ctx.GetStart()))
+}
+
+type ConstOutOfRangeError struct {
+	Ctx antlr.ParserRuleContext
+}
+
+func (e ConstOutOfRangeError) Error() string {
+	return fmt.Sprintf(
+		`constant 
+	%s
+	declared at %s
+is too big to fit inside int type`,
+		showSource(e.Ctx),
+		posFromToken(e.Ctx.GetStart()),
+	)
+}

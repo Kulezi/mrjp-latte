@@ -16,6 +16,9 @@ type varDropper struct {
 type doesReturn struct {
 	always, sometimes bool
 }
+
+// typeCheckVisitor methods evaluating statements return doesReturn or an error.
+// Methods evaluating expressions return Type or an error.
 type typeCheckVisitor struct {
 	parser.BaseLatteVisitor
 	state        *state
@@ -436,6 +439,16 @@ func (v *typeCheckVisitor) VisitSVRet(ctx *parser.SVRetContext) interface{} {
 	}
 }
 
+func (v *typeCheckVisitor) evalNonDeclStmt(ctx parser.IStmtContext) (doesReturn, error) {
+	if _, ok := ctx.(*parser.SDeclContext); ok {
+		return doesReturn{}, DeclarationWithoutBlockError{
+			Ctx: ctx,
+		}
+	}
+
+	return v.evalStmt(ctx)
+}
+
 func (v *typeCheckVisitor) VisitSCond(ctx *parser.SCondContext) interface{} {
 	t, err := v.evalType(ctx.Expr())
 	if err != nil {
@@ -451,7 +464,7 @@ func (v *typeCheckVisitor) VisitSCond(ctx *parser.SCondContext) interface{} {
 		}
 	}
 
-	blockReturns, err := v.evalStmt(ctx.Stmt())
+	blockReturns, err := v.evalNonDeclStmt(ctx.Stmt())
 	if err != nil {
 		return err
 	}
@@ -482,12 +495,12 @@ func (v *typeCheckVisitor) VisitSCondElse(ctx *parser.SCondElseContext) interfac
 		}
 	}
 
-	retTrue, err := v.evalStmt(ctx.Stmt(0))
+	retTrue, err := v.evalNonDeclStmt(ctx.Stmt(0))
 	if err != nil {
 		return err
 	}
 
-	retFalse, err := v.evalStmt(ctx.Stmt(1))
+	retFalse, err := v.evalNonDeclStmt(ctx.Stmt(1))
 	if err != nil {
 		return err
 	}
@@ -521,7 +534,7 @@ func (v *typeCheckVisitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 		}
 	}
 
-	returns, err := v.evalStmt(ctx.Stmt())
+	returns, err := v.evalNonDeclStmt(ctx.Stmt())
 	if err != nil {
 		return err
 	}
@@ -570,7 +583,7 @@ func (v *typeCheckVisitor) VisitSFor(ctx *parser.SForContext) interface{} {
 	}
 
 	defer v.ShadowLocal(ctx.ID().GetText(), arr.Elem)()
-	returns, err := v.evalStmt(ctx.Stmt())
+	returns, err := v.evalNonDeclStmt(ctx.Stmt())
 	if err != nil {
 		return err
 	}
@@ -939,7 +952,9 @@ func (v *typeCheckVisitor) VisitEId(ctx *parser.EIdContext) interface{} {
 func (v *typeCheckVisitor) VisitEInt(ctx *parser.EIntContext) interface{} {
 	n, err := strconv.Atoi(ctx.INT().GetText())
 	if err != nil {
-		return err
+		return ConstOutOfRangeError{
+			Ctx: ctx,
+		}
 	}
 
 	return TInt{
