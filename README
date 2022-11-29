@@ -1,6 +1,8 @@
 ## Uruchamianie
+Wymagane jest go 1.19.
 Aby skompilować rozwiązanie należy użyć polecenia `make`, rezulatem powinien być
 plik wykonywalny latc_x86_64.
+
 
 `./latc_x86_64 <program.lat>` wykona analizę semantyczną podanego pliku,  
 jeśli jest poprawny wypisze w pierwszej linii standardowego wyjścia błędu:  
