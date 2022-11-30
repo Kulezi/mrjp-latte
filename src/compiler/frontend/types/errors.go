@@ -1,4 +1,4 @@
-package frontend
+package types
 
 import (
 	"fmt"
@@ -105,7 +105,7 @@ evaluates to type
 		e.Expected,
 		showSource(e.Expr),
 		e.Got,
-		posFromToken(e.Expr.GetStart()),
+		PosFromToken(e.Expr.GetStart()),
 	)
 }
 
@@ -118,7 +118,7 @@ func (e UndeclaredIdentifierError) Error() string {
 		`undeclared identifier %s found
 	at %s`,
 		e.Ident,
-		posFromToken(e.Ident.GetSymbol()),
+		PosFromToken(e.Ident.GetSymbol()),
 	)
 }
 
@@ -178,7 +178,7 @@ arguments to have same type, but got
 		showSource(e.Expr),
 		e.Type1,
 		e.Type2,
-		posFromToken(e.Expr.GetStart()),
+		PosFromToken(e.Expr.GetStart()),
 	)
 }
 
@@ -200,7 +200,7 @@ in expression
 		showTypes(e.ValidTypes),
 		e.Type,
 		showSource(e.Expr),
-		posFromToken(e.Expr.GetStart()),
+		PosFromToken(e.Expr.GetStart()),
 	)
 }
 
@@ -220,7 +220,7 @@ expects %d arguments, but %d were provided in call
 		len(e.Fun.Args),
 		len(e.Expr.AllExpr()),
 		showSource(e.Expr),
-		posFromToken(e.Expr.GetStart()),
+		PosFromToken(e.Expr.GetStart()),
 	)
 }
 
@@ -236,7 +236,7 @@ func (e NotAFunctionError) Error() string {
 	at %s`,
 		e.Ident,
 		e.Type,
-		posFromToken(e.Ident.GetSymbol()),
+		PosFromToken(e.Ident.GetSymbol()),
 	)
 }
 
@@ -251,7 +251,7 @@ func (e MissingReturnValueError) Error() string {
 	at %s
 expected a value of type
 	%s`,
-		posFromToken(e.Ctx.GetStart()),
+		PosFromToken(e.Ctx.GetStart()),
 		e.Expected,
 	)
 }
@@ -269,7 +269,7 @@ func (e NotAnArrayError) Error() string {
 to evaluate to an array, but got value of type
 	%s`,
 		showSource(e.Expr),
-		posFromToken(e.Ctx.GetStart()),
+		PosFromToken(e.Ctx.GetStart()),
 		e.Type,
 	)
 }
@@ -302,7 +302,7 @@ func (e VoidReturnWithValueError) Error() string {
 	at %s`,
 		e.Fun,
 		showSource(e.Ctx),
-		posFromToken(e.Ctx.GetStart()),
+		PosFromToken(e.Ctx.GetStart()),
 	)
 }
 
@@ -331,7 +331,7 @@ func (e DeclarationWithoutBlockError) Error() string {
 	%s
 	at %s`,
 		showSource(e.Ctx),
-		posFromToken(e.Ctx.GetStart()))
+		PosFromToken(e.Ctx.GetStart()))
 }
 
 type ConstOutOfRangeError struct {
@@ -345,6 +345,6 @@ func (e ConstOutOfRangeError) Error() string {
 	declared at %s
 is too big to fit inside int type`,
 		showSource(e.Ctx),
-		posFromToken(e.Ctx.GetStart()),
+		PosFromToken(e.Ctx.GetStart()),
 	)
 }

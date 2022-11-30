@@ -2,10 +2,17 @@ package frontend
 
 import (
 	"fmt"
+	"latte/compiler/frontend/typecheck"
+	. "latte/compiler/frontend/types"
 	"latte/parser"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 )
+
+type state struct {
+	tree       parser.IProgramContext
+	signatures Signatures
+}
 
 func Run(filename string) (Signatures, error) {
 	s := state{}
@@ -61,11 +68,11 @@ func (s *state) semanticCheck() error {
 
 	if main, ok := s.signatures.Globals["main"]; !ok {
 		return fmt.Errorf("missing main function")
-	} else if !sameType(main.Type, TFun{Ident: "main", Result: TInt{}}) {
+	} else if !SameType(main.Type, TFun{Ident: "main", Result: TInt{}}) {
 		return MainInvalidSignatureError{Type: main.Type}
 	}
 
-	if err = s.signatures.inheritClasses(); err != nil {
+	if err = s.signatures.InheritClasses(); err != nil {
 		return err
 	}
 
@@ -91,7 +98,7 @@ func (s *state) evalGlobalSignatures() error {
 }
 
 func (s *state) typeCheck() error {
-	if err, ok := makeTypeCheckVisitor(s).Visit(s.tree).(error); ok {
+	if err, ok := typecheck.MakeVisitor(s.signatures).Visit(s.tree).(error); ok {
 		return err
 	}
 

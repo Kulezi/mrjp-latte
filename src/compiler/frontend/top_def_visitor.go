@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"latte/parser"
 
+	. "latte/compiler/frontend/types"
+
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 )
 
@@ -156,7 +158,7 @@ func (v *globalDeclVisitor) VisitArg(ctx *parser.ArgContext) interface{} {
 			return DuplicateIdentifierError{
 				Ident: id.GetText(),
 				Pos1:  v.Position(),
-				Pos2:  posFromToken(t.GetStart()),
+				Pos2:  PosFromToken(t.GetStart()),
 			}
 		}
 		// FIXME: eval type

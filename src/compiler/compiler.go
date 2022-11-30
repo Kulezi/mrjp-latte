@@ -3,7 +3,7 @@ package compiler
 import (
 	"latte/parser"
 
-	. "latte/compiler/frontend"
+	. "latte/compiler/frontend/types"
 )
 
 type compiler struct {

@@ -9,7 +9,14 @@ clean:
 	rm latc_x86_64
 
 test: 
-	@cd src/compiler; go test . -coverpkg=./frontend
-	
+	@cd src/compiler; go test . -count=1
+
+.PHONY: cover
+PACKAGES = $(shell cat testpackages.txt)
 cover: 
-	@cd src/compiler; go test . -coverprofile=coverage.out -coverpkg=./frontend; go tool cover -html=coverage.out
+	@cd src/compiler; $(foreach pkg,$(PACKAGES),\
+		go test . -count=1 \
+		-coverprofile=../../profile-$(shell basename $(pkg)).cov \
+		-coverpkg=./$(pkg) \
+		-covermode=count; \
+		go tool cover -html=../../profile-$(shell basename $(pkg)).cov &)

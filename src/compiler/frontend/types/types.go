@@ -1,8 +1,7 @@
-package frontend
+package types
 
 import (
 	"fmt"
-	"latte/parser"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 )
@@ -12,11 +11,6 @@ type Env map[string]TypeInfo
 type TypeInfo struct {
 	Type
 	Depth int
-}
-
-type state struct {
-	tree       parser.IProgramContext
-	signatures Signatures
 }
 
 type Signatures struct {
@@ -145,39 +139,22 @@ func (s *Signatures) ShadowLocal(ident string, t Type, depth int) (drop func()) 
 	}
 }
 
-func posFromToken(t antlr.Token) string {
+func PosFromToken(t antlr.Token) string {
 	if t == nil {
 		return "unknown position"
 	}
 	return fmt.Sprintf("line %d, column %d", t.GetLine(), t.GetColumn())
 }
 
-func sameType(a, b Type) bool {
+func SameType(a, b Type) bool {
 	return a.String() == b.String()
-}
-
-var validInequalityOpArg = map[string]struct{}{
-	"int":    {},
-	"string": {},
-}
-
-var validAddOpArg = map[string]struct{}{
-	"int":    {},
-	"string": {},
-}
-var validSubOpArg = map[string]struct{}{
-	"int": {},
-}
-
-var validMulOpArg = map[string]struct{}{
-	"int": {},
 }
 
 type Type interface {
 	String() string
 	Position() string
 	BaseType() Type
-	ConstValue() (value interface{}, ok bool)
+	Const() (value interface{}, ok bool)
 }
 
 type TVoid struct {
@@ -189,18 +166,18 @@ func (TVoid) String() string {
 }
 
 func (t TVoid) Position() string {
-	return posFromToken(t.StartToken)
+	return PosFromToken(t.StartToken)
 }
 
 func (t TVoid) BaseType() Type { return t }
 
-func (t TVoid) ConstValue() (value interface{}, ok bool) {
+func (t TVoid) Const() (value interface{}, ok bool) {
 	return nil, false
 }
 
 type TInt struct {
 	StartToken antlr.Token
-	constValue *int
+	Value      *int
 }
 
 func (TInt) String() string {
@@ -208,22 +185,22 @@ func (TInt) String() string {
 }
 
 func (t TInt) Position() string {
-	return posFromToken(t.StartToken)
+	return PosFromToken(t.StartToken)
 }
 
 func (t TInt) BaseType() Type { return t }
 
-func (t TInt) ConstValue() (value interface{}, ok bool) {
-	if t.constValue == nil {
+func (t TInt) Const() (value interface{}, ok bool) {
+	if t.Value == nil {
 		return nil, false
 	}
 
-	return *t.constValue, true
+	return *t.Value, true
 }
 
 type TString struct {
 	StartToken antlr.Token
-	constValue *string
+	Value      *string
 }
 
 func (TString) String() string {
@@ -231,22 +208,22 @@ func (TString) String() string {
 }
 
 func (t TString) Position() string {
-	return posFromToken(t.StartToken)
+	return PosFromToken(t.StartToken)
 }
 
 func (t TString) BaseType() Type { return t }
 
-func (t TString) ConstValue() (value interface{}, ok bool) {
-	if t.constValue == nil {
+func (t TString) Const() (value interface{}, ok bool) {
+	if t.Value == nil {
 		return nil, false
 	}
 
-	return *t.constValue, true
+	return *t.Value, true
 }
 
 type TBool struct {
 	StartToken antlr.Token
-	constValue *bool
+	Value      *bool
 }
 
 func (TBool) String() string {
@@ -254,17 +231,17 @@ func (TBool) String() string {
 }
 
 func (t TBool) Position() string {
-	return posFromToken(t.StartToken)
+	return PosFromToken(t.StartToken)
 }
 
 func (t TBool) BaseType() Type { return t }
 
-func (t TBool) ConstValue() (value interface{}, ok bool) {
-	if t.constValue == nil {
+func (t TBool) Const() (value interface{}, ok bool) {
+	if t.Value == nil {
 		return nil, false
 	}
 
-	return *t.constValue, true
+	return *t.Value, true
 }
 
 type TClass struct {
@@ -278,7 +255,7 @@ func (t TClass) String() string {
 }
 
 func (t TClass) Position() string {
-	return posFromToken(t.ID.GetSymbol())
+	return PosFromToken(t.ID.GetSymbol())
 }
 
 func (t TClass) Print() {
@@ -296,7 +273,7 @@ func (t TClass) AsRef() TClassRef {
 
 func (t TClass) BaseType() Type { return t }
 
-func (t TClass) ConstValue() (value interface{}, ok bool) {
+func (t TClass) Const() (value interface{}, ok bool) {
 	return nil, false
 }
 
@@ -309,12 +286,12 @@ func (t TClassRef) String() string {
 }
 
 func (t TClassRef) Position() string {
-	return posFromToken(t.ID.GetSymbol())
+	return PosFromToken(t.ID.GetSymbol())
 }
 
 func (t TClassRef) BaseType() Type { return t }
 
-func (t TClassRef) ConstValue() (value interface{}, ok bool) {
+func (t TClassRef) Const() (value interface{}, ok bool) {
 	return nil, false
 }
 
@@ -328,12 +305,12 @@ func (t TArray) String() string {
 }
 
 func (t TArray) Position() string {
-	return posFromToken(t.StartToken)
+	return PosFromToken(t.StartToken)
 }
 
 func (t TArray) BaseType() Type { return t.Elem.BaseType() }
 
-func (t TArray) ConstValue() (value interface{}, ok bool) {
+func (t TArray) Const() (value interface{}, ok bool) {
 	return nil, false
 }
 
@@ -370,126 +347,11 @@ func (t TFun) Position() string {
 		return "unknown position"
 	}
 
-	return posFromToken(t.Terminal.GetSymbol())
+	return PosFromToken(t.Terminal.GetSymbol())
 }
 
 func (t TFun) BaseType() Type { return t }
 
-func (t TFun) ConstValue() (value interface{}, ok bool) {
+func (t TFun) Const() (value interface{}, ok bool) {
 	return nil, false
-}
-
-func evalConstBoolBinOp(op string, t1, t2 Type) *bool {
-	cv1, ok1 := t1.ConstValue()
-	cv2, ok2 := t2.ConstValue()
-	if !ok1 || !ok2 {
-		return nil
-	}
-
-	var ret bool
-	switch cv1 := cv1.(type) {
-	case (int):
-		cv2 := cv2.(int)
-		switch op {
-		case "<":
-			ret = cv1 < cv2
-		case ">":
-			ret = cv1 > cv2
-		case "<=":
-			ret = cv1 <= cv2
-		case ">=":
-			ret = cv1 >= cv2
-		case "==":
-			ret = cv1 == cv2
-		case "!=":
-			ret = cv1 != cv2
-		default:
-			panic("unexpected bool bin op")
-		}
-	case (bool):
-		cv2 := cv2.(bool)
-		switch op {
-		case "&&":
-			ret = cv1 && cv2
-		case "||":
-			ret = cv1 || cv2
-		case "==":
-			ret = cv1 == cv2
-		case "!=":
-			ret = cv1 != cv2
-		default:
-			panic("unexpected bool bin op")
-		}
-	case (string):
-		cv2 := cv2.(string)
-		switch op {
-		case "<":
-			ret = cv1 < cv2
-		case ">":
-			ret = cv1 > cv2
-		case "<=":
-			ret = cv1 <= cv2
-		case ">=":
-			ret = cv1 >= cv2
-		case "==":
-			ret = cv1 == cv2
-		case "!=":
-			ret = cv1 != cv2
-		default:
-			panic("unexpected bool bin op")
-		}
-
-	default:
-		return nil
-	}
-
-	return &ret
-}
-
-func evalConstIntBinOp(op string, t1, t2 Type) *int {
-	cv1, ok1 := t1.ConstValue()
-	cv2, ok2 := t2.ConstValue()
-
-	if ok1 && ok2 {
-		var ret int
-		cv1 := cv1.(int)
-		cv2 := cv2.(int)
-		switch op {
-		case "-":
-			ret = cv1 - cv2
-		case "+":
-			ret = cv1 + cv2
-		case "*":
-			ret = cv1 * cv2
-		case "/":
-			ret = cv1 / cv2
-		case "%":
-			ret = cv1 % cv2
-		default:
-			panic("unexpected int bin op")
-		}
-		return &ret
-	}
-
-	return nil
-}
-
-func evalConstStringBinOp(op string, t1, t2 Type) *string {
-	cv1, ok1 := t1.ConstValue()
-	cv2, ok2 := t2.ConstValue()
-
-	if ok1 && ok2 {
-		var ret string
-		cv1 := cv1.(string)
-		cv2 := cv2.(string)
-		switch op {
-		case "+":
-			ret = cv1 + cv2
-		default:
-			panic("unexpected string bin op")
-		}
-		return &ret
-	}
-
-	return nil
 }

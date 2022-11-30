@@ -1,4 +1,4 @@
-package frontend
+package types
 
 func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[string]struct{}) error {
 	// Resolve parent's inheritance if it's a derived class.
@@ -29,7 +29,7 @@ func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[
 		}
 
 		if childFieldType, ok := childFields[ident]; ok {
-			if !sameType(parentFieldType, childFieldType) {
+			if !SameType(parentFieldType, childFieldType) {
 				return MethodOverrideError{
 					ParentClass:  s.Globals[parent.String()],
 					ChildClass:   s.Globals[child],
@@ -49,7 +49,7 @@ func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[
 	return nil
 }
 
-func (s *Signatures) inheritClasses() error {
+func (s *Signatures) InheritClasses() error {
 	evaluated := make(map[string]struct{})
 	for class, parent := range s.Parent {
 		if _, ok := evaluated[class]; ok {
