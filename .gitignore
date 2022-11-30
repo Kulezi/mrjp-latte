@@ -1,12 +1,18 @@
-.vscode
-.antlr
-tree_tests/
-mrjp-tests/
-*.s
+/*
+!.gitignore
+!README
+!Makefile
 
-lattests/
-!lattests/good/*.lat
-!lattests/good/*.output
+!src/
+src/*
+!src/Latte.g4
+!src/go.mod
+!src/go.sum
 
-latc_x86_64
-compiler_output
+!src/parser/
+
+!src/compiler/
+src/compiler/*
+!src/compiler/*.go
+
+!src/compiler/frontend/
