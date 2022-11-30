@@ -348,3 +348,17 @@ is too big to fit inside int type`,
 		PosFromToken(e.Ctx.GetStart()),
 	)
 }
+
+type ZeroDivisionError struct {
+	Ctx antlr.ParserRuleContext
+}
+
+func (e ZeroDivisionError) Error() string {
+	return fmt.Sprintf(
+		`division by zero in expression
+	%s
+	at %s`,
+		showSource(e.Ctx),
+		PosFromToken(e.Ctx.GetStart()),
+	)
+}

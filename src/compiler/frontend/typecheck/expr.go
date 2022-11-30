@@ -131,9 +131,16 @@ func (v *visitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
 		}
 	}
 
+	cv, ok := EvalConstIntBinOp(ctx.MulOp().GetText(), t1, t2)
+	if !ok {
+		return ZeroDivisionError{
+			Ctx: ctx,
+		}
+	}
+
 	return TInt{
 		StartToken: ctx.GetStart(),
-		Value:      EvalConstIntBinOp(ctx.MulOp().GetText(), t1, t2),
+		Value:      cv,
 	}
 }
 
@@ -171,9 +178,10 @@ func (v *visitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
 
 	switch t1.(type) {
 	case TInt:
+		cv, _ := EvalConstIntBinOp(ctx.AddOp().GetText(), t1, t2)
 		return TInt{
 			StartToken: ctx.GetStart(),
-			Value:      EvalConstIntBinOp(ctx.AddOp().GetText(), t1, t2),
+			Value:      cv,
 		}
 	case TString:
 		return TString{

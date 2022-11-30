@@ -67,7 +67,7 @@ func EvalConstBoolBinOp(op string, t1, t2 Type) *bool {
 	return &ret
 }
 
-func EvalConstIntBinOp(op string, t1, t2 Type) *int {
+func EvalConstIntBinOp(op string, t1, t2 Type) (*int, bool) {
 	cv1, ok1 := t1.Const()
 	cv2, ok2 := t2.Const()
 
@@ -83,16 +83,22 @@ func EvalConstIntBinOp(op string, t1, t2 Type) *int {
 		case "*":
 			ret = cv1 * cv2
 		case "/":
+			if cv2 == 0 {
+				return nil, false
+			}
 			ret = cv1 / cv2
 		case "%":
+			if cv2 == 0 {
+				return nil, false
+			}
 			ret = cv1 % cv2
 		default:
 			panic("unexpected int bin op")
 		}
-		return &ret
+		return &ret, true
 	}
 
-	return nil
+	return nil, true
 }
 
 func EvalConstStringBinOp(op string, t1, t2 Type) *string {
