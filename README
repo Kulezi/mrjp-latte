@@ -20,13 +20,11 @@ i w następnych liniach adekwatny komunikat pozwalający na zlokalizowanie błę
     │   ├── compiler.go 
     │   ├── compiler_test.go
     │   ├── frontend
-    │   │   ├── errors.go
     │   │   ├── frontend.go
-    │   │   ├── inheritance.go - obsługuje dziedziczenie metod w klasach.
     │   │   ├── syntax_error_listener.go - listener wyłapujący błędy parsera/leksera
     │   │   ├── top_def_visitor.go - rozwiązywanie nazw globalnych
-    │   │   ├── type_check_visitor.go - tu dzieje się większość analizy semantycznej z użyciem visitor pattern
-    │   │   └── types.go - deklaracje typów dostępnych w języku Latte
+    │   │   ├── typecheck/ - tu dzieje się większość analizy semantycznej z użyciem visitor pattern
+    │   │   └── types/ - deklaracje typów i błędów dostępnych w języku Latte oraz rozwiazywanie dziedziczenia
     │   └── gen.go
     ├── go.mod
     ├── go.sum
