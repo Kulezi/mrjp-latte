@@ -1,36 +1,49 @@
 package compiler
 
 import (
-	"latte/parser"
-
-	. "latte/compiler/frontend/types"
+	"fmt"
+	"io/ioutil"
+	. "latte/compiler/config"
+	"latte/compiler/frontend"
+	"os"
 )
 
-type compiler struct {
-	tree    parser.IProgramContext
-	globals map[string]Type
-	parent  map[string]TClassRef
-}
-
-func CompileX64(filename string) error {
-	// basename := strings.TrimSuffix(filename, path.Ext(filename))
-
-	_, err := genX64(filename)
+func CompileX64(cfg Config) error {
+	_, err := frontend.Run(cfg.Source)
 	if err != nil {
 		return err
 	}
 
-	// if err := saveAssembly(asm, basename+".s"); err != nil {
-	// 	return fmt.Errorf("failed to save assembly to .s file: %w", err)
-	// }
+	if cfg.TypeCheck {
+		return nil
+	}
 
-	// if err := compileNASM(basename+".s", basename+".o"); err != nil {
+	asm, err := genX64(cfg)
+	if err != nil {
+		return err
+	}
+
+	if err := saveAssembly(asm, cfg.Intermediate); err != nil {
+		return fmt.Errorf("failed to save assembly to .s file: %w", err)
+	}
+
+	linkFile, err := ioutil.TempFile(os.TempDir(), "latte_link")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(linkFile.Name())
+
+	// if err := compileNASM(cfg.Intermediate, linkFile.Name()); err != nil {
 	// 	return fmt.Errorf("nasm compilation error: %w", err)
 	// }
 
-	// if err := link(basename+".o", basename); err != nil {
-	// 	return fmt.Errorf("link error: %w", err)
-	// }
+	if err := compileGCC(cfg.Intermediate, linkFile.Name()); err != nil {
+		return fmt.Errorf("gcc compilation error: %w", err)
+	}
+
+	if err := link(linkFile.Name(), cfg.Target); err != nil {
+		return fmt.Errorf("link error: %w", err)
+	}
 
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"io/ioutil"
+	"latte/compiler/config"
 	"latte/compiler/frontend/types"
 	"math/rand"
 	"os"
@@ -41,7 +42,10 @@ func TestGood(t *testing.T) {
 				filename := dir + "/" + item.Name()
 				if path.Ext(filename) == ".lat" {
 					t.Run(filename, func(t *testing.T) {
-						err := CompileX64(filename)
+						err := CompileX64(config.Config{
+							TypeCheck: true,
+							Source:    filename,
+						})
 						if err != nil {
 							t.Fatal(err)
 						}
@@ -64,7 +68,10 @@ func TestBad(t *testing.T) {
 				filename := dir + "/" + item.Name()
 				if path.Ext(filename) == ".lat" {
 					t.Run(filename, func(t *testing.T) {
-						err := CompileX64(filename)
+						err := CompileX64(config.Config{
+							TypeCheck: true,
+							Source:    filename,
+						})
 						if err == nil {
 							t.Fatal("test didn't fail!")
 						} else {
@@ -171,7 +178,10 @@ func TestRandomConstExpr(t *testing.T) {
 		}
 
 		os.WriteFile(f.Name(), []byte(s), fs.FileMode(os.O_RDONLY))
-		err = CompileX64(f.Name())
+		err = CompileX64(config.Config{
+			Source:    f.Name(),
+			TypeCheck: true,
+		})
 		if err != nil {
 			if _, ok := err.(types.ZeroDivisionError); !ok {
 				t.Fatal(err)

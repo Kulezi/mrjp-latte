@@ -1,37 +1,49 @@
 package compiler
 
 import (
-	"latte/compiler/frontend"
+	. "latte/compiler/config"
 )
 
-const sampleASM = `; ----------------------------------------------------------------------------------------
-; Writes "Hello, World" to the console using only system calls. Runs on 64-bit Linux only.
-; To assemble and run:
-;
-;     nasm -felf64 hello.asm && ld hello.o && ./a.out
-; ----------------------------------------------------------------------------------------
+// const sampleASM = `; ----------------------------------------s------------------------------------------------
+// ; Writes "Hello, World" to the console using only system calls. Runs on 64-bit Linux only.
+// ; To assemble and run:
+// ;
+// ;     nasm -felf64 hello.asm && ld hello.o && ./a.out
+// ; ----------------------------------------------------------------------------------------
 
-          global    _start
+//           global    _start
 
-          section   .text
-_start:   mov       rax, 1                  ; system call for write
-          mov       rdi, 1                  ; file handle 1 is stdout
-          mov       rsi, message            ; address of string to output
-          mov       rdx, 13                 ; number of bytes
-          syscall                           ; invoke operating system to do the write
-          mov       rax, 60                 ; system call for exit
-          xor       rdi, rdi                ; exit code 0
-          syscall                           ; invoke operating system to exit
+//           section   .text
+// _start:   mov       rax, 1                  ; system call for write
+//           mov       rdi, 1                  ; file handle 1 is stdout
+//           mov       rsi, message            ; address of string to output
+//           mov       rdx, 13                 ; number of bytes
+//           syscall                           ; invoke operating system to do the write
+//           mov       rax, 60                 ; system call for exit
+//           xor       rdi, rdi                ; exit code 0
+//           syscall                           ; invoke operating system to exit
 
-          section   .data
-message:  db        "Hello, World", 10      ; note the newline at the end`
+//           section   .data
+// message:  db        "Hello, World", 10      ; note the newline at the end`
+
+const sampleATT = `.data
+hello:
+    .string "Hello world!\n"
+
+.text
+.globl _start
+_start:
+    movl $4, %eax # write(1, hello, strlen(hello))
+    movl $1, %ebx
+    movl $hello, %ecx
+    movl $13, %edx
+    int  $0x80
+
+    movl $1, %eax # exit(0)
+    movl $0, %ebx
+    int  $0x80`
 
 // FIXME: generate code.
-func genX64(filename string) (string, error) {
-	_, err := frontend.Run(filename)
-	if err != nil {
-		return "", err
-	}
-
-	return sampleASM, nil
+func genX64(cfg Config) (string, error) {
+	return sampleATT, nil
 }

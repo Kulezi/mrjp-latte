@@ -37,6 +37,22 @@ func compileNASM(sourcePath, targetPath string) error {
 	return nil
 }
 
+func compileGCC(sourcePath, targetPath string) error {
+	out, err := exec.Command(
+		"gcc",
+		"-c",
+		"-m64",
+		"-o",
+		targetPath,
+		sourcePath,
+	).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%w: %s", err, out)
+	}
+
+	return nil
+}
+
 func link(sourcePath, targetPath string) error {
 	out, err := exec.Command(
 		"ld",
