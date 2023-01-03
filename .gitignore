@@ -16,3 +16,5 @@ src/compiler/*
 !src/compiler/*.go
 
 !src/compiler/frontend/
+
+!src/compiler/config/
