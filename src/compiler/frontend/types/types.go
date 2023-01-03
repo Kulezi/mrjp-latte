@@ -45,7 +45,7 @@ func MakeSignatures() Signatures {
 			"error": TypeInfo{
 				Type: TFun{
 					Ident:  "error",
-					Result: TVoid{},
+					Result: TVoid{IsReturn: true},
 				},
 			},
 			"readInt": TypeInfo{
@@ -159,6 +159,7 @@ type Type interface {
 
 type TVoid struct {
 	StartToken antlr.Token
+	IsReturn   bool
 }
 
 func (TVoid) String() string {

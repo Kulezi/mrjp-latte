@@ -318,9 +318,18 @@ func (v *visitor) VisitSFor(ctx *parser.SForContext) interface{} {
 }
 
 func (v *visitor) VisitSExp(ctx *parser.SExpContext) interface{} {
-	if _, err := v.evalExpr(ctx.Expr()); err != nil {
+	t, err := v.evalExpr(ctx.Expr())
+	if err != nil {
 		return err
 	}
+
+	if t, ok := t.(TVoid); ok && t.IsReturn {
+		return doesReturn{
+			always:    true,
+			sometimes: true,
+		}
+	}
+
 	return doesReturn{
 		always:    false,
 		sometimes: false,
