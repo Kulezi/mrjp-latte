@@ -41,7 +41,9 @@ func compileGCC(sourcePath, targetPath string) error {
 	out, err := exec.Command(
 		"gcc",
 		"-c",
+		"-O0",
 		"-m64",
+		"-fno-pie",
 		"-o",
 		targetPath,
 		sourcePath,
