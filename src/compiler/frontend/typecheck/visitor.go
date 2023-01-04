@@ -9,8 +9,8 @@ import (
 )
 
 type varDropper struct {
-	drop  func()
-	depth int
+	Drop  func()
+	Depth int
 }
 
 type doesReturn struct {
