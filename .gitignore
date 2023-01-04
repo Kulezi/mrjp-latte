@@ -18,3 +18,5 @@ src/compiler/*
 !src/compiler/frontend/
 
 !src/compiler/config/
+
+!src/compiler/backend
