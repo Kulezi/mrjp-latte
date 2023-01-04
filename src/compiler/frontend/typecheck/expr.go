@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func (v *visitor) evalExpr(tree parser.IExprContext) (Type, error) {
+func (v *Visitor) evalExpr(tree parser.IExprContext) (Type, error) {
 	res := v.Visit(tree)
 	if err, ok := res.(error); ok {
 		return nil, err
@@ -24,7 +24,7 @@ func (v *visitor) evalExpr(tree parser.IExprContext) (Type, error) {
 	panic("evalExpr called in wrong context, visiting the tree should return a type")
 }
 
-func (v *visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
+func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
 	t, err := v.evalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ func (v *visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{}
 	return v.Visit(ctx.Expr(1))
 }
 
-func (v *visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
+func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
 	t, err := v.evalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func (v *visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
 	return arr.Elem
 }
 
-func (v *visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
+func (v *Visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
 	t, err := v.evalExpr(ctx.Expr())
 	if err != nil {
 		return err
@@ -83,7 +83,7 @@ func (v *visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitENotOp(ctx *parser.ENotOpContext) interface{} {
+func (v *Visitor) VisitENotOp(ctx *parser.ENotOpContext) interface{} {
 	t, err := v.evalExpr(ctx.Expr())
 	if err != nil {
 		return err
@@ -104,7 +104,7 @@ func (v *visitor) VisitENotOp(ctx *parser.ENotOpContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
+func (v *Visitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
 	t1, err := v.evalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
@@ -144,7 +144,7 @@ func (v *visitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
+func (v *Visitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
 	t1, err := v.evalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
@@ -193,7 +193,7 @@ func (v *visitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
+func (v *Visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
 	t1, err := v.evalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
@@ -229,7 +229,7 @@ func (v *visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitEAnd(ctx *parser.EAndContext) interface{} {
+func (v *Visitor) VisitEAnd(ctx *parser.EAndContext) interface{} {
 	t1, err := v.evalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
@@ -262,7 +262,7 @@ func (v *visitor) VisitEAnd(ctx *parser.EAndContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitEOr(ctx *parser.EOrContext) interface{} {
+func (v *Visitor) VisitEOr(ctx *parser.EOrContext) interface{} {
 	t1, err := v.evalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
@@ -294,7 +294,7 @@ func (v *visitor) VisitEOr(ctx *parser.EOrContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitENewArray(ctx *parser.ENewArrayContext) interface{} {
+func (v *Visitor) VisitENewArray(ctx *parser.ENewArrayContext) interface{} {
 	t, err := v.evalType(ctx.Singular_type_())
 	if err != nil {
 		return err
@@ -320,7 +320,7 @@ func (v *visitor) VisitENewArray(ctx *parser.ENewArrayContext) interface{} {
 	return t
 }
 
-func (v *visitor) VisitENew(ctx *parser.ENewContext) interface{} {
+func (v *Visitor) VisitENew(ctx *parser.ENewContext) interface{} {
 	t, err := v.evalType(ctx.Singular_type_())
 	if err != nil {
 		return err
@@ -336,11 +336,11 @@ func (v *visitor) VisitENew(ctx *parser.ENewContext) interface{} {
 	return class
 }
 
-func (v *visitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
-	return v.curClass
+func (v *Visitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
+	return v.CurClass
 }
 
-func (v *visitor) VisitEId(ctx *parser.EIdContext) interface{} {
+func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
 	ident := ctx.ID().GetText()
 	if t, ok := v.TypeOfLocal(ident); ok {
 		return t.Type
@@ -349,7 +349,7 @@ func (v *visitor) VisitEId(ctx *parser.EIdContext) interface{} {
 	return UndeclaredIdentifierError{Ident: ctx.ID()}
 }
 
-func (v *visitor) VisitEInt(ctx *parser.EIntContext) interface{} {
+func (v *Visitor) VisitEInt(ctx *parser.EIntContext) interface{} {
 	n, err := strconv.Atoi(ctx.INT().GetText())
 	if err != nil {
 		return ConstOutOfRangeError{
@@ -363,7 +363,7 @@ func (v *visitor) VisitEInt(ctx *parser.EIntContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitETrue(ctx *parser.ETrueContext) interface{} {
+func (v *Visitor) VisitETrue(ctx *parser.ETrueContext) interface{} {
 	b := true
 	return TBool{
 		StartToken: ctx.GetStart(),
@@ -371,7 +371,7 @@ func (v *visitor) VisitETrue(ctx *parser.ETrueContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitEFalse(ctx *parser.EFalseContext) interface{} {
+func (v *Visitor) VisitEFalse(ctx *parser.EFalseContext) interface{} {
 	b := false
 	return TBool{
 		StartToken: ctx.GetStart(),
@@ -379,7 +379,7 @@ func (v *visitor) VisitEFalse(ctx *parser.EFalseContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
+func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 	ident := ctx.ID().GetText()
 	t, ok := v.TypeOf(ident)
 	if !ok {
@@ -416,7 +416,7 @@ func (v *visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 	return signature.Result
 }
 
-func (v *visitor) VisitEStr(ctx *parser.EStrContext) interface{} {
+func (v *Visitor) VisitEStr(ctx *parser.EStrContext) interface{} {
 	withBraces := ctx.STR().GetText()
 	s := withBraces[1 : len(withBraces)-1]
 	return TString{
@@ -425,7 +425,7 @@ func (v *visitor) VisitEStr(ctx *parser.EStrContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitENull(ctx *parser.ENullContext) interface{} {
+func (v *Visitor) VisitENull(ctx *parser.ENullContext) interface{} {
 	classRef := TClassRef{ctx.ID()}
 	t, ok := v.TypeOfGlobal(classRef.String())
 	if !ok {
@@ -441,7 +441,7 @@ func (v *visitor) VisitENull(ctx *parser.ENullContext) interface{} {
 	return class
 }
 
-func (v *visitor) VisitEParen(ctx *parser.EParenContext) interface{} {
+func (v *Visitor) VisitEParen(ctx *parser.EParenContext) interface{} {
 	return v.Visit(ctx.Expr())
 }
 

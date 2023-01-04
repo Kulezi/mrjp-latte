@@ -17,34 +17,34 @@ type doesReturn struct {
 	always, sometimes bool
 }
 
-// visitor for typechecking:
+// Visitor for typechecking:
 //
 // Visiting topdefs returns nil on successful typecheck or a meaningful error on a failed one.
 // Visiting statements returns doesReturn or an error
 // Visiting expressions and types returns Type or an error
-type visitor struct {
+type Visitor struct {
 	parser.BaseLatteVisitor
-	// Holds type signatures of identifiers in current scope.
-	signatures Signatures
+	// Holds type Signatures of identifiers in current scope.
+	Signatures Signatures
 	// Depth of the current scope.
-	depth int
+	Depth int
 	// Stack of variables to unshadow.
-	dropperStack []varDropper
+	DropperStack []varDropper
 	// Signature of the currently checked class
-	curClass *TClass
+	CurClass *TClass
 	// Signature of the currently checked function/method.
-	curFun *TFun
+	CurFun *TFun
 }
 
-func MakeVisitor(s Signatures) *visitor {
-	return &visitor{signatures: s}
+func MakeVisitor(s Signatures) *Visitor {
+	return &Visitor{Signatures: s}
 }
 
-func (v *visitor) Visit(tree antlr.ParseTree) interface{} {
+func (v *Visitor) Visit(tree antlr.ParseTree) interface{} {
 	return tree.Accept(v)
 }
 
-func (v *visitor) VisitProgram(ctx *parser.ProgramContext) interface{} {
+func (v *Visitor) VisitProgram(ctx *parser.ProgramContext) interface{} {
 	res := make([]interface{}, 0)
 	for _, child := range ctx.AllTopDef() {
 		if err, ok := v.Visit(child).(error); ok {
@@ -55,7 +55,7 @@ func (v *visitor) VisitProgram(ctx *parser.ProgramContext) interface{} {
 	return res
 }
 
-func (v *visitor) VisitClassMethodDef(ctx *parser.ClassMethodDefContext) interface{} {
+func (v *Visitor) VisitClassMethodDef(ctx *parser.ClassMethodDefContext) interface{} {
 	// Check method validity.
 	return v.Visit(ctx.Fundef())
 }

@@ -6,7 +6,7 @@ import (
 	"latte/parser"
 )
 
-func (v *visitor) VisitTopDef(ctx *parser.TopDefContext) interface{} {
+func (v *Visitor) VisitTopDef(ctx *parser.TopDefContext) interface{} {
 	if fun := ctx.Fundef(); fun != nil {
 		return v.Visit(fun)
 	}
@@ -14,7 +14,7 @@ func (v *visitor) VisitTopDef(ctx *parser.TopDefContext) interface{} {
 	return v.Visit(ctx.Classdef())
 }
 
-func (v *visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
+func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	ident := ctx.ID().GetText()
 
 	t, ok := v.TypeOf(ident)
@@ -35,14 +35,14 @@ func (v *visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 		}
 	}
 
-	v.depth++
+	v.Depth++
 	for _, arg := range signature.Args {
 		defer v.ShadowLocal(arg.Ident, arg.Type)()
 	}
-	v.depth--
+	v.Depth--
 
-	v.curFun = &signature
-	defer func() { v.curFun = nil }()
+	v.CurFun = &signature
+	defer func() { v.CurFun = nil }()
 	res := v.Visit(ctx.Block())
 	if err, ok := res.(error); ok {
 		return err
@@ -58,11 +58,11 @@ func (v *visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	return nil
 }
 
-func (v *visitor) VisitBaseClassDef(ctx *parser.BaseClassDefContext) interface{} {
+func (v *Visitor) VisitBaseClassDef(ctx *parser.BaseClassDefContext) interface{} {
 	signature := v.evalClass(ctx.ID().GetText())
 
 	defer v.EnterClass(signature)()
-	v.curClass = &signature
+	v.CurClass = &signature
 	// Evaluate methods
 	for _, field := range ctx.AllField() {
 		if err, ok := v.Visit(field).(error); ok {
@@ -70,15 +70,15 @@ func (v *visitor) VisitBaseClassDef(ctx *parser.BaseClassDefContext) interface{}
 		}
 	}
 
-	v.curClass = nil
+	v.CurClass = nil
 	return nil
 }
 
-func (v *visitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefContext) interface{} {
+func (v *Visitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefContext) interface{} {
 	signature := v.evalClass(ctx.ID(0).GetText())
 
 	defer v.EnterClass(signature)()
-	v.curClass = &signature
+	v.CurClass = &signature
 	// Evaluate methods
 	for _, field := range ctx.AllField() {
 		if err, ok := v.Visit(field).(error); ok {
@@ -86,11 +86,11 @@ func (v *visitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefContext) inter
 		}
 	}
 
-	v.curClass = nil
+	v.CurClass = nil
 	return nil
 }
 
-func (v *visitor) VisitClassFieldDef(ctx *parser.ClassFieldDefContext) interface{} {
+func (v *Visitor) VisitClassFieldDef(ctx *parser.ClassFieldDefContext) interface{} {
 	// We still need to check if returned type exists.
 	return v.Visit(ctx.Nvtype_())
 }

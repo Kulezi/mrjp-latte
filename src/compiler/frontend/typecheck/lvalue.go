@@ -5,7 +5,7 @@ import (
 	"latte/parser"
 )
 
-func (v *visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
+func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
 	t, err := v.evalExpr(ctx.Expr())
 	if err != nil {
 		return err
@@ -18,7 +18,7 @@ func (v *visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
 	return v.Visit(ctx.Lvalue())
 }
 
-func (v *visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
+func (v *Visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
 	t, err := v.evalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func (v *visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
 	return arr.Elem
 }
 
-func (v *visitor) VisitLVId(ctx *parser.LVIdContext) interface{} {
+func (v *Visitor) VisitLVId(ctx *parser.LVIdContext) interface{} {
 	t, ok := v.TypeOfLocal(ctx.ID().GetText())
 	if !ok {
 		return UndeclaredIdentifierError{
@@ -49,7 +49,7 @@ func (v *visitor) VisitLVId(ctx *parser.LVIdContext) interface{} {
 	return t.Type
 }
 
-func (v *visitor) evalLVType(ctx parser.ILvalueContext) (Type, error) {
+func (v *Visitor) evalLVType(ctx parser.ILvalueContext) (Type, error) {
 	res := v.Visit(ctx)
 	if err, ok := res.(error); ok {
 		return nil, err

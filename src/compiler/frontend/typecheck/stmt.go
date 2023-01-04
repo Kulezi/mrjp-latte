@@ -5,7 +5,7 @@ import (
 	"latte/parser"
 )
 
-func (v *visitor) evalStmt(ctx parser.IStmtContext) (returns doesReturn, err error) {
+func (v *Visitor) evalStmt(ctx parser.IStmtContext) (returns doesReturn, err error) {
 	ret := v.Visit(ctx)
 	if err, ok := ret.(error); ok {
 		return doesReturn{}, err
@@ -19,9 +19,9 @@ func (v *visitor) evalStmt(ctx parser.IStmtContext) (returns doesReturn, err err
 	return b, nil
 }
 
-func (v *visitor) VisitBlock(ctx *parser.BlockContext) interface{} {
-	v.depth++
-	defer func() { v.depth-- }()
+func (v *Visitor) VisitBlock(ctx *parser.BlockContext) interface{} {
+	v.Depth++
+	defer func() { v.Depth-- }()
 	returns := doesReturn{}
 	for _, stmt := range ctx.AllStmt() {
 		stmtReturns, err := v.evalStmt(stmt)
@@ -34,28 +34,28 @@ func (v *visitor) VisitBlock(ctx *parser.BlockContext) interface{} {
 		}
 	}
 
-	for len(v.dropperStack) > 0 {
-		dropper := v.dropperStack[len(v.dropperStack)-1]
-		if dropper.depth != v.depth {
+	for len(v.DropperStack) > 0 {
+		dropper := v.DropperStack[len(v.DropperStack)-1]
+		if dropper.depth != v.Depth {
 			break
 		}
 
 		dropper.drop()
-		v.dropperStack = v.dropperStack[:len(v.dropperStack)-1]
+		v.DropperStack = v.DropperStack[:len(v.DropperStack)-1]
 	}
 
 	return returns
 }
 
-func (v *visitor) VisitSEmpty(ctx *parser.SEmptyContext) interface{} {
+func (v *Visitor) VisitSEmpty(ctx *parser.SEmptyContext) interface{} {
 	return doesReturn{}
 }
 
-func (v *visitor) VisitSBlockStmt(ctx *parser.SBlockStmtContext) interface{} {
+func (v *Visitor) VisitSBlockStmt(ctx *parser.SBlockStmtContext) interface{} {
 	return v.Visit(ctx.Block())
 }
 
-func (v *visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
+func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 	t, err := v.evalType(ctx.Nvtype_())
 	if err != nil {
 		return err
@@ -80,15 +80,15 @@ func (v *visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 				return err
 			}
 		}
-		v.dropperStack = append(v.dropperStack, varDropper{
+		v.DropperStack = append(v.DropperStack, varDropper{
 			drop:  v.ShadowLocal(ident.GetText(), t),
-			depth: v.depth,
+			depth: v.Depth,
 		})
 	}
 	return doesReturn{}
 }
 
-func (v *visitor) VisitSAss(ctx *parser.SAssContext) interface{} {
+func (v *Visitor) VisitSAss(ctx *parser.SAssContext) interface{} {
 	t, err := v.evalLVType(ctx.Lvalue())
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func (v *visitor) VisitSAss(ctx *parser.SAssContext) interface{} {
 	return doesReturn{}
 }
 
-func (v *visitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
+func (v *Visitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
 	t, err := v.evalLVType(ctx.Lvalue())
 	if err != nil {
 		return err
@@ -116,7 +116,7 @@ func (v *visitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
 	return doesReturn{}
 }
 
-func (v *visitor) VisitSDecr(ctx *parser.SDecrContext) interface{} {
+func (v *Visitor) VisitSDecr(ctx *parser.SDecrContext) interface{} {
 	t, err := v.evalLVType(ctx.Lvalue())
 	if err != nil {
 		return err
@@ -133,15 +133,15 @@ func (v *visitor) VisitSDecr(ctx *parser.SDecrContext) interface{} {
 	return doesReturn{}
 }
 
-func (v *visitor) VisitSRet(ctx *parser.SRetContext) interface{} {
-	if SameType(v.curFun.Result, TVoid{}) {
+func (v *Visitor) VisitSRet(ctx *parser.SRetContext) interface{} {
+	if SameType(v.CurFun.Result, TVoid{}) {
 		return VoidReturnWithValueError{
 			Ctx: ctx,
-			Fun: *v.curFun,
+			Fun: *v.CurFun,
 		}
 	}
 
-	if err := v.ExpectType(v.curFun.Result, ctx.Expr()); err != nil {
+	if err := v.ExpectType(v.CurFun.Result, ctx.Expr()); err != nil {
 		return err
 	}
 
@@ -151,11 +151,11 @@ func (v *visitor) VisitSRet(ctx *parser.SRetContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitSVRet(ctx *parser.SVRetContext) interface{} {
-	if !SameType(v.curFun.Result, TVoid{}) {
+func (v *Visitor) VisitSVRet(ctx *parser.SVRetContext) interface{} {
+	if !SameType(v.CurFun.Result, TVoid{}) {
 		return MissingReturnValueError{
 			Ctx:      ctx,
-			Expected: v.curFun.Result,
+			Expected: v.CurFun.Result,
 		}
 	}
 	return doesReturn{
@@ -164,7 +164,7 @@ func (v *visitor) VisitSVRet(ctx *parser.SVRetContext) interface{} {
 	}
 }
 
-func (v *visitor) evalNonDeclStmt(ctx parser.IStmtContext) (doesReturn, error) {
+func (v *Visitor) evalNonDeclStmt(ctx parser.IStmtContext) (doesReturn, error) {
 	if _, ok := ctx.(*parser.SDeclContext); ok {
 		return doesReturn{}, DeclarationWithoutBlockError{
 			Ctx: ctx,
@@ -174,7 +174,7 @@ func (v *visitor) evalNonDeclStmt(ctx parser.IStmtContext) (doesReturn, error) {
 	return v.evalStmt(ctx)
 }
 
-func (v *visitor) VisitSCond(ctx *parser.SCondContext) interface{} {
+func (v *Visitor) VisitSCond(ctx *parser.SCondContext) interface{} {
 	t, err := v.evalExpr(ctx.Expr())
 	if err != nil {
 		return err
@@ -205,7 +205,7 @@ func (v *visitor) VisitSCond(ctx *parser.SCondContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
+func (v *Visitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
 	t, err := v.evalExpr(ctx.Expr())
 	if err != nil {
 		return err
@@ -244,7 +244,7 @@ func (v *visitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
+func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 	t, err := v.evalExpr(ctx.Expr())
 	if err != nil {
 		return err
@@ -277,7 +277,7 @@ func (v *visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitSFor(ctx *parser.SForContext) interface{} {
+func (v *Visitor) VisitSFor(ctx *parser.SForContext) interface{} {
 	t, err := v.evalType(ctx.Type_())
 	if err != nil {
 		return err
@@ -317,7 +317,7 @@ func (v *visitor) VisitSFor(ctx *parser.SForContext) interface{} {
 	}
 }
 
-func (v *visitor) VisitSExp(ctx *parser.SExpContext) interface{} {
+func (v *Visitor) VisitSExp(ctx *parser.SExpContext) interface{} {
 	t, err := v.evalExpr(ctx.Expr())
 	if err != nil {
 		return err

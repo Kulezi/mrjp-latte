@@ -6,7 +6,7 @@ import (
 	"latte/parser"
 )
 
-func (v *visitor) evalClass(ident string) TClass {
+func (v *Visitor) evalClass(ident string) TClass {
 	t, ok := v.TypeOfGlobal(ident)
 	if !ok {
 		panic(fmt.Sprintf("typecheck: found undeclared class %s", ident))
@@ -20,25 +20,25 @@ func (v *visitor) evalClass(ident string) TClass {
 	return signature
 }
 
-func (v *visitor) ConflictLocal(ident string) (TypeInfo, bool) {
-	return v.signatures.ConflictLocal(ident, v.depth)
+func (v *Visitor) ConflictLocal(ident string) (TypeInfo, bool) {
+	return v.Signatures.ConflictLocal(ident, v.Depth)
 }
 
-func (v *visitor) ShadowLocal(ident string, t Type) (drop func()) {
-	return v.signatures.ShadowLocal(ident, t, v.depth)
+func (v *Visitor) ShadowLocal(ident string, t Type) (drop func()) {
+	return v.Signatures.ShadowLocal(ident, t, v.Depth)
 }
 
-func (v *visitor) TypeOfLocal(ident string) (TypeInfo, bool) {
-	res, ok := v.signatures.Locals[ident]
+func (v *Visitor) TypeOfLocal(ident string) (TypeInfo, bool) {
+	res, ok := v.Signatures.Locals[ident]
 	return res, ok
 }
 
-func (v *visitor) TypeOfGlobal(ident string) (TypeInfo, bool) {
-	res, ok := v.signatures.Globals[ident]
+func (v *Visitor) TypeOfGlobal(ident string) (TypeInfo, bool) {
+	res, ok := v.Signatures.Globals[ident]
 	return res, ok
 }
 
-func (v *visitor) TypeOf(ident string) (TypeInfo, bool) {
+func (v *Visitor) TypeOf(ident string) (TypeInfo, bool) {
 	if res, ok := v.TypeOfLocal(ident); ok {
 		return res, ok
 	}
@@ -46,8 +46,8 @@ func (v *visitor) TypeOf(ident string) (TypeInfo, bool) {
 	return v.TypeOfGlobal(ident)
 }
 
-func (v *visitor) EnterClass(signature TClass) (exit func()) {
-	v.depth++
+func (v *Visitor) EnterClass(signature TClass) (exit func()) {
+	v.Depth++
 	// Put all fields into enviroment.
 	var exits []func()
 	for ident, t := range signature.Fields {
@@ -58,11 +58,11 @@ func (v *visitor) EnterClass(signature TClass) (exit func()) {
 		for _, exit := range exits {
 			exit()
 		}
-		v.depth--
+		v.Depth--
 	}
 }
 
-func (v *visitor) isSubClass(expected, child Type) bool {
+func (v *Visitor) isSubClass(expected, child Type) bool {
 	class, ok := child.(TClass)
 	if !ok {
 		return false
@@ -77,7 +77,7 @@ func (v *visitor) isSubClass(expected, child Type) bool {
 	return SameType(expected, class)
 }
 
-func (v *visitor) ExpectType(expected Type, ctx parser.IExprContext) error {
+func (v *Visitor) ExpectType(expected Type, ctx parser.IExprContext) error {
 	if ctx == nil {
 		return nil
 	}
