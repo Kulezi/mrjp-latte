@@ -67,5 +67,13 @@ type QRet struct {
 }
 
 func (q QRet) String() string { return fmt.Sprintf("return %s", q.Value) }
+func (q QRet) IsJump() bool   { return true }
 
-func (q QRet) IsJump() bool { return true }
+type QUnOp struct {
+	QBase
+	Op  string
+	Dst Location
+	Arg Location
+}
+
+func (q QUnOp) String() string { return fmt.Sprintf("%s = %s%s", q.Dst, q.Op, q.Arg) }

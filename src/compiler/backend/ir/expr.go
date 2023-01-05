@@ -49,26 +49,18 @@ func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
 	// return arr.Elem
 }
 
-// func (v *Visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
-// 	t, err := v.evalExpr(ctx.Expr())
-// 	if err != nil {
-// 		return err
-// 	}
+func (v *Visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
+	arg := v.evalExpr(ctx.Expr())
+	dst := v.FreshTemp(arg.Type())
 
-// 	n, ok := t.(TInt)
-// 	if !ok {
-// 		return UnexpectedTypeError{
-// 			Expr:     ctx,
-// 			Expected: TInt{},
-// 			Got:      t,
-// 		}
-// 	}
+	v.EmitQuad(QUnOp{
+		Op:  "-",
+		Dst: dst,
+		Arg: arg,
+	})
 
-// 	return TInt{
-// 		StartToken: ctx.GetStart(),
-// 		Value:      EvalConstIntNegOp(n),
-// 	}
-// }
+	return dst
+}
 
 // func (v *Visitor) VisitENotOp(ctx *parser.ENotOpContext) interface{} {
 // 	t, err := v.evalExpr(ctx.Expr())
@@ -331,25 +323,6 @@ func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
 	ident := ctx.ID().GetText()
 	return v.GetLocal(ident)
 }
-
-// func (v *Visitor) VisitEInt(ctx *parser.EIntContext) interface{} {
-// 	n, _ := strconv.Atoi(ctx.INT().GetText())
-// 	return LConst{
-// 		Type_: TInt{
-// 			StartToken: ctx.GetStart(),
-// 			Value:      &n,
-// 		},
-// 		Value: n,
-// 	}
-// }
-
-// func (v *Visitor) VisitETrue(ctx *parser.ETrueContext) interface{} {
-// 	return LConst{Value: true}
-// }
-
-// func (v *Visitor) VisitEFalse(ctx *parser.EFalseContext) interface{} {
-// 	return LConst{Value: false}
-// }
 
 // func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 // 	ident := ctx.ID().GetText()

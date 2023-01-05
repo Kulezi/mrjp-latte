@@ -27,13 +27,13 @@ func (v *Visitor) VisitBlock(ctx *parser.BlockContext) interface{} {
 	return nil
 }
 
-// func (v *Visitor) VisitSEmpty(ctx *parser.SEmptyContext) interface{} {
-// 	return doesReturn{}
-// }
+func (v *Visitor) VisitSEmpty(ctx *parser.SEmptyContext) interface{} {
+	return nil
+}
 
-// func (v *Visitor) VisitSBlockStmt(ctx *parser.SBlockStmtContext) interface{} {
-// 	return v.Visit(ctx.Block())
-// }
+func (v *Visitor) VisitSBlockStmt(ctx *parser.SBlockStmtContext) interface{} {
+	return v.Visit(ctx.Block())
+}
 
 func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 	log.Println("sdecl")
@@ -71,16 +71,16 @@ func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 	return nil
 }
 
-// func (v *Visitor) VisitSAss(ctx *parser.SAssContext) interface{} {
-// 	t, err := v.evalLVType(ctx.Lvalue())
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if err := v.ExpectType(t, ctx.Expr()); err != nil {
-// 		return err
-// 	}
-// 	return doesReturn{}
-// }
+func (v *Visitor) VisitSAss(ctx *parser.SAssContext) interface{} {
+	dst := v.evalLV(ctx.Lvalue())
+	src := v.evalSExp(ctx.Expr())
+	v.EmitQuad(QMov{
+		Src: src,
+		Dst: dst,
+	})
+
+	return nil
+}
 
 // func (v *Visitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
 // 	t, err := v.evalLVType(ctx.Lvalue())
