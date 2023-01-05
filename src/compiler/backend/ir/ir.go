@@ -17,7 +17,10 @@ type LConst struct {
 }
 
 func (v LConst) String() string {
-	return fmt.Sprintf("%d", v.Value)
+	if v, ok := v.Value.(string); ok {
+		return fmt.Sprintf("\"%s\"", v)
+	}
+	return fmt.Sprintf("%v", v.Value)
 }
 
 func (v LConst) Type() Type {
