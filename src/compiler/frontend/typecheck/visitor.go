@@ -8,7 +8,7 @@ import (
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 )
 
-type varDropper struct {
+type VarDropper struct {
 	Drop  func()
 	Depth int
 }
@@ -29,7 +29,7 @@ type Visitor struct {
 	// Depth of the current scope.
 	Depth int
 	// Stack of variables to unshadow.
-	DropperStack []varDropper
+	DropperStack []VarDropper
 	// Signature of the currently checked class
 	CurClass *TClass
 	// Signature of the currently checked function/method.

@@ -9,7 +9,7 @@ import (
 )
 
 func CompileX64(cfg Config) error {
-	_, err := frontend.Run(cfg.Source)
+	s, err := frontend.Run(cfg.Source)
 	if err != nil {
 		return err
 	}
@@ -18,7 +18,7 @@ func CompileX64(cfg Config) error {
 		return nil
 	}
 
-	asm, err := genX64(cfg)
+	asm, err := genX64(s, cfg)
 	if err != nil {
 		return err
 	}

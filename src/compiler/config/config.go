@@ -46,7 +46,7 @@ func ReadConfig() Config {
 		"Target binary name",
 	)
 
-	useOptLevel := make([]bool, optLevels)
+	useOptLevel := make([]bool, optLevels+1)
 	flag.BoolVar(
 		&useOptLevel[0],
 		"O0",

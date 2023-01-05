@@ -1,6 +1,7 @@
 package ir
 
 import (
+	"fmt"
 	. "latte/compiler/frontend/types"
 	"latte/parser"
 )
@@ -14,6 +15,7 @@ func (v *Visitor) VisitTopDef(ctx *parser.TopDefContext) interface{} {
 }
 
 func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
+	fmt.Println("fundef")
 	ident := ctx.ID().GetText()
 
 	t, _ := v.TypeOf(ident)
@@ -28,7 +30,7 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	v.CurFun = &signature
 	defer func() { v.CurFun = nil }()
 
-	v.curBlock = BasicBlock{label: ident}
+	v.curBlock = BasicBlock{Label: ident + ":"}
 
 	return v.Visit(ctx.Block())
 }

@@ -1,7 +1,11 @@
 package compiler
 
 import (
+	"fmt"
+	"latte/compiler/backend/ir"
 	. "latte/compiler/config"
+	"latte/compiler/frontend"
+	"latte/compiler/frontend/typecheck"
 )
 
 // const sampleASM = `; ----------------------------------------s------------------------------------------------
@@ -44,6 +48,14 @@ _start:
     int  $0x80`
 
 // FIXME: generate code.
-func genX64(cfg Config) (string, error) {
+func genX64(s frontend.State, cfg Config) (string, error) {
+	v := ir.MakeVisitor(typecheck.MakeVisitor(s.Signatures))
+	v.Visit(s.Tree)
+	for label, block := range v.CFG {
+		fmt.Println(label)
+		for _, op := range block.Ops {
+			fmt.Println(op)
+		}
+	}
 	return sampleATT, nil
 }

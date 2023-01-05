@@ -36,11 +36,11 @@ func (v *Visitor) VisitBlock(ctx *parser.BlockContext) interface{} {
 
 	for len(v.DropperStack) > 0 {
 		dropper := v.DropperStack[len(v.DropperStack)-1]
-		if dropper.depth != v.Depth {
+		if dropper.Depth != v.Depth {
 			break
 		}
 
-		dropper.drop()
+		dropper.Drop()
 		v.DropperStack = v.DropperStack[:len(v.DropperStack)-1]
 	}
 
@@ -80,9 +80,9 @@ func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 				return err
 			}
 		}
-		v.DropperStack = append(v.DropperStack, varDropper{
-			drop:  v.ShadowLocal(ident.GetText(), t),
-			depth: v.Depth,
+		v.DropperStack = append(v.DropperStack, VarDropper{
+			Drop:  v.ShadowLocal(ident.GetText(), t),
+			Depth: v.Depth,
 		})
 	}
 	return doesReturn{}

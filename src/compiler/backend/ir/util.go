@@ -1,6 +1,7 @@
 package ir
 
 import (
+	"fmt"
 	. "latte/compiler/frontend/types"
 )
 
@@ -11,6 +12,26 @@ func (v *Visitor) AddLocal(ident string, t Type) (addr Addr, drop func()) {
 
 	drop = v.ShadowLocal(ident, t)
 	return
+}
+
+func (v *Visitor) FreshTemp() Addr {
+	res := v.totalAddresses
+	v.totalAddresses++
+	return res
+}
+
+func (v *Visitor) FreshLabel() Label {
+	res := fmt.Sprintf("_%d:", v.totalLabels)
+	v.totalLabels++
+	return res
+}
+
+func (v *Visitor) EmitQuad(q Quadruple) {
+	v.curBlock.Ops = append(v.curBlock.Ops, q)
+	if q.IsJump() {
+		v.CFG[v.curBlock.Label] = v.curBlock
+		v.curBlock = BasicBlock{}
+	}
 }
 
 func (v *Visitor) TypeOfLocal(ident string) (TypeInfo, bool) {

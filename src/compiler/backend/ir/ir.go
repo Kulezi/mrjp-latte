@@ -1,22 +1,52 @@
 package ir
 
-type Location interface{}
+import "fmt"
 
-type LReg struct{}
+type Const interface{}
+type Location interface {
+	String() string
+}
 
-type LMem struct{}
+type LConst struct {
+	Value Const
+}
 
-type LIntLit struct{}
+func (v LConst) String() string {
+	return fmt.Sprintf("%d", v.Value)
+}
 
-type LStrLit struct{}
+type LAddr uint
+
+func (addr LAddr) String() string {
+	return fmt.Sprintf("x_%d", addr)
+}
 
 type BasicBlock struct {
-	label string
-	ops   []Quadruple
+	Label string
+	Ops   []Quadruple
 }
 
-type Quadruple interface{}
-
-type AddInt struct {
-	destination, src, dst Location
+type Quadruple interface {
+	IsJump() bool
+	String() string
 }
+
+type QBase struct{}
+
+func (QBase) IsJump() bool   { return false }
+func (QBase) String() string { return "placeholder operation" }
+
+type QMov struct {
+	QBase
+	Src, Dst Location
+}
+
+func (q QMov) String() string { return fmt.Sprintf("%s := %s", q.Dst, q.Src) }
+
+type QRet struct {
+	Value Location
+}
+
+func (q QRet) String() string { return fmt.Sprintf("return %s", q.Value) }
+
+func (q QRet) IsJump() bool { return true }

@@ -9,25 +9,25 @@ import (
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 )
 
-type state struct {
-	tree       parser.IProgramContext
-	signatures Signatures
+type State struct {
+	Tree       parser.IProgramContext
+	Signatures Signatures
 }
 
-func Run(filename string) (Signatures, error) {
-	s := state{}
+func Run(filename string) (State, error) {
+	s := State{}
 	if err := s.parse(filename); err != nil {
-		return Signatures{}, err
+		return State{}, err
 	}
 
 	if err := s.semanticCheck(); err != nil {
-		return Signatures{}, err
+		return State{}, err
 	}
 
-	return s.signatures, nil
+	return s, nil
 }
 
-func (s *state) parse(filename string) error {
+func (s *State) parse(filename string) error {
 	input, err := antlr.NewFileStream(filename)
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func (s *state) parse(filename string) error {
 	p.RemoveErrorListeners()
 	p.AddErrorListener(parseErrors)
 	p.BuildParseTrees = true
-	s.tree = p.Program()
+	s.Tree = p.Program()
 
 	if err := lexErrors.Check("lexer error:"); err != nil {
 		return err
@@ -58,7 +58,7 @@ func (s *state) parse(filename string) error {
 	return nil
 }
 
-func (s *state) semanticCheck() error {
+func (s *State) semanticCheck() error {
 	var err error
 	// Evaluate method/function signatures and inheritance tree.
 
@@ -66,13 +66,13 @@ func (s *state) semanticCheck() error {
 		return err
 	}
 
-	if main, ok := s.signatures.Globals["main"]; !ok {
+	if main, ok := s.Signatures.Globals["main"]; !ok {
 		return fmt.Errorf("missing main function")
 	} else if !SameType(main.Type, TFun{Ident: "main", Result: TInt{}}) {
 		return MainInvalidSignatureError{Type: main.Type}
 	}
 
-	if err = s.signatures.InheritClasses(); err != nil {
+	if err = s.Signatures.InheritClasses(); err != nil {
 		return err
 	}
 
@@ -91,14 +91,14 @@ func (s *state) semanticCheck() error {
 	return nil
 }
 
-func (s *state) evalGlobalSignatures() error {
+func (s *State) evalGlobalSignatures() error {
 	var err error
-	s.signatures, err = makeGlobalDeclVisitor().Run(s.tree)
+	s.Signatures, err = makeGlobalDeclVisitor().Run(s.Tree)
 	return err
 }
 
-func (s *state) typeCheck() error {
-	if err, ok := typecheck.MakeVisitor(s.signatures).Visit(s.tree).(error); ok {
+func (s *State) typeCheck() error {
+	if err, ok := typecheck.MakeVisitor(s.Signatures).Visit(s.Tree).(error); ok {
 		return err
 	}
 
