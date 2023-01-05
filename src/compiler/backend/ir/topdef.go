@@ -1,7 +1,6 @@
 package ir
 
 import (
-	"fmt"
 	. "latte/compiler/frontend/types"
 	"latte/parser"
 )
@@ -15,7 +14,6 @@ func (v *Visitor) VisitTopDef(ctx *parser.TopDefContext) interface{} {
 }
 
 func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
-	fmt.Println("fundef")
 	ident := ctx.ID().GetText()
 
 	t, _ := v.TypeOf(ident)
@@ -23,7 +21,7 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 
 	v.Depth++
 	for _, arg := range signature.Args {
-		defer v.ShadowLocal(arg.Ident, arg.Type)()
+		defer v.Visitor.ShadowLocal(arg.Ident, arg.Type)()
 	}
 	v.Depth--
 

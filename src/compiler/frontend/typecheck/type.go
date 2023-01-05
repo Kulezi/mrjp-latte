@@ -7,7 +7,7 @@ import (
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 )
 
-func (v *Visitor) evalType(ctx antlr.ParserRuleContext) (Type, error) {
+func (v *Visitor) EvalType(ctx antlr.ParserRuleContext) (Type, error) {
 	t := v.Visit(ctx)
 	if err, ok := t.(error); ok {
 		return nil, err
@@ -62,7 +62,7 @@ func (v *Visitor) VisitTClass(ctx *parser.TClassContext) interface{} {
 }
 
 func (v *Visitor) VisitTArray(ctx *parser.TArrayContext) interface{} {
-	t, err := v.evalType(ctx.Singular_type_())
+	t, err := v.EvalType(ctx.Singular_type_())
 	if err != nil {
 		return err
 	}

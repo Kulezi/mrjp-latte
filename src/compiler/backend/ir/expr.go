@@ -327,14 +327,10 @@ func (v *Visitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
 	// return v.CurClass
 }
 
-// func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
-// 	ident := ctx.ID().GetText()
-// 	if t, ok := v.TypeOfLocal(ident); ok {
-// 		return t.Type
-// 	}
-
-// 	return UndeclaredIdentifierError{Ident: ctx.ID()}
-// }
+func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
+	ident := ctx.ID().GetText()
+	return v.GetLocal(ident)
+}
 
 // func (v *Visitor) VisitEInt(ctx *parser.EIntContext) interface{} {
 // 	n, _ := strconv.Atoi(ctx.INT().GetText())

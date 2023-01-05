@@ -155,6 +155,7 @@ type Type interface {
 	Position() string
 	BaseType() Type
 	Const() (value interface{}, ok bool)
+	DefaultValue() interface{}
 }
 
 type TVoid struct {
@@ -174,6 +175,10 @@ func (t TVoid) BaseType() Type { return t }
 
 func (t TVoid) Const() (value interface{}, ok bool) {
 	return nil, false
+}
+
+func (t TVoid) DefaultValue() interface{} {
+	panic("can't take default value of void type")
 }
 
 type TInt struct {
@@ -199,6 +204,10 @@ func (t TInt) Const() (value interface{}, ok bool) {
 	return *t.Value, true
 }
 
+func (t TInt) DefaultValue() interface{} {
+	return 0
+}
+
 type TString struct {
 	StartToken antlr.Token
 	Value      *string
@@ -222,6 +231,10 @@ func (t TString) Const() (value interface{}, ok bool) {
 	return *t.Value, true
 }
 
+func (t TString) DefaultValue() interface{} {
+	return ""
+}
+
 type TBool struct {
 	StartToken antlr.Token
 	Value      *bool
@@ -243,6 +256,10 @@ func (t TBool) Const() (value interface{}, ok bool) {
 	}
 
 	return *t.Value, true
+}
+
+func (t TBool) DefaultValue() interface{} {
+	return false
 }
 
 type TClass struct {
@@ -278,6 +295,10 @@ func (t TClass) Const() (value interface{}, ok bool) {
 	return nil, false
 }
 
+func (t TClass) DefaultValue() interface{} {
+	panic("can't take default value of a class")
+}
+
 type TClassRef struct {
 	ID antlr.TerminalNode
 }
@@ -294,6 +315,10 @@ func (t TClassRef) BaseType() Type { return t }
 
 func (t TClassRef) Const() (value interface{}, ok bool) {
 	return nil, false
+}
+
+func (t TClassRef) DefaultValue() interface{} {
+	panic("can't take default value of a classref")
 }
 
 type TArray struct {
@@ -313,6 +338,10 @@ func (t TArray) BaseType() Type { return t.Elem.BaseType() }
 
 func (t TArray) Const() (value interface{}, ok bool) {
 	return nil, false
+}
+
+func (t TArray) DefaultValue() interface{} {
+	panic("can't take default value of a array")
 }
 
 type FArg struct {
@@ -355,4 +384,8 @@ func (t TFun) BaseType() Type { return t }
 
 func (t TFun) Const() (value interface{}, ok bool) {
 	return nil, false
+}
+
+func (t TFun) DefaultValue() interface{} {
+	panic("can't take default value of a function")
 }

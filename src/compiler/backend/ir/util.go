@@ -5,25 +5,30 @@ import (
 	. "latte/compiler/frontend/types"
 )
 
-func (v *Visitor) AddLocal(ident string, t Type) (addr Addr, drop func()) {
-	addr = v.totalAddresses
-	v.variableAdresses[ident] = addr
+func (v *Visitor) FreshTemp(t Type) LReg {
+	addr := v.totalAddresses
 	v.totalAddresses++
 
-	drop = v.ShadowLocal(ident, t)
-	return
-}
-
-func (v *Visitor) FreshTemp() Addr {
-	res := v.totalAddresses
-	v.totalAddresses++
-	return res
+	return LReg{
+		Type_: t,
+		Addr:  addr,
+	}
 }
 
 func (v *Visitor) FreshLabel() Label {
 	res := fmt.Sprintf("_%d:", v.totalLabels)
 	v.totalLabels++
 	return res
+}
+
+func (v *Visitor) ShadowLocal(ident string, t Type) (location Location, drop func()) {
+	loc := v.FreshTemp(t)
+	v.variableLocations[ident] = loc
+	return loc, v.Signatures.ShadowLocal(ident, t, v.Depth)
+}
+
+func (v *Visitor) GetLocal(ident string) Location {
+	return v.variableLocations[ident]
 }
 
 func (v *Visitor) EmitQuad(q Quadruple) {

@@ -1,13 +1,13 @@
 package ir
 
 import (
-	"fmt"
+	"latte/compiler/frontend/typecheck"
 	"latte/compiler/frontend/types"
 	"latte/parser"
+	"log"
 )
 
 func (v *Visitor) VisitBlock(ctx *parser.BlockContext) interface{} {
-	fmt.Println("block")
 	v.Depth++
 	defer func() { v.Depth-- }()
 	for _, stmt := range ctx.AllStmt() {
@@ -35,38 +35,41 @@ func (v *Visitor) VisitBlock(ctx *parser.BlockContext) interface{} {
 // 	return v.Visit(ctx.Block())
 // }
 
-// func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
-// 	t, err := v.evalType(ctx.Nvtype_())
-// 	if err != nil {
-// 		return err
-// 	}
+func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
+	log.Println("sdecl")
+	t, _ := v.Visitor.EvalType(ctx.Nvtype_())
 
-// 	for _, item := range ctx.AllItem() {
-// 		item, ok := item.(*parser.ItemContext)
-// 		if !ok {
-// 			panic("unexpected antlr behaviour: item is not an ItemContext")
-// 		}
-// 		ident := item.ID()
-// 		if clashing, ok := v.ConflictLocal(ident.GetText()); ok {
-// 			return DuplicateIdentifierError{
-// 				Ident: ident.GetText(),
-// 				Pos1:  clashing.Position(),
-// 				Pos2:  PosFromToken(ident.GetSymbol()),
-// 			}
-// 		}
+	for _, item := range ctx.AllItem() {
+		item, ok := item.(*parser.ItemContext)
+		if !ok {
+			panic("unexpected antlr behaviour: item is not an ItemContext")
+		}
+		ident := item.ID().GetText()
 
-// 		if item.Expr() != nil {
-// 			if err := v.ExpectType(t, item.Expr()); err != nil {
-// 				return err
-// 			}
-// 		}
-// 		v.DropperStack = append(v.DropperStack, varDropper{
-// 			drop:  v.ShadowLocal(ident.GetText(), t),
-// 			depth: v.Depth,
-// 		})
-// 	}
-// 	return doesReturn{}
-// }
+		src := LConst{
+			Type_: t,
+		}
+
+		if item.Expr() != nil {
+			src.Value = v.evalSExp(item.Expr())
+		} else {
+			src.Value = t.DefaultValue()
+		}
+
+		dst, drop := v.ShadowLocal(ident, t)
+		v.EmitQuad(QMov{
+			Src: src,
+			Dst: dst,
+		})
+
+		v.DropperStack = append(v.DropperStack, typecheck.VarDropper{
+			Drop:  drop,
+			Depth: v.Depth,
+		})
+	}
+
+	return nil
+}
 
 // func (v *Visitor) VisitSAss(ctx *parser.SAssContext) interface{} {
 // 	t, err := v.evalLVType(ctx.Lvalue())
@@ -114,8 +117,6 @@ func (v *Visitor) VisitBlock(ctx *parser.BlockContext) interface{} {
 // }
 
 func (v *Visitor) VisitSRet(ctx *parser.SRetContext) interface{} {
-	fmt.Println("sret")
-
 	if loc, ok := v.evalConstExpr(ctx.Expr()); ok {
 		v.EmitQuad(QRet{
 			Value: loc,
@@ -293,13 +294,16 @@ func (v *Visitor) VisitSRet(ctx *parser.SRetContext) interface{} {
 // }
 
 func (v *Visitor) VisitSExp(ctx *parser.SExpContext) interface{} {
-	fmt.Println("sexp")
+	return v.evalSExp(ctx.Expr())
+}
 
-	if loc, ok := v.evalConstExpr(ctx.Expr()); ok {
+func (v *Visitor) evalSExp(expr parser.IExprContext) Location {
+
+	if loc, ok := v.evalConstExpr(expr); ok {
 		return loc
 	}
 
-	return v.evalExpr(ctx.Expr())
+	return v.evalExpr(expr)
 }
 
 func (v *Visitor) evalConstExpr(expr parser.IExprContext) (value Location, ok bool) {

@@ -33,7 +33,7 @@ type LReg struct {
 }
 
 func (v LReg) String() string {
-	return fmt.Sprintf("r_%d", v)
+	return fmt.Sprintf("r_%d", v.Addr)
 }
 
 func (v LReg) Type() Type {
@@ -60,7 +60,7 @@ type QMov struct {
 	Src, Dst Location
 }
 
-func (q QMov) String() string { return fmt.Sprintf("%s := %s", q.Dst, q.Src) }
+func (q QMov) String() string { return fmt.Sprintf("%s = %s", q.Dst, q.Src) }
 
 type QRet struct {
 	Value Location

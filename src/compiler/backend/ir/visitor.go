@@ -13,8 +13,8 @@ type Label = string
 // Visitor for intermediate representation generation
 type Visitor struct {
 	*typecheck.Visitor
-	variableAdresses map[string]Addr
-	totalAddresses   uint
+	variableLocations map[string]Location
+	totalAddresses    uint
 
 	CFG         map[Label]BasicBlock
 	totalLabels uint
@@ -38,8 +38,8 @@ func (v *Visitor) VisitProgram(ctx *parser.ProgramContext) interface{} {
 
 func MakeVisitor(v *typecheck.Visitor) *Visitor {
 	return &Visitor{
-		Visitor:          v,
-		variableAdresses: make(map[string]uint),
-		CFG:              make(map[string]BasicBlock),
+		Visitor:           v,
+		variableLocations: make(map[string]Location),
+		CFG:               make(map[string]BasicBlock),
 	}
 }

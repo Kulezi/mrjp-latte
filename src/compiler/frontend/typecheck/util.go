@@ -82,7 +82,7 @@ func (v *Visitor) ExpectType(expected Type, ctx parser.IExprContext) error {
 		return nil
 	}
 
-	got, err := v.evalExpr(ctx)
+	got, err := v.EvalExpr(ctx)
 	if err != nil {
 		return err
 	}

@@ -56,7 +56,7 @@ func (v *Visitor) VisitSBlockStmt(ctx *parser.SBlockStmtContext) interface{} {
 }
 
 func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
-	t, err := v.evalType(ctx.Nvtype_())
+	t, err := v.EvalType(ctx.Nvtype_())
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (v *Visitor) evalNonDeclStmt(ctx parser.IStmtContext) (doesReturn, error) {
 }
 
 func (v *Visitor) VisitSCond(ctx *parser.SCondContext) interface{} {
-	t, err := v.evalExpr(ctx.Expr())
+	t, err := v.EvalExpr(ctx.Expr())
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func (v *Visitor) VisitSCond(ctx *parser.SCondContext) interface{} {
 }
 
 func (v *Visitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
-	t, err := v.evalExpr(ctx.Expr())
+	t, err := v.EvalExpr(ctx.Expr())
 	if err != nil {
 		return err
 	}
@@ -245,7 +245,7 @@ func (v *Visitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
 }
 
 func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
-	t, err := v.evalExpr(ctx.Expr())
+	t, err := v.EvalExpr(ctx.Expr())
 	if err != nil {
 		return err
 	}
@@ -278,12 +278,12 @@ func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 }
 
 func (v *Visitor) VisitSFor(ctx *parser.SForContext) interface{} {
-	t, err := v.evalType(ctx.Type_())
+	t, err := v.EvalType(ctx.Type_())
 	if err != nil {
 		return err
 	}
 
-	arrType, err := v.evalExpr(ctx.Expr())
+	arrType, err := v.EvalExpr(ctx.Expr())
 	if err != nil {
 		return err
 	}
@@ -318,7 +318,7 @@ func (v *Visitor) VisitSFor(ctx *parser.SForContext) interface{} {
 }
 
 func (v *Visitor) VisitSExp(ctx *parser.SExpContext) interface{} {
-	t, err := v.evalExpr(ctx.Expr())
+	t, err := v.EvalExpr(ctx.Expr())
 	if err != nil {
 		return err
 	}

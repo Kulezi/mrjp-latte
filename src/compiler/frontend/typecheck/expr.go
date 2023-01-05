@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func (v *Visitor) evalExpr(tree parser.IExprContext) (Type, error) {
+func (v *Visitor) EvalExpr(tree parser.IExprContext) (Type, error) {
 	res := v.Visit(tree)
 	if err, ok := res.(error); ok {
 		return nil, err
@@ -25,7 +25,7 @@ func (v *Visitor) evalExpr(tree parser.IExprContext) (Type, error) {
 }
 
 func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
-	t, err := v.evalExpr(ctx.Expr(0))
+	t, err := v.EvalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{}
 }
 
 func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
-	t, err := v.evalExpr(ctx.Expr(0))
+	t, err := v.EvalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
 }
 
 func (v *Visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
-	t, err := v.evalExpr(ctx.Expr())
+	t, err := v.EvalExpr(ctx.Expr())
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (v *Visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
 }
 
 func (v *Visitor) VisitENotOp(ctx *parser.ENotOpContext) interface{} {
-	t, err := v.evalExpr(ctx.Expr())
+	t, err := v.EvalExpr(ctx.Expr())
 	if err != nil {
 		return err
 	}
@@ -105,12 +105,12 @@ func (v *Visitor) VisitENotOp(ctx *parser.ENotOpContext) interface{} {
 }
 
 func (v *Visitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
-	t1, err := v.evalExpr(ctx.Expr(0))
+	t1, err := v.EvalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
 	}
 
-	t2, err := v.evalExpr(ctx.Expr(1))
+	t2, err := v.EvalExpr(ctx.Expr(1))
 	if err != nil {
 		return err
 	}
@@ -145,12 +145,12 @@ func (v *Visitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
 }
 
 func (v *Visitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
-	t1, err := v.evalExpr(ctx.Expr(0))
+	t1, err := v.EvalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
 	}
 
-	t2, err := v.evalExpr(ctx.Expr(1))
+	t2, err := v.EvalExpr(ctx.Expr(1))
 	if err != nil {
 		return err
 	}
@@ -194,12 +194,12 @@ func (v *Visitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
 }
 
 func (v *Visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
-	t1, err := v.evalExpr(ctx.Expr(0))
+	t1, err := v.EvalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
 	}
 
-	t2, err := v.evalExpr(ctx.Expr(1))
+	t2, err := v.EvalExpr(ctx.Expr(1))
 	if err != nil {
 		return err
 	}
@@ -230,12 +230,12 @@ func (v *Visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
 }
 
 func (v *Visitor) VisitEAnd(ctx *parser.EAndContext) interface{} {
-	t1, err := v.evalExpr(ctx.Expr(0))
+	t1, err := v.EvalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
 	}
 
-	t2, err := v.evalExpr(ctx.Expr(1))
+	t2, err := v.EvalExpr(ctx.Expr(1))
 	if err != nil {
 		return err
 	}
@@ -263,12 +263,12 @@ func (v *Visitor) VisitEAnd(ctx *parser.EAndContext) interface{} {
 }
 
 func (v *Visitor) VisitEOr(ctx *parser.EOrContext) interface{} {
-	t1, err := v.evalExpr(ctx.Expr(0))
+	t1, err := v.EvalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
 	}
 
-	t2, err := v.evalExpr(ctx.Expr(1))
+	t2, err := v.EvalExpr(ctx.Expr(1))
 	if err != nil {
 		return err
 	}
@@ -295,13 +295,13 @@ func (v *Visitor) VisitEOr(ctx *parser.EOrContext) interface{} {
 }
 
 func (v *Visitor) VisitENewArray(ctx *parser.ENewArrayContext) interface{} {
-	t, err := v.evalType(ctx.Singular_type_())
+	t, err := v.EvalType(ctx.Singular_type_())
 	if err != nil {
 		return err
 	}
 
 	e := ctx.Expr()
-	idxType, err := v.evalExpr(e)
+	idxType, err := v.EvalExpr(e)
 	if err != nil {
 		return err
 	}
@@ -321,7 +321,7 @@ func (v *Visitor) VisitENewArray(ctx *parser.ENewArrayContext) interface{} {
 }
 
 func (v *Visitor) VisitENew(ctx *parser.ENewContext) interface{} {
-	t, err := v.evalType(ctx.Singular_type_())
+	t, err := v.EvalType(ctx.Singular_type_())
 	if err != nil {
 		return err
 	}

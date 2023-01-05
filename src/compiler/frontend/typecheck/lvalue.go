@@ -6,7 +6,7 @@ import (
 )
 
 func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
-	t, err := v.evalExpr(ctx.Expr())
+	t, err := v.EvalExpr(ctx.Expr())
 	if err != nil {
 		return err
 	}
@@ -19,7 +19,7 @@ func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
 }
 
 func (v *Visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
-	t, err := v.evalExpr(ctx.Expr(0))
+	t, err := v.EvalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
 	}
