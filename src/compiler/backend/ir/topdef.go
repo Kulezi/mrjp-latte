@@ -30,7 +30,16 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 
 	v.curBlock = BasicBlock{Label: ident + ":"}
 
-	return v.Visit(ctx.Block())
+	v.Visit(ctx.Block())
+
+	// This means the block didn't end in a return,
+	// end of this block is either unreachable or is end of a void function
+	// hence we insert a return.
+	if !v.lastQuad.IsJump() || v.curBlock.Label == ident+":" {
+		v.EmitQuad(QVRet{})
+	}
+
+	return nil
 }
 
 func (v *Visitor) VisitBaseClassDef(ctx *parser.BaseClassDefContext) interface{} {

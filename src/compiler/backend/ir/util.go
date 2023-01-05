@@ -21,10 +21,14 @@ func (v *Visitor) FreshLabel() Label {
 	return res
 }
 
-func (v *Visitor) ShadowLocal(ident string, t Type) (location Location, drop func()) {
+func (v *Visitor) ShadowLocal(ident string, t Type) (location Location) {
 	loc := v.FreshTemp(t)
 	v.variableLocations[ident] = loc
-	return loc, v.Signatures.ShadowLocal(ident, t, v.Depth)
+	v.Signatures.Locals[ident] = TypeInfo{
+		Type: t,
+	}
+
+	return loc
 }
 
 func (v *Visitor) GetLocal(ident string) Location {
@@ -32,6 +36,7 @@ func (v *Visitor) GetLocal(ident string) Location {
 }
 
 func (v *Visitor) EmitQuad(q Quadruple) {
+	v.lastQuad = q
 	v.curBlock.Ops = append(v.curBlock.Ops, q)
 	if q.IsJump() {
 		v.CFG[v.curBlock.Label] = v.curBlock

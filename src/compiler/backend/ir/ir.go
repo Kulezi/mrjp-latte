@@ -62,6 +62,11 @@ type QMov struct {
 
 func (q QMov) String() string { return fmt.Sprintf("%s = %s", q.Dst, q.Src) }
 
+type QVRet struct{}
+
+func (q QVRet) String() string { return "return" }
+func (q QVRet) IsJump() bool   { return true }
+
 type QRet struct {
 	Value Location
 }
@@ -77,3 +82,12 @@ type QUnOp struct {
 }
 
 func (q QUnOp) String() string { return fmt.Sprintf("%s = %s%s", q.Dst, q.Op, q.Arg) }
+
+type QBinOp struct {
+	QBase
+	Op       string
+	Dst      Location
+	Lhs, Rhs Location
+}
+
+func (q QBinOp) String() string { return fmt.Sprintf("%s = %s%s%s", q.Dst, q.Lhs, q.Op, q.Rhs) }

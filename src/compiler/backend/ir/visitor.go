@@ -19,6 +19,7 @@ type Visitor struct {
 	CFG         map[Label]BasicBlock
 	totalLabels uint
 	curBlock    BasicBlock
+	lastQuad    Quadruple
 }
 
 func (v *Visitor) Visit(tree antlr.ParseTree) interface{} {

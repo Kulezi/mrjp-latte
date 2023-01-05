@@ -41,9 +41,18 @@ func (v *Visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
 
 func (v *Visitor) VisitLVId(ctx *parser.LVIdContext) interface{} {
 	ident := ctx.ID().GetText()
-	return v.GetLocal(ident)
+	old := v.GetLocal(ident)
+	return locPair{
+		old: old,
+		new: v.ShadowLocal(ident, old.Type()),
+	}
 }
 
-func (v *Visitor) evalLV(ctx parser.ILvalueContext) Location {
-	return v.Visit(ctx).(Location)
+type locPair struct {
+	old, new Location
+}
+
+func (v *Visitor) evalLV(ctx parser.ILvalueContext) (old, new Location) {
+	locs := v.Visit(ctx).(locPair)
+	return locs.old, locs.new
 }

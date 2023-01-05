@@ -1,27 +1,13 @@
 package ir
 
 import (
-	"latte/compiler/frontend/typecheck"
 	"latte/compiler/frontend/types"
 	"latte/parser"
-	"log"
 )
 
 func (v *Visitor) VisitBlock(ctx *parser.BlockContext) interface{} {
-	v.Depth++
-	defer func() { v.Depth-- }()
 	for _, stmt := range ctx.AllStmt() {
 		v.Visit(stmt)
-	}
-
-	for len(v.DropperStack) > 0 {
-		dropper := v.DropperStack[len(v.DropperStack)-1]
-		if dropper.Depth != v.Depth {
-			break
-		}
-
-		dropper.Drop()
-		v.DropperStack = v.DropperStack[:len(v.DropperStack)-1]
 	}
 
 	return nil
@@ -36,7 +22,6 @@ func (v *Visitor) VisitSBlockStmt(ctx *parser.SBlockStmtContext) interface{} {
 }
 
 func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
-	log.Println("sdecl")
 	t, _ := v.Visitor.EvalType(ctx.Nvtype_())
 
 	for _, item := range ctx.AllItem() {
@@ -56,15 +41,10 @@ func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 			src.Value = t.DefaultValue()
 		}
 
-		dst, drop := v.ShadowLocal(ident, t)
+		dst := v.ShadowLocal(ident, t)
 		v.EmitQuad(QMov{
 			Src: src,
 			Dst: dst,
-		})
-
-		v.DropperStack = append(v.DropperStack, typecheck.VarDropper{
-			Drop:  drop,
-			Depth: v.Depth,
 		})
 	}
 
@@ -72,8 +52,8 @@ func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 }
 
 func (v *Visitor) VisitSAss(ctx *parser.SAssContext) interface{} {
-	dst := v.evalLV(ctx.Lvalue())
 	src := v.evalSExp(ctx.Expr())
+	_, dst := v.evalLV(ctx.Lvalue())
 	v.EmitQuad(QMov{
 		Src: src,
 		Dst: dst,
@@ -82,39 +62,35 @@ func (v *Visitor) VisitSAss(ctx *parser.SAssContext) interface{} {
 	return nil
 }
 
-// func (v *Visitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
-// 	t, err := v.evalLVType(ctx.Lvalue())
-// 	if err != nil {
-// 		return err
-// 	}
+func (v *Visitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
+	src, dst := v.evalLV(ctx.Lvalue())
+	v.EmitQuad(QBinOp{
+		Dst: dst,
+		Op:  "+",
+		Lhs: src,
+		Rhs: LConst{
+			Type_: types.TInt{},
+			Value: 1,
+		},
+	})
 
-// 	if !SameType(t, TInt{}) {
-// 		return UnexpectedTypeError{
-// 			Expr:     ctx,
-// 			Expected: TInt{},
-// 			Got:      t,
-// 		}
-// 	}
+	return nil
+}
 
-// 	return doesReturn{}
-// }
+func (v *Visitor) VisitSDecr(ctx *parser.SDecrContext) interface{} {
+	src, dst := v.evalLV(ctx.Lvalue())
+	v.EmitQuad(QBinOp{
+		Dst: dst,
+		Op:  "-",
+		Lhs: src,
+		Rhs: LConst{
+			Type_: types.TInt{},
+			Value: 1,
+		},
+	})
 
-// func (v *Visitor) VisitSDecr(ctx *parser.SDecrContext) interface{} {
-// 	t, err := v.evalLVType(ctx.Lvalue())
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	if !SameType(t, TInt{}) {
-// 		return UnexpectedTypeError{
-// 			Expr:     ctx,
-// 			Expected: TInt{},
-// 			Got:      t,
-// 		}
-// 	}
-
-// 	return doesReturn{}
-// }
+	return nil
+}
 
 func (v *Visitor) VisitSRet(ctx *parser.SRetContext) interface{} {
 	if loc, ok := v.evalConstExpr(ctx.Expr()); ok {
@@ -129,18 +105,10 @@ func (v *Visitor) VisitSRet(ctx *parser.SRetContext) interface{} {
 	return nil
 }
 
-// func (v *Visitor) VisitSVRet(ctx *parser.SVRetContext) interface{} {
-// 	if !SameType(v.CurFun.Result, TVoid{}) {
-// 		return MissingReturnValueError{
-// 			Ctx:      ctx,
-// 			Expected: v.CurFun.Result,
-// 		}
-// 	}
-// 	return doesReturn{
-// 		always:    true,
-// 		sometimes: true,
-// 	}
-// }
+func (v *Visitor) VisitSVRet(ctx *parser.SVRetContext) interface{} {
+	v.EmitQuad(QVRet{})
+	return nil
+}
 
 // func (v *Visitor) evalNonDeclStmt(ctx parser.IStmtContext) (doesReturn, error) {
 // 	if _, ok := ctx.(*parser.SDeclContext); ok {
