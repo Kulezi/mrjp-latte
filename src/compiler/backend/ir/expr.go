@@ -62,148 +62,63 @@ func (v *Visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
 	return dst
 }
 
-// func (v *Visitor) VisitENotOp(ctx *parser.ENotOpContext) interface{} {
-// 	t, err := v.evalExpr(ctx.Expr())
-// 	if err != nil {
-// 		return err
-// 	}
+func (v *Visitor) VisitENotOp(ctx *parser.ENotOpContext) interface{} {
+	arg := v.evalExpr(ctx.Expr())
+	dst := v.FreshTemp(arg.Type())
 
-// 	b, ok := t.(TBool)
-// 	if !ok {
-// 		return UnexpectedTypeError{
-// 			Expr:     ctx,
-// 			Expected: TBool{},
-// 			Got:      t,
-// 		}
-// 	}
+	v.EmitQuad(QUnOp{
+		Op:  "!",
+		Dst: dst,
+		Arg: arg,
+	})
 
-// 	return TBool{
-// 		StartToken: ctx.GetStart(),
-// 		Value:      EvalConstBoolNotOp(b),
-// 	}
-// }
-
-func (v *Visitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
-	panic("TODO")
-	// t1, err := v.evalExpr(ctx.Expr(0))
-	// t2, err := v.evalExpr(ctx.Expr(1))
-	// if err != nil {
-	// 	return err
-	// }
-
-	// if !SameType(t1, t2) {
-	// 	return ArgTypeMismatchError{
-	// 		Expr:  ctx,
-	// 		Type1: t1,
-	// 		Type2: t2,
-	// 	}
-	// }
-
-	// if _, ok := validMulOpArg[t1.String()]; !ok {
-	// 	return InvalidOpArgsError{
-	// 		Expr:       ctx,
-	// 		Type:       t1,
-	// 		ValidTypes: validMulOpArg,
-	// 	}
-	// }
-
-	// cv, ok := EvalConstIntBinOp(ctx.MulOp().GetText(), t1, t2)
-	// if !ok {
-	// 	return ZeroDivisionError{
-	// 		Ctx: ctx,
-	// 	}
-	// }
-
-	// return TInt{
-	// 	StartToken: ctx.GetStart(),
-	// 	Value:      cv,
-	// }
+	return dst
 }
 
-// func (v *Visitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
-// 	t1, err := v.evalExpr(ctx.Expr(0))
-// 	if err != nil {
-// 		return err
-// 	}
+func (v *Visitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
+	lhs := v.evalExpr(ctx.Expr(0))
+	rhs := v.evalExpr(ctx.Expr(1))
+	dst := v.FreshTemp(lhs.Type())
+	v.EmitQuad(QBinOp{
+		Op:  "*",
+		Dst: dst,
+		Lhs: lhs,
+		Rhs: rhs,
+	})
 
-// 	t2, err := v.evalExpr(ctx.Expr(1))
-// 	if err != nil {
-// 		return err
-// 	}
+	return dst
+}
 
-// 	if !SameType(t1, t2) {
-// 		return ArgTypeMismatchError{
-// 			Expr:  ctx,
-// 			Type1: t1,
-// 			Type2: t2,
-// 		}
-// 	}
+func (v *Visitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
+	lhs := v.evalExpr(ctx.Expr(0))
+	rhs := v.evalExpr(ctx.Expr(1))
+	op := ctx.AddOp().GetText()
+	dst := v.FreshTemp(lhs.Type())
+	v.EmitQuad(QBinOp{
+		Op:  op,
+		Dst: dst,
+		Lhs: lhs,
+		Rhs: rhs,
+	})
 
-// 	validTypes := validAddOpArg
-// 	if ctx.AddOp().GetText() == "-" {
-// 		validTypes = validSubOpArg
-// 	}
+	return dst
+}
 
-// 	if _, ok := validTypes[t1.String()]; !ok {
-// 		return InvalidOpArgsError{
-// 			Expr:       ctx,
-// 			Type:       t1,
-// 			ValidTypes: validTypes,
-// 		}
-// 	}
+func (v *Visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
+	lhs := v.evalExpr(ctx.Expr(0))
+	rhs := v.evalExpr(ctx.Expr(1))
+	op := ctx.RelOp().GetText()
+	dst := v.FreshTemp(lhs.Type())
 
-// 	switch t1.(type) {
-// 	case TInt:
-// 		cv, _ := EvalConstIntBinOp(ctx.AddOp().GetText(), t1, t2)
-// 		return TInt{
-// 			StartToken: ctx.GetStart(),
-// 			Value:      cv,
-// 		}
-// 	case TString:
-// 		return TString{
-// 			StartToken: ctx.GetStart(),
-// 			Value:      EvalConstStringBinOp(ctx.AddOp().GetText(), t1, t2),
-// 		}
-// 	default:
-// 		panic("unexpected addOp type")
-// 	}
-// }
+	v.EmitQuad(QBinOp{
+		Op:  op,
+		Dst: dst,
+		Lhs: lhs,
+		Rhs: rhs,
+	})
 
-// func (v *Visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
-// 	t1, err := v.evalExpr(ctx.Expr(0))
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	t2, err := v.evalExpr(ctx.Expr(1))
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	if !SameType(t1, t2) && !(v.isSubClass(t1, t2) || v.isSubClass(t2, t1)) {
-// 		return ArgTypeMismatchError{
-// 			Expr:  ctx,
-// 			Type1: t1,
-// 			Type2: t2,
-// 		}
-// 	}
-
-// 	switch ctx.RelOp().GetText() {
-// 	case "<", ">", "<=", ">=":
-// 		if _, ok := validInequalityOpArg[t1.String()]; !ok {
-// 			return InvalidOpArgsError{
-// 				Expr:       ctx,
-// 				Type:       t1,
-// 				ValidTypes: validInequalityOpArg,
-// 			}
-// 		}
-// 	}
-
-// 	return TBool{
-// 		StartToken: ctx.GetStart(),
-// 		Value:      EvalConstBoolBinOp(ctx.RelOp().GetText(), t1, t2),
-// 	}
-// }
+	return dst
+}
 
 // func (v *Visitor) VisitEAnd(ctx *parser.EAndContext) interface{} {
 // 	t1, err := v.evalExpr(ctx.Expr(0))
