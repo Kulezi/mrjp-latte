@@ -2,6 +2,7 @@ package ir
 
 import (
 	"fmt"
+	"latte/compiler/frontend/types"
 	"latte/parser"
 )
 
@@ -114,10 +115,16 @@ func (v *Visitor) VisitBlock(ctx *parser.BlockContext) interface{} {
 
 func (v *Visitor) VisitSRet(ctx *parser.SRetContext) interface{} {
 	fmt.Println("sret")
-	v.EmitQuad(QRet{
-		Value: v.evalExpr(ctx.Expr()),
-	})
 
+	if loc, ok := v.evalConstExpr(ctx.Expr()); ok {
+		v.EmitQuad(QRet{
+			Value: loc,
+		})
+	} else {
+		v.EmitQuad(QRet{
+			Value: v.evalExpr(ctx.Expr()),
+		})
+	}
 	return nil
 }
 
@@ -268,9 +275,7 @@ func (v *Visitor) VisitSRet(ctx *parser.SRetContext) interface{} {
 // 	}
 
 // 	if !SameType(t, arr.Elem) && !v.isSubClass(t, arr.Elem) {
-// 		return UnexpectedTypeError{
-// 			Expr:     ctx,
-// 			Expected: arr.Elem,
+// 		return UnexpectedTypeError{.Visit(ctx.Expr())
 // 			Got:      t,
 // 		}
 // 	}
@@ -289,5 +294,22 @@ func (v *Visitor) VisitSRet(ctx *parser.SRetContext) interface{} {
 
 func (v *Visitor) VisitSExp(ctx *parser.SExpContext) interface{} {
 	fmt.Println("sexp")
-	return v.Visit(ctx.Expr())
+
+	if loc, ok := v.evalConstExpr(ctx.Expr()); ok {
+		return loc
+	}
+
+	return v.evalExpr(ctx.Expr())
+}
+
+func (v *Visitor) evalConstExpr(expr parser.IExprContext) (value Location, ok bool) {
+	t := v.Visitor.Visit(expr).(types.Type)
+	if v, ok := t.Const(); ok {
+		return LConst{
+			Type_: t,
+			Value: v,
+		}, true
+	}
+
+	return nil, false
 }

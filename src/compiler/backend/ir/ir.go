@@ -1,13 +1,18 @@
 package ir
 
-import "fmt"
+import (
+	"fmt"
+	. "latte/compiler/frontend/types"
+)
 
 type Const interface{}
 type Location interface {
 	String() string
+	Type() Type
 }
 
 type LConst struct {
+	Type_ Type
 	Value Const
 }
 
@@ -15,10 +20,21 @@ func (v LConst) String() string {
 	return fmt.Sprintf("%d", v.Value)
 }
 
-type LAddr uint
+func (v LConst) Type() Type {
+	return v.Type_
+}
 
-func (addr LAddr) String() string {
-	return fmt.Sprintf("x_%d", addr)
+type LReg struct {
+	Type_ Type
+	Addr  uint
+}
+
+func (v LReg) String() string {
+	return fmt.Sprintf("r_%d", v)
+}
+
+func (v LReg) Type() Type {
+	return v.Type_
 }
 
 type BasicBlock struct {

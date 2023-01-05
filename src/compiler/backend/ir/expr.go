@@ -2,7 +2,6 @@ package ir
 
 import (
 	"latte/parser"
-	"strconv"
 )
 
 func (v *Visitor) evalExpr(tree parser.IExprContext) Location {
@@ -10,43 +9,45 @@ func (v *Visitor) evalExpr(tree parser.IExprContext) Location {
 	return ret
 }
 
-// func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
-// 	t, err := v.evalExpr(ctx.Expr(0))
-// 	if err != nil {
-// 		return err
-// 	}
+func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
+	panic("can't access field - classes are not yet supported")
+	// t, err := v.evalExpr(ctx.Expr(0))
+	// if err != nil {
+	// 	return err
+	// }
 
-// 	class, ok := t.(TClass)
-// 	if ok {
-// 		defer v.EnterClass(class)()
-// 	} else if _, ok = t.(TArray); ok {
-// 		defer v.ShadowLocal("length", TInt{})()
-// 	}
+	// class, ok := t.(TClass)
+	// if ok {
+	// 	defer v.EnterClass(class)()
+	// } else if _, ok = t.(TArray); ok {
+	// 	defer v.ShadowLocal("length", TInt{})()
+	// }
 
-// 	// Evaluate right-hand side in this environment.
-// 	return v.Visit(ctx.Expr(1))
-// }
+	// // Evaluate right-hand side in this environment.
+	// return v.Visit(ctx.Expr(1))
+}
 
-// func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
-// 	t, err := v.evalExpr(ctx.Expr(0))
-// 	if err != nil {
-// 		return err
-// 	}
+func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
+	panic("arrays are not yet supported")
+	// t, err := v.evalExpr(ctx.Expr(0))
+	// if err != nil {
+	// 	return err
+	// }
 
-// 	arr, ok := t.(TArray)
-// 	if !ok {
-// 		return ExpectedArrayError{
-// 			Expr: ctx,
-// 			Got:  t,
-// 		}
-// 	}
+	// arr, ok := t.(TArray)
+	// if !ok {
+	// 	return ExpectedArrayError{
+	// 		Expr: ctx,
+	// 		Got:  t,
+	// 	}
+	// }
 
-// 	if err := v.ExpectType(TInt{}, ctx.Expr(1)); err != nil {
-// 		return err
-// 	}
+	// if err := v.ExpectType(TInt{}, ctx.Expr(1)); err != nil {
+	// 	return err
+	// }
 
-// 	return arr.Elem
-// }
+	// return arr.Elem
+}
 
 // func (v *Visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
 // 	t, err := v.evalExpr(ctx.Expr())
@@ -90,45 +91,42 @@ func (v *Visitor) evalExpr(tree parser.IExprContext) Location {
 // 	}
 // }
 
-// func (v *Visitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
-// 	t1, err := v.evalExpr(ctx.Expr(0))
-// 	if err != nil {
-// 		return err
-// 	}
+func (v *Visitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
+	panic("TODO")
+	// t1, err := v.evalExpr(ctx.Expr(0))
+	// t2, err := v.evalExpr(ctx.Expr(1))
+	// if err != nil {
+	// 	return err
+	// }
 
-// 	t2, err := v.evalExpr(ctx.Expr(1))
-// 	if err != nil {
-// 		return err
-// 	}
+	// if !SameType(t1, t2) {
+	// 	return ArgTypeMismatchError{
+	// 		Expr:  ctx,
+	// 		Type1: t1,
+	// 		Type2: t2,
+	// 	}
+	// }
 
-// 	if !SameType(t1, t2) {
-// 		return ArgTypeMismatchError{
-// 			Expr:  ctx,
-// 			Type1: t1,
-// 			Type2: t2,
-// 		}
-// 	}
+	// if _, ok := validMulOpArg[t1.String()]; !ok {
+	// 	return InvalidOpArgsError{
+	// 		Expr:       ctx,
+	// 		Type:       t1,
+	// 		ValidTypes: validMulOpArg,
+	// 	}
+	// }
 
-// 	if _, ok := validMulOpArg[t1.String()]; !ok {
-// 		return InvalidOpArgsError{
-// 			Expr:       ctx,
-// 			Type:       t1,
-// 			ValidTypes: validMulOpArg,
-// 		}
-// 	}
+	// cv, ok := EvalConstIntBinOp(ctx.MulOp().GetText(), t1, t2)
+	// if !ok {
+	// 	return ZeroDivisionError{
+	// 		Ctx: ctx,
+	// 	}
+	// }
 
-// 	cv, ok := EvalConstIntBinOp(ctx.MulOp().GetText(), t1, t2)
-// 	if !ok {
-// 		return ZeroDivisionError{
-// 			Ctx: ctx,
-// 		}
-// 	}
-
-// 	return TInt{
-// 		StartToken: ctx.GetStart(),
-// 		Value:      cv,
-// 	}
-// }
+	// return TInt{
+	// 	StartToken: ctx.GetStart(),
+	// 	Value:      cv,
+	// }
+}
 
 // func (v *Visitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
 // 	t1, err := v.evalExpr(ctx.Expr(0))
@@ -280,51 +278,54 @@ func (v *Visitor) evalExpr(tree parser.IExprContext) Location {
 // 	}
 // }
 
-// func (v *Visitor) VisitENewArray(ctx *parser.ENewArrayContext) interface{} {
-// 	t, err := v.evalType(ctx.Singular_type_())
-// 	if err != nil {
-// 		return err
-// 	}
+func (v *Visitor) VisitENewArray(ctx *parser.ENewArrayContext) interface{} {
+	panic("can't use new - arrays are not yet supported")
+	// t, err := v.evalType(ctx.Singular_type_())
+	// if err != nil {
+	// 	return err
+	// }
 
-// 	e := ctx.Expr()
-// 	idxType, err := v.evalExpr(e)
-// 	if err != nil {
-// 		return err
-// 	}
+	// e := ctx.Expr()
+	// idxType, err := v.evalExpr(e)
+	// if err != nil {
+	// 	return err
+	// }
 
-// 	if _, ok := idxType.(TInt); !ok {
-// 		return ArraySizeTypeError{
-// 			Expr: e,
-// 			Type: idxType,
-// 		}
-// 	}
+	// if _, ok := idxType.(TInt); !ok {
+	// 	return ArraySizeTypeError{
+	// 		Expr: e,
+	// 		Type: idxType,
+	// 	}
+	// }
 
-// 	t = TArray{
-// 		Elem: t,
-// 	}
+	// t = TArray{
+	// 	Elem: t,
+	// }
 
-// 	return t
-// }
+	// return t
+}
 
-// func (v *Visitor) VisitENew(ctx *parser.ENewContext) interface{} {
-// 	t, err := v.evalType(ctx.Singular_type_())
-// 	if err != nil {
-// 		return err
-// 	}
+func (v *Visitor) VisitENew(ctx *parser.ENewContext) interface{} {
+	panic("can't use new - classes are not yet supported")
+	// t, err := v.evalType(ctx.Singular_type_())
+	// if err != nil {
+	// 	return err
+	// }
 
-// 	class, ok := t.(TClass)
-// 	if !ok {
-// 		return UnknownClassError{
-// 			Type: t,
-// 		}
-// 	}
+	// class, ok := t.(TClass)
+	// if !ok {
+	// 	return UnknownClassError{
+	// 		Type: t,
+	// 	}
+	// }
 
-// 	return class
-// }
+	// return class
+}
 
-// func (v *Visitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
-// 	return v.CurClass
-// }
+func (v *Visitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
+	panic("can't use self - classes are not yet supported")
+	// return v.CurClass
+}
 
 // func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
 // 	ident := ctx.ID().GetText()
@@ -335,31 +336,23 @@ func (v *Visitor) evalExpr(tree parser.IExprContext) Location {
 // 	return UndeclaredIdentifierError{Ident: ctx.ID()}
 // }
 
-func (v *Visitor) VisitEInt(ctx *parser.EIntContext) interface{} {
-	n, _ := strconv.Atoi(ctx.INT().GetText())
-	addr := LAddr(v.FreshTemp())
-	v.EmitQuad(QMov{
-		Src: LConst{Value: n},
-		Dst: addr,
-	})
-
-	return addr
-}
-
-// func (v *Visitor) VisitETrue(ctx *parser.ETrueContext) interface{} {
-// 	b := true
-// 	return TBool{
-// 		StartToken: ctx.GetStart(),
-// 		Value:      &b,
+// func (v *Visitor) VisitEInt(ctx *parser.EIntContext) interface{} {
+// 	n, _ := strconv.Atoi(ctx.INT().GetText())
+// 	return LConst{
+// 		Type_: TInt{
+// 			StartToken: ctx.GetStart(),
+// 			Value:      &n,
+// 		},
+// 		Value: n,
 // 	}
 // }
 
+// func (v *Visitor) VisitETrue(ctx *parser.ETrueContext) interface{} {
+// 	return LConst{Value: true}
+// }
+
 // func (v *Visitor) VisitEFalse(ctx *parser.EFalseContext) interface{} {
-// 	b := false
-// 	return TBool{
-// 		StartToken: ctx.GetStart(),
-// 		Value:      &b,
-// 	}
+// 	return LConst{Value: false}
 // }
 
 // func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
@@ -399,34 +392,32 @@ func (v *Visitor) VisitEInt(ctx *parser.EIntContext) interface{} {
 // 	return signature.Result
 // }
 
-// func (v *Visitor) VisitEStr(ctx *parser.EStrContext) interface{} {
-// 	withBraces := ctx.STR().GetText()
-// 	s := withBraces[1 : len(withBraces)-1]
-// 	return TString{
-// 		StartToken: ctx.GetStart(),
-// 		Value:      &s,
-// 	}
-// }
+func (v *Visitor) VisitEStr(ctx *parser.EStrContext) interface{} {
+	withBraces := ctx.STR().GetText()
+	s := withBraces[1 : len(withBraces)-1]
+	return LConst{Value: s}
+}
 
-// func (v *Visitor) VisitENull(ctx *parser.ENullContext) interface{} {
-// 	classRef := TClassRef{ctx.ID()}
-// 	t, ok := v.TypeOfGlobal(classRef.String())
-// 	if !ok {
-// 		return UnknownClassError{classRef}
-// 	}
+func (v *Visitor) VisitENull(ctx *parser.ENullContext) interface{} {
+	panic("nulls are not yet supported")
+	// classRef := TClassRef{ctx.ID()}
+	// t, ok := v.TypeOfGlobal(classRef.String())
+	// if !ok {
+	// 	return UnknownClassError{classRef}
+	// }
 
-// 	class, ok := t.Type.(TClass)
-// 	if !ok {
-// 		return UnknownClassError{
-// 			Type: t,
-// 		}
-// 	}
-// 	return class
-// }
+	// class, ok := t.Type.(TClass)
+	// if !ok {
+	// 	return UnknownClassError{
+	// 		Type: t,
+	// 	}
+	// }
+	// return class
+}
 
-// func (v *Visitor) VisitEParen(ctx *parser.EParenContext) interface{} {
-// 	return v.Visit(ctx.Expr())
-// }
+func (v *Visitor) VisitEParen(ctx *parser.EParenContext) interface{} {
+	return v.Visit(ctx.Expr())
+}
 
 // var validInequalityOpArg = map[string]struct{}{
 // 	"int":    {},
