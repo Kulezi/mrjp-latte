@@ -32,12 +32,8 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 
 	v.Visit(ctx.Block())
 
-	// This means the block didn't end in a return,
-	// end of this block is either unreachable or is end of a void function
-	// hence we insert a return.
-	if !v.lastQuad.IsJump() || v.curBlock.Label == ident+":" {
-		v.EmitQuad(QVRet{})
-	}
+	// Emit a return, in case of non-void it will be unreachable and optimized away later.
+	v.EmitQuad(QVRet{})
 
 	return nil
 }

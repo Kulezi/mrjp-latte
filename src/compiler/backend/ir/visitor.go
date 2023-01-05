@@ -16,7 +16,9 @@ type Visitor struct {
 	variableLocations map[string]Location
 	totalAddresses    uint
 
-	CFG         map[Label]BasicBlock
+	CFG    map[Label]BasicBlock
+	Blocks []BasicBlock
+
 	totalLabels uint
 	curBlock    BasicBlock
 	lastQuad    Quadruple

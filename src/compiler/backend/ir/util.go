@@ -21,6 +21,10 @@ func (v *Visitor) FreshLabel() Label {
 	return res
 }
 
+func (v *Visitor) StartBlock(l Label) {
+	v.curBlock = BasicBlock{Label: l}
+}
+
 func (v *Visitor) ShadowLocal(ident string, t Type) (location Location) {
 	loc := v.FreshTemp(t)
 	v.variableLocations[ident] = loc
@@ -39,7 +43,11 @@ func (v *Visitor) EmitQuad(q Quadruple) {
 	v.lastQuad = q
 	v.curBlock.Ops = append(v.curBlock.Ops, q)
 	if q.IsJump() {
+		if v.curBlock.Label == "" {
+			v.curBlock.Label = v.FreshLabel()
+		}
 		v.CFG[v.curBlock.Label] = v.curBlock
+		v.Blocks = append(v.Blocks, v.curBlock)
 		v.curBlock = BasicBlock{}
 	}
 }

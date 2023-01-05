@@ -5,7 +5,7 @@ import (
 	"latte/parser"
 )
 
-func (v *Visitor) evalStmt(ctx parser.IStmtContext) (returns doesReturn, err error) {
+func (v *Visitor) EvalStmt(ctx parser.IStmtContext) (returns doesReturn, err error) {
 	ret := v.Visit(ctx)
 	if err, ok := ret.(error); ok {
 		return doesReturn{}, err
@@ -24,7 +24,7 @@ func (v *Visitor) VisitBlock(ctx *parser.BlockContext) interface{} {
 	defer func() { v.Depth-- }()
 	returns := doesReturn{}
 	for _, stmt := range ctx.AllStmt() {
-		stmtReturns, err := v.evalStmt(stmt)
+		stmtReturns, err := v.EvalStmt(stmt)
 		if err != nil {
 			return err
 		}
@@ -164,14 +164,14 @@ func (v *Visitor) VisitSVRet(ctx *parser.SVRetContext) interface{} {
 	}
 }
 
-func (v *Visitor) evalNonDeclStmt(ctx parser.IStmtContext) (doesReturn, error) {
+func (v *Visitor) EvalNonDeclStmt(ctx parser.IStmtContext) (doesReturn, error) {
 	if _, ok := ctx.(*parser.SDeclContext); ok {
 		return doesReturn{}, DeclarationWithoutBlockError{
 			Ctx: ctx,
 		}
 	}
 
-	return v.evalStmt(ctx)
+	return v.EvalStmt(ctx)
 }
 
 func (v *Visitor) VisitSCond(ctx *parser.SCondContext) interface{} {
@@ -189,7 +189,7 @@ func (v *Visitor) VisitSCond(ctx *parser.SCondContext) interface{} {
 		}
 	}
 
-	blockReturns, err := v.evalNonDeclStmt(ctx.Stmt())
+	blockReturns, err := v.EvalNonDeclStmt(ctx.Stmt())
 	if err != nil {
 		return err
 	}
@@ -220,12 +220,12 @@ func (v *Visitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
 		}
 	}
 
-	retTrue, err := v.evalNonDeclStmt(ctx.Stmt(0))
+	retTrue, err := v.EvalNonDeclStmt(ctx.Stmt(0))
 	if err != nil {
 		return err
 	}
 
-	retFalse, err := v.evalNonDeclStmt(ctx.Stmt(1))
+	retFalse, err := v.EvalNonDeclStmt(ctx.Stmt(1))
 	if err != nil {
 		return err
 	}
@@ -259,7 +259,7 @@ func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 		}
 	}
 
-	returns, err := v.evalNonDeclStmt(ctx.Stmt())
+	returns, err := v.EvalNonDeclStmt(ctx.Stmt())
 	if err != nil {
 		return err
 	}
@@ -306,7 +306,7 @@ func (v *Visitor) VisitSFor(ctx *parser.SForContext) interface{} {
 	}
 
 	defer v.ShadowLocal(ctx.ID().GetText(), arr.Elem)()
-	returns, err := v.evalNonDeclStmt(ctx.Stmt())
+	returns, err := v.EvalNonDeclStmt(ctx.Stmt())
 	if err != nil {
 		return err
 	}

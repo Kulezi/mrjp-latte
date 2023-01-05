@@ -110,118 +110,106 @@ func (v *Visitor) VisitSVRet(ctx *parser.SVRetContext) interface{} {
 	return nil
 }
 
-// func (v *Visitor) evalNonDeclStmt(ctx parser.IStmtContext) (doesReturn, error) {
-// 	if _, ok := ctx.(*parser.SDeclContext); ok {
-// 		return doesReturn{}, DeclarationWithoutBlockError{
-// 			Ctx: ctx,
-// 		}
-// 	}
+func (v *Visitor) VisitSCond(ctx *parser.SCondContext) interface{} {
+	if b, ok := v.evalConstExpr(ctx.Expr()); ok {
+		b := b.(LConst).Value.(bool)
+		if b {
+			v.Visit(ctx.Stmt())
+		}
 
-// 	return v.evalStmt(ctx)
-// }
+		return nil
+	}
 
-// func (v *Visitor) VisitSCond(ctx *parser.SCondContext) interface{} {
-// 	t, err := v.evalExpr(ctx.Expr())
-// 	if err != nil {
-// 		return err
-// 	}
+	lFalse := v.FreshLabel()
+	lTrue := v.FreshLabel()
 
-// 	b, ok := t.(TBool)
-// 	if !ok {
-// 		return UnexpectedTypeError{
-// 			Expr:     ctx,
-// 			Expected: TBool{},
-// 			Got:      t,
-// 		}
-// 	}
+	b := v.evalSExp(ctx.Expr())
+	v.EmitQuad(QJz{
+		Value: b,
+		Dst:   lFalse,
+	})
 
-// 	blockReturns, err := v.evalNonDeclStmt(ctx.Stmt())
-// 	if err != nil {
-// 		return err
-// 	}
+	v.StartBlock(lTrue)
 
-// 	// If it always executes we are sure of the return.
-// 	if b.Value != nil && *b.Value {
-// 		return blockReturns
-// 	}
+	v.Visit(ctx.Stmt())
 
-// 	return doesReturn{
-// 		always:    false,
-// 		sometimes: blockReturns.sometimes,
-// 	}
-// }
+	v.StartBlock(lFalse)
+	return nil
+}
 
-// func (v *Visitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
-// 	t, err := v.evalExpr(ctx.Expr())
-// 	if err != nil {
-// 		return err
-// 	}
+func (v *Visitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
+	if b, ok := v.evalConstExpr(ctx.Expr()); ok {
+		b := b.(LConst).Value.(bool)
+		if b {
+			v.Visit(ctx.Stmt(0))
+		} else {
+			v.Visit(ctx.Stmt(1))
+		}
 
-// 	b, ok := t.(TBool)
-// 	if !ok {
-// 		return UnexpectedTypeError{
-// 			Expr:     ctx,
-// 			Expected: TBool{},
-// 			Got:      t,
-// 		}
-// 	}
+		return nil
+	}
 
-// 	retTrue, err := v.evalNonDeclStmt(ctx.Stmt(0))
-// 	if err != nil {
-// 		return err
-// 	}
+	lTrue := v.FreshLabel()
+	lFalse := v.FreshLabel()
+	lEnd := v.FreshLabel()
 
-// 	retFalse, err := v.evalNonDeclStmt(ctx.Stmt(1))
-// 	if err != nil {
-// 		return err
-// 	}
+	b := v.evalSExp(ctx.Expr())
+	v.EmitQuad(QJz{
+		Value: b,
+		Dst:   lFalse,
+	})
 
-// 	if b.Value != nil {
-// 		if *b.Value {
-// 			return retTrue
-// 		} else {
-// 			return retFalse
-// 		}
-// 	}
+	v.StartBlock(lTrue)
+	v.Visit(ctx.Stmt(0))
+	v.EmitQuad(QJmp{
+		Dst: lEnd,
+	})
 
-// 	return doesReturn{
-// 		always:    retFalse.always || retTrue.always,
-// 		sometimes: retFalse.sometimes || retTrue.sometimes,
-// 	}
-// }
+	v.StartBlock(lFalse)
+	v.Visit(ctx.Stmt(1))
 
-// func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
-// 	t, err := v.evalExpr(ctx.Expr())
-// 	if err != nil {
-// 		return err
-// 	}
+	v.StartBlock(lEnd)
+	return nil
+}
 
-// 	b, ok := t.(TBool)
-// 	if !ok {
-// 		return UnexpectedTypeError{
-// 			Expr:     ctx,
-// 			Expected: TBool{},
-// 			Got:      t,
-// 		}
-// 	}
+func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
+	lBody := v.FreshLabel()
+	lCond := v.FreshLabel()
+	genBody := true
+	genCond := true
+	if b, ok := v.evalConstExpr(ctx.Expr()); ok {
+		b := b.(LConst).Value.(bool)
+		if !b {
+			genBody = false
+		} else {
+			genCond = false
+		}
+	}
 
-// 	returns, err := v.evalNonDeclStmt(ctx.Stmt())
-// 	if err != nil {
-// 		return err
-// 	}
+	v.EmitQuad(QJmp{
+		Dst: lCond,
+	})
 
-// 	if b.Value != nil && *b.Value {
-// 		return doesReturn{
-// 			always:    returns.sometimes,
-// 			sometimes: returns.sometimes,
-// 		}
-// 	}
+	v.StartBlock(lBody)
+	if genBody {
+		v.Visit(ctx.Stmt())
+	}
 
-// 	return doesReturn{
-// 		always:    false,
-// 		sometimes: returns.sometimes,
-// 	}
-// }
+	v.StartBlock(lCond)
+	if genCond {
+		b := v.evalSExp(ctx.Expr())
+		v.EmitQuad(QJnz{
+			Value: b,
+			Dst:   lBody,
+		})
+	} else {
+		v.EmitQuad(QJmp{
+			Dst: lBody,
+		})
+	}
+
+	return nil
+}
 
 // func (v *Visitor) VisitSFor(ctx *parser.SForContext) interface{} {
 // 	t, err := v.evalType(ctx.Type_())

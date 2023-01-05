@@ -91,3 +91,26 @@ type QBinOp struct {
 }
 
 func (q QBinOp) String() string { return fmt.Sprintf("%s = %s%s%s", q.Dst, q.Lhs, q.Op, q.Rhs) }
+
+type QJmp struct {
+	Dst Label
+}
+
+func (q QJmp) String() string { return "goto " + q.Dst }
+func (q QJmp) IsJump() bool   { return true }
+
+type QJz struct {
+	Value Location
+	Dst   Label
+}
+
+func (q QJz) String() string { return fmt.Sprintf("if !%s goto %s", q.Value, q.Dst) }
+func (q QJz) IsJump() bool   { return true }
+
+type QJnz struct {
+	Value Location
+	Dst   Label
+}
+
+func (q QJnz) String() string { return fmt.Sprintf("if %s goto %s", q.Value, q.Dst) }
+func (q QJnz) IsJump() bool   { return true }
