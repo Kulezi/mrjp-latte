@@ -44,6 +44,8 @@ func (v *Visitor) FreshLabel() Label {
 
 func (v *Visitor) StartBlock(l Label) {
 	if v.curBlock.Label != "" {
+		v.curBlock.Ops = append(v.curBlock.Ops, QJmp{Dst: l})
+
 		v.CFG[v.curBlock.Label] = v.curBlock
 		v.Blocks = append(v.Blocks, v.curBlock)
 	}
