@@ -17,10 +17,7 @@ func CompileX64(cfg Config) error {
 		return nil
 	}
 
-	asm, err := genX64(s, cfg)
-	if err != nil {
-		return err
-	}
+	asm := genX64(s, cfg)
 
 	log.Println(cfg.Intermediate)
 	if err := saveAssembly(asm, cfg.Intermediate); err != nil {
