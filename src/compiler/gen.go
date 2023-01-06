@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"fmt"
 	"latte/compiler/backend/ir"
 	. "latte/compiler/config"
 	"latte/compiler/frontend"
@@ -51,12 +50,12 @@ _start:
 func genX64(s frontend.State, cfg Config) (string, error) {
 	v := ir.MakeVisitor(typecheck.MakeVisitor(s.Signatures))
 	v.Visit(s.Tree)
+	ir := ""
 	for _, block := range v.Blocks {
-		fmt.Println("-------")
-		fmt.Println(block.Label)
+		ir += block.Label + "\n"
 		for _, op := range block.Ops {
-			fmt.Println(op)
+			ir += "\t" + op.String() + "\n"
 		}
 	}
-	return sampleATT, nil
+	return ir, nil
 }

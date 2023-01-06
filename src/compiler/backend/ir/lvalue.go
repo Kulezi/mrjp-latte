@@ -42,9 +42,12 @@ func (v *Visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
 func (v *Visitor) VisitLVId(ctx *parser.LVIdContext) interface{} {
 	ident := ctx.ID().GetText()
 	old := v.GetLocal(ident)
+	new := v.FreshTemp(old.Type())
+	v.variableLocations[ident] = new
+
 	return locPair{
 		old: old,
-		new: v.ShadowLocal(ident, old.Type()),
+		new: new,
 	}
 }
 

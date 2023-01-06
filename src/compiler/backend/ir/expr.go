@@ -89,7 +89,7 @@ func (v *Visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
 func (v *Visitor) VisitENotOp(ctx *parser.ENotOpContext) interface{} {
 	defer v.PushLabels(v.lFalse, v.lTrue, v.lNext)()
 	v.Visit(ctx.Expr())
-	return nil
+	return LUnassigned{Type_: types.TBool{}}
 }
 
 func (v *Visitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {

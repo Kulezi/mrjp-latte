@@ -1,13 +1,26 @@
 package ir
 
 import (
+	"latte/compiler/frontend/typecheck"
 	"latte/compiler/frontend/types"
 	"latte/parser"
 )
 
 func (v *Visitor) VisitBlock(ctx *parser.BlockContext) interface{} {
+	v.Depth++
+	defer func() { v.Depth-- }()
 	for _, stmt := range ctx.AllStmt() {
 		v.Visit(stmt)
+	}
+
+	for len(v.DropperStack) > 0 {
+		dropper := v.DropperStack[len(v.DropperStack)-1]
+		if dropper.Depth != v.Depth {
+			break
+		}
+
+		dropper.Drop()
+		v.DropperStack = v.DropperStack[:len(v.DropperStack)-1]
 	}
 
 	return nil
@@ -41,7 +54,11 @@ func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 			src.Value = t.DefaultValue()
 		}
 
-		dst := v.ShadowLocal(ident, t)
+		dst, drop := v.ShadowLocal(ident, t)
+		v.DropperStack = append(v.DropperStack, typecheck.VarDropper{
+			Drop:  drop,
+			Depth: v.Depth,
+		})
 		v.EmitQuad(QMov{
 			Src: src,
 			Dst: dst,
@@ -125,7 +142,7 @@ func (v *Visitor) VisitSCond(ctx *parser.SCondContext) interface{} {
 
 	// Generate condition code.
 	popLabels := v.PushLabels(lTrue, lFalse, lTrue)
-	v.evalSExp(ctx.Expr())
+	v.evalExpr(ctx.Expr())
 	popLabels()
 
 	// Generate if body.
@@ -154,7 +171,7 @@ func (v *Visitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
 
 	// Generate condition code.
 	popLabels := v.PushLabels(lTrue, lFalse, lTrue)
-	v.evalSExp(ctx.Expr())
+	v.Visit(ctx.Expr())
 	popLabels()
 
 	// Generate if body.

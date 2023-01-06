@@ -43,17 +43,31 @@ func (v *Visitor) FreshLabel() Label {
 }
 
 func (v *Visitor) StartBlock(l Label) {
+	if v.curBlock.Label != "" {
+		v.CFG[v.curBlock.Label] = v.curBlock
+		v.Blocks = append(v.Blocks, v.curBlock)
+	}
+
 	v.curBlock = BasicBlock{Label: l}
 }
 
-func (v *Visitor) ShadowLocal(ident string, t Type) (location Location) {
+func (v *Visitor) ShadowLocal(ident string, t Type) (location Location, drop func()) {
 	loc := v.FreshTemp(t)
+
+	oldSignature, ok := v.Signatures.Locals[ident]
+	oldLoc, ok := v.variableLocations[ident]
+
 	v.variableLocations[ident] = loc
 	v.Signatures.Locals[ident] = TypeInfo{
 		Type: t,
 	}
 
-	return loc
+	return loc, func() {
+		if ok {
+			v.Signatures.Locals[ident] = oldSignature
+			v.variableLocations[ident] = oldLoc
+		}
+	}
 }
 
 func (v *Visitor) GetLocal(ident string) Location {
