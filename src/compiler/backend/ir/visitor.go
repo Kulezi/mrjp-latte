@@ -1,6 +1,7 @@
 package ir
 
 import (
+	"latte/compiler/config"
 	"latte/compiler/frontend/typecheck"
 	"latte/parser"
 
@@ -13,6 +14,9 @@ type Label = string
 // Visitor for intermediate representation generation
 type Visitor struct {
 	*typecheck.Visitor
+
+	config config.Config
+
 	variableLocations map[string]Location
 	totalAddresses    uint
 
@@ -42,9 +46,10 @@ func (v *Visitor) VisitProgram(ctx *parser.ProgramContext) interface{} {
 	return res
 }
 
-func MakeVisitor(v *typecheck.Visitor) *Visitor {
+func MakeVisitor(v *typecheck.Visitor, config config.Config) *Visitor {
 	return &Visitor{
 		Visitor:           v,
+		config:            config,
 		variableLocations: make(map[string]Location),
 		CFG:               make(map[string]BasicBlock),
 	}

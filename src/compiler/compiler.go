@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "latte/compiler/config"
 	"latte/compiler/frontend"
+	"log"
 )
 
 func CompileX64(cfg Config) error {
@@ -21,6 +22,7 @@ func CompileX64(cfg Config) error {
 		return err
 	}
 
+	log.Println(cfg.Intermediate)
 	if err := saveAssembly(asm, cfg.Intermediate); err != nil {
 		return fmt.Errorf("failed to save assembly to .s file: %w", err)
 	}

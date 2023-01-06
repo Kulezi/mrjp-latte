@@ -281,16 +281,22 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 
 	signature := t.Type.(types.TFun)
 
-	// TODO: eval all args.
-	// for i, e := range ctx.AllExpr() {
-	//
-	// }
+	var args []Location
+	for _, e := range ctx.AllExpr() {
+		arg := v.evalExpr(e)
+		if _, ok := arg.(LUnassigned); ok {
+			arg = v.getBoolLoc()
+		}
+
+		args = append(args, arg)
+	}
 
 	dst := v.FreshTemp(signature.Result)
 	// Emit call.
 	v.EmitQuad(QCall{
 		Label: v.GetFunctionLabel(ident),
 		Dst:   dst,
+		Args:  args,
 	})
 
 	return dst

@@ -48,7 +48,7 @@ _start:
 
 // FIXME: generate code.
 func genX64(s frontend.State, cfg Config) (string, error) {
-	v := ir.MakeVisitor(typecheck.MakeVisitor(s.Signatures))
+	v := ir.MakeVisitor(typecheck.MakeVisitor(s.Signatures), cfg)
 	v.Visit(s.Tree)
 	ir := ""
 	for _, block := range v.Blocks {

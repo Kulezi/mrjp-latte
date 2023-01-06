@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"path"
+	"strings"
 	"testing"
 )
 
@@ -43,9 +44,14 @@ func TestGood(t *testing.T) {
 				filename := dir + "/" + item.Name()
 				if path.Ext(filename) == ".lat" {
 					t.Run(filename, func(t *testing.T) {
+						basename := strings.TrimSuffix(filename, ".lat")
+
+						intermediate := basename + ".s"
 						err := CompileX64(config.Config{
-							Source: filename,
+							Source:       filename,
+							Intermediate: intermediate,
 						})
+
 						if err != nil {
 							t.Fatal(err)
 						}

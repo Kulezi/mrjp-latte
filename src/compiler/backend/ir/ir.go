@@ -28,12 +28,18 @@ func (v LConst) Type() Type {
 }
 
 type LReg struct {
-	Type_ Type
-	Addr  uint
+	Type_    Type
+	Variable string
+	Addr     uint
 }
 
 func (v LReg) String() string {
-	return fmt.Sprintf("r_%d", v.Addr)
+	varName := v.Variable
+	if varName == "" {
+		varName = "__tmp__"
+	}
+
+	return fmt.Sprintf("r_%s_%d", v.Variable, v.Addr)
 }
 
 func (v LReg) Type() Type {
@@ -102,7 +108,7 @@ type QBinOp struct {
 	Lhs, Rhs Location
 }
 
-func (q QBinOp) String() string { return fmt.Sprintf("%s = %s%s%s", q.Dst, q.Lhs, q.Op, q.Rhs) }
+func (q QBinOp) String() string { return fmt.Sprintf("%s = %s %s %s", q.Dst, q.Lhs, q.Op, q.Rhs) }
 
 type QJmp struct {
 	Dst Label
@@ -135,3 +141,10 @@ type QCall struct {
 }
 
 func (q QCall) String() string { return fmt.Sprintf("%s = call %s(%s)", q.Dst, q.Label, q.Args) }
+
+type QPop struct {
+	QBase
+	Dst Location
+}
+
+func (q QPop) String() string { return fmt.Sprintf("%s = pop", q.Dst) }

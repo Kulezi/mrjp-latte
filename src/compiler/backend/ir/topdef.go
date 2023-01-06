@@ -3,7 +3,6 @@ package ir
 import (
 	. "latte/compiler/frontend/types"
 	"latte/parser"
-	"log"
 )
 
 func (v *Visitor) VisitTopDef(ctx *parser.TopDefContext) interface{} {
@@ -15,14 +14,14 @@ func (v *Visitor) VisitTopDef(ctx *parser.TopDefContext) interface{} {
 }
 
 func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
-	log.Println(ctx.GetText())
 	ident := ctx.ID().GetText()
 	t, _ := v.TypeOf(ident)
 	signature := t.Type.(TFun)
 
 	v.Depth++
 	for _, arg := range signature.Args {
-		_, drop := v.ShadowLocal(arg.Ident, arg.Type)
+		loc, drop := v.ShadowLocal(arg.Ident, arg.Type)
+		v.EmitLoadArg(loc, arg.Type)
 		defer drop()
 	}
 	v.Depth--
