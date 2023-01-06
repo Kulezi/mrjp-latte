@@ -5,6 +5,11 @@ import (
 	. "latte/compiler/frontend/types"
 )
 
+func (v *Visitor) GetFunctionLabel(ident string) Label {
+	// TODO: This will need a change when objects are introduced.
+	return ident + ":"
+}
+
 func (v *Visitor) FreshTemp(t Type) LReg {
 	addr := v.totalAddresses
 	v.totalAddresses++
@@ -13,6 +18,22 @@ func (v *Visitor) FreshTemp(t Type) LReg {
 		Type_: t,
 		Addr:  addr,
 	}
+}
+
+func (v *Visitor) InsideCondition() bool {
+	return v.lTrue != ""
+}
+
+func (v *Visitor) PushLabels(lTrue, lFalse, lNext Label) (pop func()) {
+	oldTrue, oldFalse, oldNext := v.lTrue, v.lFalse, v.lNext
+	v.lTrue, v.lFalse, v.lNext = lTrue, lFalse, lNext
+	return func() {
+		v.lTrue, v.lFalse, v.lNext = oldTrue, oldFalse, oldNext
+	}
+}
+
+func (v *Visitor) GetLabels() (lTrue, lFalse, lNext Label) {
+	return v.lTrue, v.lFalse, v.lNext
 }
 
 func (v *Visitor) FreshLabel() Label {

@@ -40,6 +40,18 @@ func (v LReg) Type() Type {
 	return v.Type_
 }
 
+type LUnassigned struct {
+	Type_ Type
+}
+
+func (v LUnassigned) String() string {
+	return "unassigned"
+}
+
+func (v LUnassigned) Type() Type {
+	return v.Type_
+}
+
 type BasicBlock struct {
 	Label string
 	Ops   []Quadruple
@@ -114,3 +126,12 @@ type QJnz struct {
 
 func (q QJnz) String() string { return fmt.Sprintf("if %s goto %s", q.Value, q.Dst) }
 func (q QJnz) IsJump() bool   { return true }
+
+type QCall struct {
+	Label Label
+	Dst   Location
+	Args  []Location
+}
+
+func (q QCall) String() string { return fmt.Sprintf("%s = call %s(%s)", q.Dst, q.Label, q.Args) }
+func (q QCall) IsJump() bool   { return true }

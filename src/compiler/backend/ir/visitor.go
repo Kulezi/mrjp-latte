@@ -22,6 +22,9 @@ type Visitor struct {
 	totalLabels uint
 	curBlock    BasicBlock
 	lastQuad    Quadruple
+
+	// For boolean expression short circuit evaluation.
+	lTrue, lFalse, lNext Label
 }
 
 func (v *Visitor) Visit(tree antlr.ParseTree) interface{} {

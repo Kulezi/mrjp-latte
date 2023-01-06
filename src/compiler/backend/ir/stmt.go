@@ -120,17 +120,16 @@ func (v *Visitor) VisitSCond(ctx *parser.SCondContext) interface{} {
 		return nil
 	}
 
-	lFalse := v.FreshLabel()
 	lTrue := v.FreshLabel()
+	lFalse := v.FreshLabel()
 
-	b := v.evalSExp(ctx.Expr())
-	v.EmitQuad(QJz{
-		Value: b,
-		Dst:   lFalse,
-	})
+	// Generate condition code.
+	popLabels := v.PushLabels(lTrue, lFalse, lTrue)
+	v.evalSExp(ctx.Expr())
+	popLabels()
 
+	// Generate if body.
 	v.StartBlock(lTrue)
-
 	v.Visit(ctx.Stmt())
 
 	v.StartBlock(lFalse)
@@ -153,18 +152,19 @@ func (v *Visitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
 	lFalse := v.FreshLabel()
 	lEnd := v.FreshLabel()
 
-	b := v.evalSExp(ctx.Expr())
-	v.EmitQuad(QJz{
-		Value: b,
-		Dst:   lFalse,
-	})
+	// Generate condition code.
+	popLabels := v.PushLabels(lTrue, lFalse, lTrue)
+	v.evalSExp(ctx.Expr())
+	popLabels()
 
+	// Generate if body.
 	v.StartBlock(lTrue)
 	v.Visit(ctx.Stmt(0))
 	v.EmitQuad(QJmp{
 		Dst: lEnd,
 	})
 
+	// Generate else body.
 	v.StartBlock(lFalse)
 	v.Visit(ctx.Stmt(1))
 
@@ -173,8 +173,6 @@ func (v *Visitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
 }
 
 func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
-	lBody := v.FreshLabel()
-	lCond := v.FreshLabel()
 	genBody := true
 	genCond := true
 	if b, ok := v.evalConstExpr(ctx.Expr()); ok {
@@ -185,6 +183,10 @@ func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 			genCond = false
 		}
 	}
+
+	lBody := v.FreshLabel()
+	lCond := v.FreshLabel()
+	lEnd := v.FreshLabel()
 
 	v.EmitQuad(QJmp{
 		Dst: lCond,
@@ -197,11 +199,9 @@ func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 
 	v.StartBlock(lCond)
 	if genCond {
-		b := v.evalSExp(ctx.Expr())
-		v.EmitQuad(QJnz{
-			Value: b,
-			Dst:   lBody,
-		})
+		popLabels := v.PushLabels(lBody, lEnd, lEnd)
+		v.evalExpr(ctx.Expr())
+		popLabels()
 	} else {
 		v.EmitQuad(QJmp{
 			Dst: lBody,
@@ -255,7 +255,6 @@ func (v *Visitor) VisitSExp(ctx *parser.SExpContext) interface{} {
 }
 
 func (v *Visitor) evalSExp(expr parser.IExprContext) Location {
-
 	if loc, ok := v.evalConstExpr(expr); ok {
 		return loc
 	}

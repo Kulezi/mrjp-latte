@@ -1,12 +1,36 @@
 package ir
 
 import (
+	"latte/compiler/frontend/types"
 	"latte/parser"
+	"strconv"
 )
 
 func (v *Visitor) evalExpr(tree parser.IExprContext) Location {
-	ret := v.Visit(tree).(Location)
-	return ret
+	return v.Visit(tree).(Location)
+}
+
+func (v *Visitor) getBoolLoc() Location {
+	t := types.TBool{}
+	loc := v.FreshTemp(t)
+	lEnd := v.FreshLabel()
+
+	v.StartBlock(v.lTrue)
+	v.EmitQuad(QMov{
+		Dst: loc,
+		Src: LConst{Type_: t, Value: true},
+	})
+	v.EmitQuad(QJmp{Dst: lEnd})
+
+	v.StartBlock(v.lFalse)
+	v.EmitQuad(QMov{
+		Dst: loc,
+		Src: LConst{Type_: t, Value: false},
+	})
+
+	v.StartBlock(lEnd)
+
+	return loc
 }
 
 func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
@@ -63,16 +87,9 @@ func (v *Visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
 }
 
 func (v *Visitor) VisitENotOp(ctx *parser.ENotOpContext) interface{} {
-	arg := v.evalExpr(ctx.Expr())
-	dst := v.FreshTemp(arg.Type())
-
-	v.EmitQuad(QUnOp{
-		Op:  "!",
-		Dst: dst,
-		Arg: arg,
-	})
-
-	return dst
+	defer v.PushLabels(v.lFalse, v.lTrue, v.lNext)()
+	v.Visit(ctx.Expr())
+	return nil
 }
 
 func (v *Visitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
@@ -105,9 +122,20 @@ func (v *Visitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
 }
 
 func (v *Visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
-	lhs := v.evalExpr(ctx.Expr(0))
-	rhs := v.evalExpr(ctx.Expr(1))
 	op := ctx.RelOp().GetText()
+
+	lTrue, lFalse, lNext := v.FreshLabel(), v.FreshLabel(), v.FreshLabel()
+	v.PushLabels(lTrue, lFalse, lNext)
+	lhs := v.evalExpr(ctx.Expr(0))
+	if _, ok := lhs.(LUnassigned); ok {
+		lhs = v.getBoolLoc()
+	}
+
+	rhs := v.evalExpr(ctx.Expr(1))
+	if _, ok := rhs.(LUnassigned); ok {
+		rhs = v.getBoolLoc()
+	}
+
 	dst := v.FreshTemp(lhs.Type())
 
 	v.EmitQuad(QBinOp{
@@ -120,70 +148,53 @@ func (v *Visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
 	return dst
 }
 
-// func (v *Visitor) VisitEAnd(ctx *parser.EAndContext) interface{} {
-// 	t1, err := v.evalExpr(ctx.Expr(0))
-// 	if err != nil {
-// 		return err
-// 	}
+func (v *Visitor) VisitEAnd(ctx *parser.EAndContext) interface{} {
+	lp := v.FreshLabel()
 
-// 	t2, err := v.evalExpr(ctx.Expr(1))
-// 	if err != nil {
-// 		return err
-// 	}
+	pop := v.PushLabels(lp, v.lFalse, lp)
+	v.Visit(ctx.Expr(0))
+	pop()
 
-// 	if !SameType(t1, TBool{}) {
-// 		return UnexpectedTypeError{
-// 			Expr:     ctx,
-// 			Expected: TBool{},
-// 			Got:      t1,
-// 		}
-// 	}
+	v.StartBlock(lp)
+	v.Visit(ctx.Expr(1))
 
-// 	if !SameType(t2, TBool{}) {
-// 		return UnexpectedTypeError{
-// 			Expr:     ctx,
-// 			Expected: TBool{},
-// 			Got:      t2,
-// 		}
-// 	}
+	return LUnassigned{Type_: types.TBool{}}
+}
 
-// 	return TBool{
-// 		StartToken: ctx.GetStart(),
-// 		Value:      EvalConstBoolBinOp("&&", t1, t2),
-// 	}
-// }
+func (v *Visitor) VisitEInt(ctx *parser.EIntContext) interface{} {
+	n, _ := strconv.Atoi(ctx.INT().GetText())
 
-// func (v *Visitor) VisitEOr(ctx *parser.EOrContext) interface{} {
-// 	t1, err := v.evalExpr(ctx.Expr(0))
-// 	if err != nil {
-// 		return err
-// 	}
+	return LConst{Type_: types.TInt{}, Value: n}
+}
 
-// 	t2, err := v.evalExpr(ctx.Expr(1))
-// 	if err != nil {
-// 		return err
-// 	}
+func (v *Visitor) VisitETrue(ctx *parser.ETrueContext) interface{} {
+	if v.lTrue != v.lNext {
+		v.EmitQuad(QJmp{Dst: v.lTrue})
+	}
 
-// 	if !SameType(t1, TBool{}) {
-// 		return UnexpectedTypeError{
-// 			Expr:     ctx,
-// 			Expected: TBool{},
-// 			Got:      t1,
-// 		}
-// 	}
+	return LUnassigned{Type_: types.TBool{}}
+}
 
-// 	if !SameType(t2, TBool{}) {
-// 		return UnexpectedTypeError{
-// 			Expr:     ctx,
-// 			Expected: TBool{},
-// 			Got:      t2,
-// 		}
-// 	}
-// 	return TBool{
-// 		StartToken: ctx.GetStart(),
-// 		Value:      EvalConstBoolBinOp("||", t1, t2),
-// 	}
-// }
+func (v *Visitor) VisitEFalse(ctx *parser.EFalseContext) interface{} {
+	if v.lFalse != v.lNext {
+		v.EmitQuad(QJmp{Dst: v.lFalse})
+	}
+
+	return LUnassigned{Type_: types.TBool{}}
+}
+
+func (v *Visitor) VisitEOr(ctx *parser.EOrContext) interface{} {
+	lp := v.FreshLabel()
+
+	pop := v.PushLabels(v.lTrue, lp, lp)
+	v.Visit(ctx.Expr(0))
+	pop()
+
+	v.StartBlock(lp)
+	v.Visit(ctx.Expr(1))
+
+	return LUnassigned{Type_: types.TBool{}}
+}
 
 func (v *Visitor) VisitENewArray(ctx *parser.ENewArrayContext) interface{} {
 	panic("can't use new - arrays are not yet supported")
@@ -236,50 +247,59 @@ func (v *Visitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
 
 func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
 	ident := ctx.ID().GetText()
-	return v.GetLocal(ident)
+	loc := v.GetLocal(ident)
+	if _, ok := loc.Type().(types.TBool); ok {
+		if v.lTrue == v.lNext {
+			v.EmitQuad(QJz{
+				Value: loc,
+				Dst:   v.lFalse,
+			})
+		} else if v.lFalse == v.lNext {
+			v.EmitQuad(QJnz{
+				Value: loc,
+				Dst:   v.lTrue,
+			})
+		} else {
+			v.EmitQuad(QJz{
+				Value: loc,
+				Dst:   v.lFalse,
+			})
+			v.EmitQuad(QJmp{
+				Dst: v.lTrue,
+			})
+		}
+
+		return LUnassigned{}
+	}
+
+	return loc
 }
 
-// func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
-// 	ident := ctx.ID().GetText()
-// 	t, ok := v.TypeOf(ident)
-// 	if !ok {
-// 		return UndeclaredIdentifierError{
-// 			Ident: ctx.ID(),
-// 		}
-// 	}
+func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
+	ident := ctx.ID().GetText()
+	t, _ := v.TypeOf(ident)
 
-// 	signature, ok := t.Type.(TFun)
-// 	if !ok {
-// 		return NotAFunctionError{
-// 			Ident: ctx.ID(),
-// 			Type:  t.Type,
-// 		}
-// 	}
+	signature := t.Type.(types.TFun)
 
-// 	if len(signature.Args) != len(ctx.AllExpr()) {
-// 		return InvalidFunctionArgumentCountError{
-// 			Expr: ctx,
-// 			Fun:  signature,
-// 		}
-// 	}
+	// TODO: eval all args.
+	// for i, e := range ctx.AllExpr() {
+	//
+	// }
 
-// 	for i, e := range ctx.AllExpr() {
-// 		if err := v.ExpectType(signature.Args[i].Type, e); err != nil {
-// 			return err
-// 		}
-// 	}
+	dst := v.FreshTemp(signature.Result)
+	// Emit call.
+	v.EmitQuad(QCall{
+		Label: v.GetFunctionLabel(ident),
+		Dst:   dst,
+	})
 
-// 	if classRef, ok := signature.Result.(TClassRef); ok {
-// 		class, _ := v.TypeOfGlobal(classRef.String())
-// 		return class.Type.(TClass)
-// 	}
-// 	return signature.Result
-// }
+	return dst
+}
 
 func (v *Visitor) VisitEStr(ctx *parser.EStrContext) interface{} {
 	withBraces := ctx.STR().GetText()
 	s := withBraces[1 : len(withBraces)-1]
-	return LConst{Value: s}
+	return LConst{Type_: types.TString{}, Value: s}
 }
 
 func (v *Visitor) VisitENull(ctx *parser.ENullContext) interface{} {

@@ -28,7 +28,7 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	v.CurFun = &signature
 	defer func() { v.CurFun = nil }()
 
-	v.curBlock = BasicBlock{Label: ident + ":"}
+	v.curBlock = BasicBlock{Label: v.GetFunctionLabel(ident)}
 
 	v.Visit(ctx.Block())
 

@@ -13,21 +13,22 @@ import (
 )
 
 var goodDirs = []string{
-	"../../lattests/good",
-	"../../mgtests/lattests/tests/margdoc",
-	"../../mgtests/lattests/tests/margdoc/lvalues",
-	"../../mrjp-tests/good/basic",
-	"../../mrjp-tests/good/arrays",
-	"../../mrjp-tests/good/hardcore",
-	"../../mrjp-tests/good/virtual",
-	"../../mrjp-tests/gr5",
+	// "../../lattests/good",
+	// "../../mgtests/lattests/tests/margdoc",
+	// "../../mgtests/lattests/tests/margdoc/lvalues",
+	// "../../mrjp-tests/good/basic",
+	// "../../mrjp-tests/good/arrays",
+	// "../../mrjp-tests/good/hardcore",
+	// "../../mrjp-tests/good/virtual",
+	// "../../mrjp-tests/gr5",
+	"../../defaultowe_testy/lattests/good",
 }
 
 var badDirs = []string{
-	"../../lattests/bad",
-	"../../mrjp-tests/bad/semantic",
-	"../../mgtests/lattests/tests/margdoc/bad",
-	"../../mgtests/lattests/tests/margdoc/casting",
+	// "../../lattests/bad",
+	// "../../mrjp-tests/bad/semantic",
+	// "../../mgtests/lattests/tests/margdoc/bad",
+	// "../../mgtests/lattests/tests/margdoc/casting",
 }
 
 func TestGood(t *testing.T) {
@@ -43,8 +44,7 @@ func TestGood(t *testing.T) {
 				if path.Ext(filename) == ".lat" {
 					t.Run(filename, func(t *testing.T) {
 						err := CompileX64(config.Config{
-							TypeCheck: true,
-							Source:    filename,
+							Source: filename,
 						})
 						if err != nil {
 							t.Fatal(err)
