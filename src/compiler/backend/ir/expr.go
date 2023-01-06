@@ -13,7 +13,7 @@ func (v *Visitor) evalExpr(tree parser.IExprContext) Location {
 func (v *Visitor) getBoolLoc() Location {
 	t := types.TBool{}
 	loc := v.FreshTemp(t)
-	lEnd := v.FreshLabel()
+	lEnd := v.FreshLabel("lBEnd")
 
 	v.StartBlock(v.lTrue)
 	v.EmitQuad(QMov{
@@ -124,17 +124,21 @@ func (v *Visitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
 func (v *Visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
 	op := ctx.RelOp().GetText()
 
-	lTrue, lFalse, lNext := v.FreshLabel(), v.FreshLabel(), v.FreshLabel()
-	v.PushLabels(lTrue, lFalse, lNext)
+	lTrue, lFalse := v.FreshLabel("lRelTrue"), v.FreshLabel("lRelFalse")
+	pop := v.PushLabels(lTrue, lFalse, lTrue)
 	lhs := v.evalExpr(ctx.Expr(0))
 	if _, ok := lhs.(LUnassigned); ok {
 		lhs = v.getBoolLoc()
 	}
+	pop()
 
+	lTrue, lFalse = v.FreshLabel("lRelTrue"), v.FreshLabel("lRelFalse")
+	pop = v.PushLabels(lTrue, lFalse, lTrue)
 	rhs := v.evalExpr(ctx.Expr(1))
 	if _, ok := rhs.(LUnassigned); ok {
 		rhs = v.getBoolLoc()
 	}
+	pop()
 
 	dst := v.FreshTemp(lhs.Type())
 
@@ -145,11 +149,13 @@ func (v *Visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
 		Rhs: rhs,
 	})
 
-	return dst
+	v.dispatchBool(dst)
+
+	return LUnassigned{Type_: types.TBool{}}
 }
 
 func (v *Visitor) VisitEAnd(ctx *parser.EAndContext) interface{} {
-	lp := v.FreshLabel()
+	lp := v.FreshLabel("lANDp")
 
 	pop := v.PushLabels(lp, v.lFalse, lp)
 	v.Visit(ctx.Expr(0))
@@ -184,7 +190,7 @@ func (v *Visitor) VisitEFalse(ctx *parser.EFalseContext) interface{} {
 }
 
 func (v *Visitor) VisitEOr(ctx *parser.EOrContext) interface{} {
-	lp := v.FreshLabel()
+	lp := v.FreshLabel("lORp")
 
 	pop := v.PushLabels(v.lTrue, lp, lp)
 	v.Visit(ctx.Expr(0))
@@ -345,3 +351,25 @@ func (v *Visitor) VisitEParen(ctx *parser.EParenContext) interface{} {
 // var validMulOpArg = map[string]struct{}{
 // 	"int": {},
 // }
+
+func (v *Visitor) dispatchBool(loc Location) {
+	if v.lTrue == v.lNext {
+		v.EmitQuad(QJz{
+			Value: loc,
+			Dst:   v.lFalse,
+		})
+	} else if v.lFalse == v.lNext {
+		v.EmitQuad(QJnz{
+			Value: loc,
+			Dst:   v.lTrue,
+		})
+	} else {
+		v.EmitQuad(QJz{
+			Value: loc,
+			Dst:   v.lFalse,
+		})
+		v.EmitQuad(QJmp{
+			Dst: v.lTrue,
+		})
+	}
+}

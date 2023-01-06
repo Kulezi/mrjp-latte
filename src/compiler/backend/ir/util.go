@@ -36,16 +36,14 @@ func (v *Visitor) GetLabels() (lTrue, lFalse, lNext Label) {
 	return v.lTrue, v.lFalse, v.lNext
 }
 
-func (v *Visitor) FreshLabel() Label {
-	res := fmt.Sprintf("_%d:", v.totalLabels)
+func (v *Visitor) FreshLabel(prefix string) Label {
+	res := fmt.Sprintf("%s_%d:", prefix, v.totalLabels)
 	v.totalLabels++
 	return res
 }
 
 func (v *Visitor) StartBlock(l Label) {
 	if v.curBlock.Label != "" {
-		v.curBlock.Ops = append(v.curBlock.Ops, QJmp{Dst: l})
-
 		v.CFG[v.curBlock.Label] = v.curBlock
 		v.Blocks = append(v.Blocks, v.curBlock)
 	}
@@ -82,7 +80,7 @@ func (v *Visitor) EmitQuad(q Quadruple) {
 	v.curBlock.Ops = append(v.curBlock.Ops, q)
 	if q.IsJump() {
 		if v.curBlock.Label == "" {
-			v.curBlock.Label = v.FreshLabel()
+			v.curBlock.Label = v.FreshLabel("after_jump")
 		}
 		v.CFG[v.curBlock.Label] = v.curBlock
 		v.Blocks = append(v.Blocks, v.curBlock)

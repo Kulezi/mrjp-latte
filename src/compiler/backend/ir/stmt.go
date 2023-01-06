@@ -137,8 +137,8 @@ func (v *Visitor) VisitSCond(ctx *parser.SCondContext) interface{} {
 		return nil
 	}
 
-	lTrue := v.FreshLabel()
-	lFalse := v.FreshLabel()
+	lTrue := v.FreshLabel("lCTrue")
+	lFalse := v.FreshLabel("lCFalse")
 
 	// Generate condition code.
 	popLabels := v.PushLabels(lTrue, lFalse, lTrue)
@@ -165,9 +165,9 @@ func (v *Visitor) VisitSCondElse(ctx *parser.SCondElseContext) interface{} {
 		return nil
 	}
 
-	lTrue := v.FreshLabel()
-	lFalse := v.FreshLabel()
-	lEnd := v.FreshLabel()
+	lTrue := v.FreshLabel("lCETrue")
+	lFalse := v.FreshLabel("lCEFalse")
+	lEnd := v.FreshLabel("lCEEnd")
 
 	// Generate condition code.
 	popLabels := v.PushLabels(lTrue, lFalse, lTrue)
@@ -201,9 +201,9 @@ func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 		}
 	}
 
-	lBody := v.FreshLabel()
-	lCond := v.FreshLabel()
-	lEnd := v.FreshLabel()
+	lBody := v.FreshLabel("lWBody")
+	lCond := v.FreshLabel("lWCond")
+	lEnd := v.FreshLabel("lWEnd")
 
 	v.EmitQuad(QJmp{
 		Dst: lCond,
