@@ -7,6 +7,13 @@ import (
 	"log"
 )
 
+type ControlFlowGraph struct {
+	Nodes    []BasicBlock
+	Edges    map[Label][]Label
+	BlockIdx map[Label]int
+}
+
+// Generates a control flow graph that is in non-SSA form.
 func Generate(s frontend.State, config config.Config) ControlFlowGraph {
 	v := MakeVisitor(typecheck.MakeVisitor(s.Signatures), config)
 	v.Visit(s.Tree)
@@ -45,12 +52,6 @@ func Generate(s frontend.State, config config.Config) ControlFlowGraph {
 	}
 
 	return cfg
-}
-
-type ControlFlowGraph struct {
-	Nodes    []BasicBlock
-	Edges    map[Label][]Label
-	BlockIdx map[Label]int
 }
 
 func (cfg *ControlFlowGraph) String() string {

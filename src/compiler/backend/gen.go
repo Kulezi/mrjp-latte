@@ -47,15 +47,7 @@ import (
 
 // FIXME: generate code.
 func GenX64(s frontend.State, config Config) string {
-	cfg := ir.Generate(s, config)
-	// v := ir.MakeVisitor(typecheck.MakeVisitor(s.Signatures), cfg)
-	// v.Visit(s.Tree)
-	// ir := ""
-	// for _, block := range v.Blocks {
-	// 	ir += block.Label + "\n"
-	// 	for _, op := range block.Ops {
-	// 		ir += "\t" + op.String() + "\n"
-	// 	}
-	// }
+	cfg := MakeSSA(ir.Generate(s, config))
+
 	return cfg.String()
 }
