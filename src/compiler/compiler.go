@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"latte/compiler/backend"
 	. "latte/compiler/config"
 	"latte/compiler/frontend"
 	"log"
@@ -17,7 +18,7 @@ func CompileX64(cfg Config) error {
 		return nil
 	}
 
-	asm := genX64(s, cfg)
+	asm := backend.GenX64(s, cfg)
 
 	log.Println(cfg.Intermediate)
 	if err := saveAssembly(asm, cfg.Intermediate); err != nil {

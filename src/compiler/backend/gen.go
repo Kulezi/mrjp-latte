@@ -1,4 +1,4 @@
-package compiler
+package backend
 
 import (
 	"latte/compiler/backend/ir"
@@ -28,26 +28,26 @@ import (
 //           section   .data
 // message:  db        "Hello, World", 10      ; note the newline at the end`
 
-const sampleATT = `.data
-hello:
-    .string "Hello world!\n"
+// const sampleATT = `.data
+// hello:
+//     .string "Hello world!\n"
 
-.text
-.globl _start
-_start:
-    movl $4, %eax # write(1, hello, strlen(hello))
-    movl $1, %ebx
-    movl $hello, %ecx
-    movl $13, %edx
-    int  $0x80
+// .text
+// .globl _start
+// _start:
+//     movl $4, %eax # write(1, hello, strlen(hello))
+//     movl $1, %ebx
+//     movl $hello, %ecx
+//     movl $13, %edx
+//     int  $0x80
 
-    movl $1, %eax # exit(0)
-    movl $0, %ebx
-    int  $0x80`
+//     movl $1, %eax # exit(0)
+//     movl $0, %ebx
+//     int  $0x80`
 
 // FIXME: generate code.
-func genX64(s frontend.State, cfg Config) string {
-	ir := ir.Generate(s, cfg)
+func GenX64(s frontend.State, config Config) string {
+	cfg := ir.Generate(s, config)
 	// v := ir.MakeVisitor(typecheck.MakeVisitor(s.Signatures), cfg)
 	// v.Visit(s.Tree)
 	// ir := ""
@@ -57,5 +57,5 @@ func genX64(s frontend.State, cfg Config) string {
 	// 		ir += "\t" + op.String() + "\n"
 	// 	}
 	// }
-	return ir.String()
+	return cfg.String()
 }
