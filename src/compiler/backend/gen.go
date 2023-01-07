@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"fmt"
 	"latte/compiler/backend/ir"
 	. "latte/compiler/config"
 	"latte/compiler/frontend"
@@ -49,5 +50,5 @@ import (
 func GenX64(s frontend.State, config Config) string {
 	cfg := MakeSSA(ir.Generate(s, config))
 
-	return cfg.String()
+	return fmt.Sprintf("%v", cfg.String())
 }

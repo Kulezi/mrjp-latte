@@ -9,7 +9,7 @@ import (
 
 type ControlFlowGraph struct {
 	Nodes    []BasicBlock
-	Edges    map[Label][]Label
+	Succ     map[Label][]Label
 	BlockIdx map[Label]int
 }
 
@@ -21,7 +21,7 @@ func Generate(s frontend.State, config config.Config) ControlFlowGraph {
 	cfg := ControlFlowGraph{
 		Nodes:    v.Blocks,
 		BlockIdx: make(map[Label]int),
-		Edges:    make(map[string][]string),
+		Succ:     make(map[string][]string),
 	}
 
 	for i, block := range cfg.Nodes {
@@ -34,20 +34,20 @@ func Generate(s frontend.State, config config.Config) ControlFlowGraph {
 			lastOp := ops[len(ops)-1]
 			switch jmp := lastOp.(type) {
 			case QJmp:
-				cfg.Edges[label] = append(cfg.Edges[label], jmp.Dst)
+				cfg.Succ[label] = append(cfg.Succ[label], jmp.Dst)
 			case QJnz:
-				cfg.Edges[label] = append(cfg.Edges[label], jmp.Dst)
-				cfg.Edges[label] = append(cfg.Edges[label], cfg.Nodes[i+1].Label)
+				cfg.Succ[label] = append(cfg.Succ[label], jmp.Dst)
+				cfg.Succ[label] = append(cfg.Succ[label], cfg.Nodes[i+1].Label)
 			case QJz:
-				cfg.Edges[label] = append(cfg.Edges[label], jmp.Dst)
-				cfg.Edges[label] = append(cfg.Edges[label], cfg.Nodes[i+1].Label)
+				cfg.Succ[label] = append(cfg.Succ[label], jmp.Dst)
+				cfg.Succ[label] = append(cfg.Succ[label], cfg.Nodes[i+1].Label)
 			case QRet, QVRet:
 			default:
-				cfg.Edges[label] = append(cfg.Edges[label], cfg.Nodes[i+1].Label)
+				cfg.Succ[label] = append(cfg.Succ[label], cfg.Nodes[i+1].Label)
 			}
 		} else {
 			log.Println("empty label wtf")
-			cfg.Edges[label] = append(cfg.Edges[label], cfg.Nodes[i+1].Label)
+			cfg.Succ[label] = append(cfg.Succ[label], cfg.Nodes[i+1].Label)
 		}
 	}
 
