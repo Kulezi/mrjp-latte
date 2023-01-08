@@ -18,7 +18,7 @@ type Visitor struct {
 	config config.Config
 
 	variableLocations map[string]Location
-	totalAddresses    uint
+	allAddresses      map[string]struct{}
 
 	CFG    map[Label]BasicBlock
 	Blocks []BasicBlock
@@ -51,6 +51,7 @@ func MakeVisitor(v *typecheck.Visitor, config config.Config) *Visitor {
 		Visitor:           v,
 		config:            config,
 		variableLocations: make(map[string]Location),
+		allAddresses:      make(map[string]struct{}),
 		CFG:               make(map[string]BasicBlock),
 	}
 }

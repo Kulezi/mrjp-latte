@@ -1,7 +1,6 @@
 package backend
 
 import (
-	"fmt"
 	"latte/compiler/backend/ir"
 	. "latte/compiler/config"
 	"latte/compiler/frontend"
@@ -48,7 +47,17 @@ import (
 
 // FIXME: generate code.
 func GenX64(s frontend.State, config Config) string {
-	cfg := MakeSSA(ir.Generate(s, config))
+	// cfg := MakeSSA(ir.Generate(s, config))
 
-	return fmt.Sprintf("%v", cfg.String())
+	cfg := ir.Generate(s, config)
+
+	res := ""
+	for _, block := range cfg.Nodes {
+		res += block.Label + "\n"
+		for _, op := range block.Ops {
+			res += "\t" + op.String() + "\n"
+		}
+	}
+
+	return res
 }

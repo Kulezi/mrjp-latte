@@ -9,7 +9,7 @@ clean:
 	rm latc_x86_64
 
 test: 
-	@cd src/compiler; go test . -count=1
+	@cd src/compiler; go test . -count=1 -v
 
 .PHONY: cover
 PACKAGES = $(shell cat testpackages.txt)

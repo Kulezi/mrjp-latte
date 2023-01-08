@@ -30,16 +30,11 @@ func (v LConst) Type() Type {
 type LReg struct {
 	Type_    Type
 	Variable string
-	Addr     uint
+	Name     string
 }
 
 func (v LReg) String() string {
-	varName := v.Variable
-	if varName == "" {
-		varName = "__tmp__"
-	}
-
-	return fmt.Sprintf("r_%s_%d", v.Variable, v.Addr)
+	return fmt.Sprintf("%s", v.Name)
 }
 
 func (v LReg) Type() Type {

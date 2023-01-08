@@ -3,6 +3,7 @@ package ir
 import (
 	"fmt"
 	. "latte/compiler/frontend/types"
+	"log"
 )
 
 func (v *Visitor) GetFunctionLabel(ident string) Label {
@@ -10,13 +11,22 @@ func (v *Visitor) GetFunctionLabel(ident string) Label {
 	return ident + ":"
 }
 
-func (v *Visitor) FreshTemp(t Type) LReg {
-	addr := v.totalAddresses
-	v.totalAddresses++
+func (v *Visitor) FreshTemp(prefix string, t Type) LReg {
+	tries := 0
+	for {
+		ident := prefix
+		if tries > 0 {
+			ident += fmt.Sprintf("_%d", tries)
+		}
 
-	return LReg{
-		Type_: t,
-		Addr:  addr,
+		if _, ok := v.allAddresses[ident]; !ok {
+			v.allAddresses[ident] = struct{}{}
+			return LReg{
+				Type_: t,
+				Name:  ident,
+			}
+		}
+		tries++
 	}
 }
 
@@ -52,7 +62,7 @@ func (v *Visitor) StartBlock(l Label) {
 }
 
 func (v *Visitor) ShadowLocal(ident string, t Type) (location Location, drop func()) {
-	loc := v.FreshTemp(t)
+	loc := v.FreshTemp(ident, t)
 	loc.Variable = ident
 
 	oldSignature, ok := v.Signatures.Locals[ident]
@@ -112,5 +122,6 @@ func (v *Visitor) EmitLoadArg(loc Location, typ Type) {
 	} else {
 		// Function argument passing is done entirely using stack.
 		v.EmitQuad(QPop{Dst: loc})
+		log.Println("emitted pop")
 	}
 }

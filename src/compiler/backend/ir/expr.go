@@ -12,7 +12,7 @@ func (v *Visitor) evalExpr(tree parser.IExprContext) Location {
 
 func (v *Visitor) getBoolLoc() Location {
 	t := types.TBool{}
-	loc := v.FreshTemp(t)
+	loc := v.FreshTemp("bool_loc", t)
 	lEnd := v.FreshLabel("lBEnd")
 
 	v.StartBlock(v.lTrue)
@@ -75,7 +75,7 @@ func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
 
 func (v *Visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
 	arg := v.evalExpr(ctx.Expr())
-	dst := v.FreshTemp(arg.Type())
+	dst := v.FreshTemp("neg_tmp", arg.Type())
 
 	v.EmitQuad(QUnOp{
 		Op:  "-",
@@ -95,7 +95,7 @@ func (v *Visitor) VisitENotOp(ctx *parser.ENotOpContext) interface{} {
 func (v *Visitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
 	lhs := v.evalExpr(ctx.Expr(0))
 	rhs := v.evalExpr(ctx.Expr(1))
-	dst := v.FreshTemp(lhs.Type())
+	dst := v.FreshTemp("mul_tmp", lhs.Type())
 	v.EmitQuad(QBinOp{
 		Op:  "*",
 		Dst: dst,
@@ -110,7 +110,7 @@ func (v *Visitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
 	lhs := v.evalExpr(ctx.Expr(0))
 	rhs := v.evalExpr(ctx.Expr(1))
 	op := ctx.AddOp().GetText()
-	dst := v.FreshTemp(lhs.Type())
+	dst := v.FreshTemp("add_tmp", lhs.Type())
 	v.EmitQuad(QBinOp{
 		Op:  op,
 		Dst: dst,
@@ -140,7 +140,7 @@ func (v *Visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
 	}
 	pop()
 
-	dst := v.FreshTemp(lhs.Type())
+	dst := v.FreshTemp("rel_tmp", lhs.Type())
 
 	v.EmitQuad(QBinOp{
 		Op:  op,
@@ -297,7 +297,7 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 		args = append(args, arg)
 	}
 
-	dst := v.FreshTemp(signature.Result)
+	dst := v.FreshTemp("call_tmp", signature.Result)
 	// Emit call.
 	v.EmitQuad(QCall{
 		Label: v.GetFunctionLabel(ident),
