@@ -54,7 +54,7 @@ func (v LUnassigned) Type() Type {
 }
 
 type BasicBlock struct {
-	Label string
+	Label Label
 	Ops   []Quadruple
 }
 
@@ -109,7 +109,7 @@ type QJmp struct {
 	Dst Label
 }
 
-func (q QJmp) String() string { return "goto " + q.Dst }
+func (q QJmp) String() string { return "goto " + q.Dst.Name }
 func (q QJmp) IsJump() bool   { return true }
 
 type QJz struct {

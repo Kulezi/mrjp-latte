@@ -8,7 +8,7 @@ import (
 
 func (v *Visitor) GetFunctionLabel(ident string) Label {
 	// TODO: This will need a change when objects are introduced.
-	return ident + ":"
+	return Label{IsFunction: true, Name: ident}
 }
 
 func (v *Visitor) FreshTemp(prefix string, t Type) LReg {
@@ -30,10 +30,6 @@ func (v *Visitor) FreshTemp(prefix string, t Type) LReg {
 	}
 }
 
-func (v *Visitor) InsideCondition() bool {
-	return v.lTrue != ""
-}
-
 func (v *Visitor) PushLabels(lTrue, lFalse, lNext Label) (pop func()) {
 	oldTrue, oldFalse, oldNext := v.lTrue, v.lFalse, v.lNext
 	v.lTrue, v.lFalse, v.lNext = lTrue, lFalse, lNext
@@ -47,13 +43,13 @@ func (v *Visitor) GetLabels() (lTrue, lFalse, lNext Label) {
 }
 
 func (v *Visitor) FreshLabel(prefix string) Label {
-	res := fmt.Sprintf("%s_%d:", prefix, v.totalLabels)
+	res := fmt.Sprintf("_%s_%d", prefix, v.totalLabels)
 	v.totalLabels++
-	return res
+	return Label{Name: res}
 }
 
 func (v *Visitor) StartBlock(l Label) {
-	if v.curBlock.Label != "" {
+	if v.curBlock.Label.Name != "" {
 		v.CFG[v.curBlock.Label] = v.curBlock
 		v.Blocks = append(v.Blocks, v.curBlock)
 	}
@@ -89,7 +85,7 @@ func (v *Visitor) EmitQuad(q Quadruple) {
 	v.lastQuad = q
 	v.curBlock.Ops = append(v.curBlock.Ops, q)
 	if q.IsJump() {
-		if v.curBlock.Label == "" {
+		if v.curBlock.Label.Name == "" {
 			v.curBlock.Label = v.FreshLabel("after_jump")
 		}
 		v.CFG[v.curBlock.Label] = v.curBlock

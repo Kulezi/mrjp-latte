@@ -2,10 +2,12 @@ package compiler
 
 import (
 	"fmt"
+	"io/ioutil"
 	"latte/compiler/backend"
 	. "latte/compiler/config"
 	"latte/compiler/frontend"
 	"log"
+	"os"
 )
 
 func CompileX64(cfg Config) error {
@@ -25,23 +27,23 @@ func CompileX64(cfg Config) error {
 		return fmt.Errorf("failed to save assembly to .s file: %w", err)
 	}
 
-	// linkFile, err := ioutil.TempFile(os.TempDir(), "latte_link")
-	// if err != nil {
-	// 	return err
-	// }
-	// defer os.Remove(linkFile.Name())
+	linkFile, err := ioutil.TempFile(os.TempDir(), "latte_link")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(linkFile.Name())
 
 	// if err := compileNASM(cfg.Intermediate, linkFile.Name()); err != nil {
 	// 	return fmt.Errorf("nasm compilation error: %w", err)
 	// }
 
-	// if err := compileGCC(cfg.Intermediate, linkFile.Name()); err != nil {
-	// 	return fmt.Errorf("gcc compilation error: %w", err)
-	// }
+	if err := compileGCC(cfg.Intermediate, linkFile.Name()); err != nil {
+		return fmt.Errorf("gcc compilation error: %w", err)
+	}
 
-	// if err := link(linkFile.Name(), cfg.Target); err != nil {
-	// 	return fmt.Errorf("link error: %w", err)
-	// }
+	if err := link(linkFile.Name(), cfg.Target); err != nil {
+		return fmt.Errorf("link error: %w", err)
+	}
 
 	return nil
 }

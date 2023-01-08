@@ -25,7 +25,6 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	v.StartBlock(label)
 
 	for _, arg := range signature.Args {
-
 		loc, drop := v.ShadowLocal(arg.Ident, arg.Type)
 		v.EmitLoadArg(loc, arg.Type)
 		defer drop()

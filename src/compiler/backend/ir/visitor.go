@@ -9,7 +9,10 @@ import (
 )
 
 type Addr = uint
-type Label = string
+type Label struct {
+	IsFunction bool
+	Name       string
+}
 
 // Visitor for intermediate representation generation
 type Visitor struct {
@@ -52,6 +55,6 @@ func MakeVisitor(v *typecheck.Visitor, config config.Config) *Visitor {
 		config:            config,
 		variableLocations: make(map[string]Location),
 		allAddresses:      make(map[string]struct{}),
-		CFG:               make(map[string]BasicBlock),
+		CFG:               make(map[Label]BasicBlock),
 	}
 }

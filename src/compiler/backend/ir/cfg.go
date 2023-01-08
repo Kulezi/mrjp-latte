@@ -21,7 +21,7 @@ func Generate(s frontend.State, config config.Config) ControlFlowGraph {
 	cfg := ControlFlowGraph{
 		Nodes:    v.Blocks,
 		BlockIdx: make(map[Label]int),
-		Succ:     make(map[string][]string),
+		Succ:     make(map[Label][]Label),
 	}
 
 	for i, block := range cfg.Nodes {
@@ -57,7 +57,7 @@ func Generate(s frontend.State, config config.Config) ControlFlowGraph {
 func (cfg *ControlFlowGraph) String() string {
 	ir := ""
 	for _, block := range cfg.Nodes {
-		ir += block.Label + "\n"
+		ir += block.Label.Name + "\n"
 		for _, op := range block.Ops {
 			ir += "\t" + op.String() + "\n"
 		}
