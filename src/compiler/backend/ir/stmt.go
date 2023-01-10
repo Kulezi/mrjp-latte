@@ -225,6 +225,8 @@ func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 		})
 	}
 
+	v.StartBlock(lEnd)
+
 	return nil
 }
 

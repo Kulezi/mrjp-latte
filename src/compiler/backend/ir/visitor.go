@@ -14,6 +14,10 @@ type Label struct {
 	Name       string
 }
 
+func (l Label) String() string {
+	return l.Name
+}
+
 // Visitor for intermediate representation generation
 type Visitor struct {
 	*typecheck.Visitor

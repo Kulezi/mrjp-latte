@@ -109,12 +109,14 @@ func (q QBinOp) String() string { return fmt.Sprintf("%s = %s %s %s", q.Dst, q.L
 
 type QRelOp struct {
 	QBase
-	Op       string
-	Dst      Location
-	Lhs, Rhs Location
+	Op                   string
+	LFalse, LTrue, LNext Label
+	Lhs, Rhs             Location
 }
 
-func (q QRelOp) String() string { return fmt.Sprintf("%s = %s %s %s", q.Dst, q.Lhs, q.Op, q.Rhs) }
+func (q QRelOp) String() string {
+	return fmt.Sprintf("if %s %s %s goto %s else goto %s", q.Lhs, q.Op, q.Rhs, q.LTrue, q.LFalse)
+}
 
 type QJmp struct {
 	Dst Label

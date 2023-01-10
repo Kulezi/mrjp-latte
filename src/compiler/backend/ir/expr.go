@@ -141,16 +141,14 @@ func (v *Visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
 	}
 	pop()
 
-	dst := v.FreshTemp("rel_tmp", lhs.Type())
-
 	v.EmitQuad(QRelOp{
-		Op:  op,
-		Dst: dst,
-		Lhs: lhs,
-		Rhs: rhs,
+		Op:     op,
+		LTrue:  v.lTrue,
+		LFalse: v.lFalse,
+		LNext:  v.lNext,
+		Lhs:    lhs,
+		Rhs:    rhs,
 	})
-
-	v.dispatchBool(dst)
 
 	return LUnassigned{Type_: types.TBool{}}
 }
@@ -299,6 +297,11 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 				Src: arg,
 			})
 		}
+		if _, ok := arg.(LReg); ok {
+			v.EmitQuad(QPush{
+				Src: arg,
+			})
+		}
 
 		args = append(args, arg)
 	}
@@ -357,25 +360,3 @@ func (v *Visitor) VisitEParen(ctx *parser.EParenContext) interface{} {
 // var validMulOpArg = map[string]struct{}{
 // 	"int": {},
 // }
-
-func (v *Visitor) dispatchBool(loc Location) {
-	if v.lTrue == v.lNext {
-		v.EmitQuad(QJz{
-			Value: loc,
-			Dst:   v.lFalse,
-		})
-	} else if v.lFalse == v.lNext {
-		v.EmitQuad(QJnz{
-			Value: loc,
-			Dst:   v.lTrue,
-		})
-	} else {
-		v.EmitQuad(QJz{
-			Value: loc,
-			Dst:   v.lFalse,
-		})
-		v.EmitQuad(QJmp{
-			Dst: v.lTrue,
-		})
-	}
-}

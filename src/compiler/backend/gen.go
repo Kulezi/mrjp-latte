@@ -170,6 +170,8 @@ func (x64 *X64Generator) GenFromQuad(q ir.Quadruple) {
 		x64.EmitQMov(q)
 	case ir.QBinOp:
 		x64.EmitBinOp(q)
+	case ir.QRelOp:
+		x64.EmitRelOp(q)
 	case ir.QNeg:
 		x64.EmitNeg(q)
 	case ir.QJmp:
@@ -189,6 +191,7 @@ func (x64 *X64Generator) GenFromQuad(q ir.Quadruple) {
 	case ir.QPush:
 		x64.EmitPush(q)
 	default:
+		log.Println(q)
 		panic("unsupported quadruple")
 	}
 }
@@ -246,21 +249,76 @@ func (x64 *X64Generator) EmitBinOp(q ir.QBinOp) {
 		panic("unsupported binary operator")
 	}
 
-	x64.EmitOp("pushq %s", rax)
+	if dst, ok := q.Dst.(ir.LReg); ok && dst.Variable != "" {
+		x64.EmitOp("movq %s, %s", rax, x64.getLoc(dst))
+	} else {
+		x64.EmitOp("pushq %s", rax)
+	}
 }
 
-func (x64 *X64Generator) EmitRelOp(q ir.QBinOp) {
+var inverseJmp = map[string]string{
+	"jge": "jl",
+	"jg":  "jle",
+	"je":  "jne",
+	"jne": "je",
+	"jl":  "jge",
+	"jle": "jg",
+}
+
+func (x64 *X64Generator) EmitRelOp(q ir.QRelOp) {
 	x64.EmitLoad(rax, q.Lhs)
 	x64.EmitLoad(rbx, q.Rhs)
+	x64.EmitOp("cmp %s, %s", rbx, rax)
+
+	var op string
 	switch q.Op {
 	case ">":
-		x64.EmitOp("cmp %s, %s", rax, rbx)
-		x64.EmitOp("setg %s", rax)
-	// TODO: "<", "<=", "==", "!=", ">="
+		op = "jg"
+	case ">=":
+		op = "jge"
+	case "<=":
+		op = "jle"
+	case "<":
+		op = "jl"
+	case "==":
+		op = "je"
+	case "!=":
+		op = "jne"
 	default:
 		panic("unsupported binary operator")
 	}
+
+	if q.LNext == q.LTrue {
+		x64.EmitOp("%s %s", inverseJmp[op], q.LFalse)
+	} else if q.LNext == q.LFalse {
+		x64.EmitOp("%s %s", op, q.LTrue)
+	} else {
+		x64.EmitOp("%s %s", op, q.LTrue)
+		x64.EmitOp("jmp %s", op, q.LFalse)
+	}
 }
+
+// func (v *Visitor) dispatchBool(loc Location) {
+// 	if v.lTrue == v.lNext {
+// 		v.EmitQuad(QJz{
+// 			Value: loc,
+// 			Dst:   v.lFalse,
+// 		})
+// 	} else if v.lFalse == v.lNext {
+// 		v.EmitQuad(QJnz{
+// 			Value: loc,
+// 			Dst:   v.lTrue,
+// 		})
+// 	} else {
+// 		v.EmitQuad(QJz{
+// 			Value: loc,
+// 			Dst:   v.lFalse,
+// 		})
+// 		v.EmitQuad(QJmp{
+// 			Dst: v.lTrue,
+// 		})
+// 	}
+// }
 
 func (x64 *X64Generator) EmitNeg(q ir.QNeg) {
 	x64.EmitLoad(rax, q.Arg)
