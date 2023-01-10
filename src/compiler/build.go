@@ -59,8 +59,9 @@ func compileGCC(sourcePath, targetPath string) error {
 
 func link(sourcePath, targetPath string) error {
 	out, err := exec.Command(
-		"ld",
+		"gcc",
 		sourcePath,
+		"/home/pawelputra/studia/mrjp/latte/lib/runtime.o",
 		"-o",
 		targetPath).CombinedOutput()
 	if err != nil {

@@ -49,7 +49,7 @@ import (
 //     int  $0x80`
 
 const prologATT = `.text
-.globl _start
+.globl main
 `
 
 const (
@@ -147,11 +147,11 @@ func (x64 *X64Generator) EmitFunctionEpilog() {
 
 func (x64 *X64Generator) GenFromBlock(block ir.BasicBlock) {
 	label := block.Label
-	if label.Name == "main" {
-		x64.EmitLabel("_start")
-	} else {
-		x64.EmitLabel(label.Name)
-	}
+	// if label.Name == "main" {
+	// 	x64.EmitLabel("_start")
+	// } else {
+	x64.EmitLabel(label.Name)
+	// }
 
 	// Prepare stack frame.
 	if label.IsFunction {
@@ -304,6 +304,9 @@ func (x64 *X64Generator) EmitPop(q ir.QPop) {
 }
 
 func (x64 *X64Generator) EmitCall(q ir.QCall) {
+	if q.Label.Name == "printInt" {
+		x64.EmitOp("pop %s", rdi)
+	}
 	x64.EmitOp("call %s", q.Label.Name)
 	// TODO: use result
 }
