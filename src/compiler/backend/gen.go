@@ -186,6 +186,8 @@ func (x64 *X64Generator) GenFromQuad(q ir.Quadruple) {
 		x64.EmitCall(q)
 	case ir.QPop:
 		x64.EmitPop(q)
+	case ir.QPush:
+		x64.EmitPush(q)
 	default:
 		panic("unsupported quadruple")
 	}
@@ -218,6 +220,11 @@ func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
 func (x64 *X64Generator) EmitQMov(q ir.QMov) {
 	x64.EmitLoad(rax, q.Src)
 	x64.EmitOp("movq %s, %s", rax, x64.getLoc(q.Dst))
+}
+
+func (x64 *X64Generator) EmitPush(q ir.QPush) {
+	x64.EmitLoad(rax, q.Src)
+	x64.EmitOp("push %s", rax)
 }
 
 func (x64 *X64Generator) EmitBinOp(q ir.QBinOp) {

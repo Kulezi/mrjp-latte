@@ -154,3 +154,10 @@ type QPop struct {
 }
 
 func (q QPop) String() string { return fmt.Sprintf("%s = pop", q.Dst) }
+
+type QPush struct {
+	QBase
+	Src Location
+}
+
+func (q QPush) String() string { return fmt.Sprintf("push %s", q.Src) }

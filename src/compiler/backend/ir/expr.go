@@ -294,6 +294,11 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 		if _, ok := arg.(LUnassigned); ok {
 			arg = v.getBoolLoc()
 		}
+		if _, ok := arg.(LConst); ok {
+			v.EmitQuad(QPush{
+				Src: arg,
+			})
+		}
 
 		args = append(args, arg)
 	}
