@@ -57,10 +57,22 @@ const (
 	rbx = `%rbx`
 	rcx = `%rcx`
 	rdx = `%rdx`
+	rsi = `%rsi`
 	rdi = `%rdi`
 	rsp = `%rsp`
 	rbp = `%rbp`
+	r8  = `%r8`
+	r9  = `%r9`
+	r10 = `%r10`
+	r11 = `%r11`
+	r12 = `%r12`
+	r13 = `%r13`
+	r14 = `%r14`
+	r15 = `%r15`
 )
+
+var scratchRegisters = []string{rax, rdi, rsi, rdx, rcx, r8, r9, r10, r11}
+var preservedRegisters = []string{rbx, rsp, rbp, r12, r13, r14, r15}
 
 // FIXME: generate code.
 func GenX64(s frontend.State, config Config) string {
@@ -101,6 +113,38 @@ func (x64 *X64Generator) EmitOp(format string, args ...interface{}) {
 	x64.Emit("\t"+format+"\n", args...)
 }
 
+func (x64 *X64Generator) EmitFunctionProlog() {
+	x64.EmitOp("pushq %s", rbp)
+	x64.EmitOp("movq %s, %s", rsp, rbp)
+	for _, reg := range preservedRegisters {
+		if reg != rbp && reg != rsp {
+			x64.EmitOp("pushq %s", reg)
+		}
+	}
+
+	varCnt := x64.curFun.VariableCount
+	if varCnt > 0 {
+		x64.EmitOp("subq $%d, %s", varCnt*8, rsp)
+	}
+}
+
+func (x64 *X64Generator) EmitFunctionEpilog() {
+	varCnt := x64.curFun.VariableCount
+	if varCnt > 0 {
+		x64.EmitOp("addq $%d, %s", varCnt*8, rsp)
+	}
+
+	for i := len(preservedRegisters) - 1; i >= 0; i-- {
+		reg := preservedRegisters[i]
+		if reg != rbp && reg != rsp {
+			x64.EmitOp("popq %s", reg)
+		}
+	}
+
+	x64.EmitOp("movq %s, %s", rbp, rsp)
+	x64.EmitOp("popq %s", rbp)
+}
+
 func (x64 *X64Generator) GenFromBlock(block ir.BasicBlock) {
 	label := block.Label
 	if label.Name == "main" {
@@ -112,10 +156,7 @@ func (x64 *X64Generator) GenFromBlock(block ir.BasicBlock) {
 	// Prepare stack frame.
 	if label.IsFunction {
 		x64.curFun = x64.FunInfo[label]
-		varCnt := x64.curFun.VariableCount
-		if varCnt > 0 {
-			x64.EmitOp("subq $%d, %s", varCnt*8, rsp)
-		}
+		x64.EmitFunctionProlog()
 	}
 
 	for _, op := range block.Ops {
@@ -124,7 +165,6 @@ func (x64 *X64Generator) GenFromBlock(block ir.BasicBlock) {
 }
 
 func (x64 *X64Generator) GenFromQuad(q ir.Quadruple) {
-	log.Printf("%#v", q)
 	switch q := q.(type) {
 	case ir.QMov:
 		x64.EmitQMov(q)
@@ -238,10 +278,9 @@ func (x64 *X64Generator) EmitJnz(q ir.QJnz) {
 }
 
 func (x64 *X64Generator) EmitRet(q ir.QRet) {
-	// if block.Label.IsFunction {
-	// 	TODO: fix stack and put function epilog here.
-	// }
+	x64.EmitFunctionEpilog()
 
+	log.Println(x64.curFun)
 	if x64.curFun.Function.Name == "main" {
 		x64.EmitLoad(rax, ir.LConst{Type_: types.TInt{}, Value: 60})
 		x64.EmitLoad(rdi, q.Value)
@@ -253,6 +292,8 @@ func (x64 *X64Generator) EmitRet(q ir.QRet) {
 }
 
 func (x64 *X64Generator) EmitVRet(q ir.QVRet) {
+	x64.EmitFunctionEpilog()
+
 	x64.EmitOp("ret")
 }
 

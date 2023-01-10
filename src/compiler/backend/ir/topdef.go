@@ -38,6 +38,7 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	v.Visit(ctx.Block())
 	afterVars := v.varCount
 	v.FunInfo[label] = VarInfo{
+		Function:      label,
 		Offset:        beforeVars,
 		VariableCount: afterVars - beforeVars,
 	}
