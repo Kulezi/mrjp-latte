@@ -58,6 +58,10 @@ func GenX64(s frontend.State, config Config) string {
 	cfg := ir.Generate(s, config)
 	for _, block := range cfg.Nodes {
 		fmt.Println(block.Label)
+		// if block.Label.IsFunction {
+		// 	TODO: emit stack frame and function prolog here.
+		// }
+
 		for _, op := range block.Ops {
 			fmt.Println("\t" + op.String())
 		}
@@ -132,23 +136,24 @@ func (x64 *X64Generator) GenFromQuad(q ir.Quadruple) {
 }
 
 const (
-	rax = "%%rax"
-	rbx = "%%rbx"
-	rcx = "%%rcx"
-	rdx = "%%rdx"
-	rdi = "%%rdi"
+	rax = `%rax`
+	rbx = `%rbx`
+	rcx = `%rcx`
+	rdx = `%rdx`
+	rdi = `%rdi`
 )
 
 func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
+	fmt.Println(register)
 	switch loc := loc.(type) {
 	case ir.LConst:
-		x64.EmitOp(fmt.Sprintf("movq $%s, %s", loc, register))
+		x64.EmitOp("movq $%s, %s", loc, register)
 	case ir.LReg:
 		// Temporaries go on stack, so we need to pop
 		if loc.Variable == "" {
 			x64.EmitOp("popq %s", register)
 		} else {
-			x64.EmitOp("movq %%%s, %s", loc, register)
+			x64.EmitOp("movq %s, %s", loc, register)
 		}
 	}
 }
@@ -217,6 +222,10 @@ func (x64 *X64Generator) EmitJnz(q ir.QJnz) {
 }
 
 func (x64 *X64Generator) EmitRet(q ir.QRet) {
+	// if block.Label.IsFunction {
+	// 	TODO: fix stack and put function epilog here.
+	// }
+
 	if x64.curFun.Name == "main" {
 		x64.EmitLoad(rax, ir.LConst{Type_: types.TInt{}, Value: 60})
 		x64.EmitLoad(rdi, q.Value)
