@@ -110,8 +110,8 @@ func (x64 *X64Generator) GenFromQuad(q ir.Quadruple) {
 		x64.EmitQMov(q)
 	case ir.QBinOp:
 		x64.EmitBinOp(q)
-	case ir.QUnOp:
-		x64.EmitUnOp(q)
+	case ir.QNeg:
+		x64.EmitNeg(q)
 	case ir.QJmp:
 		x64.EmitJmp(q)
 	case ir.QJz:
@@ -194,17 +194,9 @@ func (x64 *X64Generator) EmitRelOp(q ir.QBinOp) {
 	}
 }
 
-func (x64 *X64Generator) EmitUnOp(q ir.QUnOp) {
+func (x64 *X64Generator) EmitNeg(q ir.QNeg) {
 	x64.EmitLoad(rax, q.Arg)
-	switch q.Op {
-	case "!":
-		x64.EmitOp("neg %s", rax)
-	case "-":
-		x64.EmitOp("not %s", rax)
-	default:
-		panic("unsupported unary operator")
-	}
-
+	x64.EmitOp("neg %s", rax)
 	x64.EmitOp("pushq %s", rax)
 }
 

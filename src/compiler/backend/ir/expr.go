@@ -77,8 +77,7 @@ func (v *Visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
 	arg := v.evalExpr(ctx.Expr())
 	dst := v.FreshTemp("neg_tmp", arg.Type())
 
-	v.EmitQuad(QUnOp{
-		Op:  "-",
+	v.EmitQuad(QNeg{
 		Dst: dst,
 		Arg: arg,
 	})
