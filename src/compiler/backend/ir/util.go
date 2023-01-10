@@ -60,6 +60,9 @@ func (v *Visitor) StartBlock(l Label) {
 func (v *Visitor) ShadowLocal(ident string, t Type) (location Location, drop func()) {
 	loc := v.FreshTemp(ident, t)
 	loc.Variable = ident
+	loc.Index = v.varCount
+	log.Printf("var %s -> %d", ident, loc.Index)
+	v.varCount++
 
 	oldSignature, ok := v.Signatures.Locals[ident]
 	oldLoc, ok := v.variableLocations[ident]

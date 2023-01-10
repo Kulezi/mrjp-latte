@@ -22,8 +22,10 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	v.Depth++
 	log.Println(signature)
 	label := v.GetFunctionLabel(ident)
+
 	v.StartBlock(label)
 
+	beforeVars := v.varCount
 	for _, arg := range signature.Args {
 		loc, drop := v.ShadowLocal(arg.Ident, arg.Type)
 		v.EmitLoadArg(loc, arg.Type)
@@ -35,10 +37,14 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	defer func() { v.CurFun = nil }()
 
 	v.Visit(ctx.Block())
+	afterVars := v.varCount
+	v.FunInfo[label] = VarInfo{
+		Offset:        beforeVars,
+		VariableCount: afterVars - beforeVars,
+	}
 
 	// Emit a return, in case of non-void it will be unreachable and optimized away later.
 	v.EmitQuad(QVRet{})
-
 	return nil
 }
 

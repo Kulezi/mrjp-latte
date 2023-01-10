@@ -51,23 +51,29 @@ const prologATT = `.text
 .globl _start
 `
 
+const (
+	rax = `%rax`
+	rbx = `%rbx`
+	rcx = `%rcx`
+	rdx = `%rdx`
+	rdi = `%rdi`
+	rsp = `%rsp`
+	rbp = `%rbp`
+)
+
 // FIXME: generate code.
 func GenX64(s frontend.State, config Config) string {
 	// cfg := MakeSSA(ir.Generate(s, config))
 
-	cfg := ir.Generate(s, config)
+	cfg, finfo := ir.Generate(s, config)
 	for _, block := range cfg.Nodes {
 		fmt.Println(block.Label)
-		// if block.Label.IsFunction {
-		// 	TODO: emit stack frame and function prolog here.
-		// }
-
 		for _, op := range block.Ops {
 			fmt.Println("\t" + op.String())
 		}
 	}
 
-	x64 := X64Generator{}
+	x64 := X64Generator{FunInfo: finfo}
 	x64.Emit(prologATT)
 	for _, block := range cfg.Nodes {
 		x64.GenFromBlock(block)
@@ -77,8 +83,9 @@ func GenX64(s frontend.State, config Config) string {
 }
 
 type X64Generator struct {
-	curFun ir.Label
-	res    string
+	FunInfo ir.FunInfo
+	curFun  ir.VarInfo
+	res     string
 }
 
 func (x64 *X64Generator) EmitLabel(s string) {
@@ -94,15 +101,22 @@ func (x64 *X64Generator) EmitOp(format string, args ...interface{}) {
 }
 
 func (x64 *X64Generator) GenFromBlock(block ir.BasicBlock) {
-	if block.Label.IsFunction {
-		x64.curFun = block.Label
-	}
-
-	if block.Label.Name == "main" {
+	label := block.Label
+	if label.Name == "main" {
 		x64.EmitLabel("_start")
 	} else {
-		x64.EmitLabel(block.Label.Name)
+		x64.EmitLabel(label.Name)
 	}
+
+	// Prepare stack frame.
+	if label.IsFunction {
+		x64.curFun = x64.FunInfo[label]
+		varCnt := x64.curFun.VariableCount
+		if varCnt > 0 {
+			x64.EmitOp("subq $%d, %s", varCnt*8, rsp)
+		}
+	}
+
 	for _, op := range block.Ops {
 		x64.GenFromQuad(op)
 	}
@@ -135,16 +149,15 @@ func (x64 *X64Generator) GenFromQuad(q ir.Quadruple) {
 	}
 }
 
-const (
-	rax = `%rax`
-	rbx = `%rbx`
-	rcx = `%rcx`
-	rdx = `%rdx`
-	rdi = `%rdi`
-)
+func (x64 *X64Generator) getLoc(loc ir.Location) string {
+	reg := loc.(ir.LReg)
+	varOffset := reg.Index
+	funOffset := x64.curFun.Offset
+	offset := (varOffset - funOffset + 1) * 8
+	return fmt.Sprintf("-%d(%s)", offset, rbp)
+}
 
 func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
-	fmt.Println(register)
 	switch loc := loc.(type) {
 	case ir.LConst:
 		x64.EmitOp("movq $%s, %s", loc, register)
@@ -153,15 +166,14 @@ func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
 		if loc.Variable == "" {
 			x64.EmitOp("popq %s", register)
 		} else {
-			x64.EmitOp("movq %s, %s", loc, register)
+			x64.EmitOp("movq %s, %s", x64.getLoc(loc), register)
 		}
 	}
 }
 
 func (x64 *X64Generator) EmitQMov(q ir.QMov) {
-	dst := q.Dst.(ir.LReg)
 	x64.EmitLoad(rax, q.Src)
-	x64.EmitOp("mov %s, %s", rax, dst)
+	x64.EmitOp("movq %s, %s", rax, x64.getLoc(q.Dst))
 }
 
 func (x64 *X64Generator) EmitBinOp(q ir.QBinOp) {
@@ -226,7 +238,7 @@ func (x64 *X64Generator) EmitRet(q ir.QRet) {
 	// 	TODO: fix stack and put function epilog here.
 	// }
 
-	if x64.curFun.Name == "main" {
+	if x64.curFun.Function.Name == "main" {
 		x64.EmitLoad(rax, ir.LConst{Type_: types.TInt{}, Value: 60})
 		x64.EmitLoad(rdi, q.Value)
 		x64.EmitOp("syscall")
@@ -243,7 +255,7 @@ func (x64 *X64Generator) EmitVRet(q ir.QVRet) {
 func (x64 *X64Generator) EmitPop(q ir.QPop) {
 	dst := q.Dst.(ir.LReg)
 	x64.EmitOp("pop %s", rax)
-	x64.EmitOp("mov %s, %s", rax, dst)
+	x64.EmitOp("movq %s, %s", rax, x64.getLoc(dst))
 }
 
 func (x64 *X64Generator) EmitCall(q ir.QCall) {

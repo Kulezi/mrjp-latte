@@ -13,8 +13,17 @@ type ControlFlowGraph struct {
 	BlockIdx map[Label]int
 }
 
-// Generates a control flow graph that is in non-SSA form.
-func Generate(s frontend.State, config config.Config) ControlFlowGraph {
+type VarInfo struct {
+	Function      Label
+	VariableCount int
+	Offset        int
+}
+
+type FunInfo map[Label]VarInfo
+
+// Generates a control flow graph that is in non-SSA form,
+// along with information about variables and string literals.
+func Generate(s frontend.State, config config.Config) (ControlFlowGraph, FunInfo) {
 	v := MakeVisitor(typecheck.MakeVisitor(s.Signatures), config)
 	v.Visit(s.Tree)
 
@@ -51,7 +60,7 @@ func Generate(s frontend.State, config config.Config) ControlFlowGraph {
 		}
 	}
 
-	return cfg
+	return cfg, v.FunInfo
 }
 
 func (cfg *ControlFlowGraph) String() string {

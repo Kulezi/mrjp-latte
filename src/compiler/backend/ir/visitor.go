@@ -26,6 +26,9 @@ type Visitor struct {
 	CFG    map[Label]BasicBlock
 	Blocks []BasicBlock
 
+	FunInfo  FunInfo
+	varCount int
+
 	totalLabels uint
 	curBlock    BasicBlock
 	lastQuad    Quadruple
@@ -56,5 +59,6 @@ func MakeVisitor(v *typecheck.Visitor, config config.Config) *Visitor {
 		variableLocations: make(map[string]Location),
 		allAddresses:      make(map[string]struct{}),
 		CFG:               make(map[Label]BasicBlock),
+		FunInfo:           make(FunInfo),
 	}
 }

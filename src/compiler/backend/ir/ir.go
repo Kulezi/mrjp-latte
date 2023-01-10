@@ -28,9 +28,12 @@ func (v LConst) Type() Type {
 }
 
 type LReg struct {
-	Type_    Type
+	Type_ Type
+	Name  string
+
+	// Values below are non-zero only for a non-temporary variable
 	Variable string
-	Name     string
+	Index    int
 }
 
 func (v LReg) String() string {
