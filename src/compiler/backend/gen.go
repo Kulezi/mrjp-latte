@@ -174,12 +174,24 @@ func (x64 *X64Generator) EmitBinOp(q ir.QBinOp) {
 	case "%":
 		x64.EmitOp("divq %s", rbx)
 		x64.EmitOp("xchg %s, %s", rdx, rax)
-		// TODO: result not in rax
 	default:
 		panic("unsupported binary operator")
 	}
 
 	x64.EmitOp("pushq %s", rax)
+}
+
+func (x64 *X64Generator) EmitRelOp(q ir.QBinOp) {
+	x64.EmitLoad(rax, q.Lhs)
+	x64.EmitLoad(rbx, q.Rhs)
+	switch q.Op {
+	case ">":
+		x64.EmitOp("cmp %s, %s", rax, rbx)
+		x64.EmitOp("setg %s", rax)
+	// TODO: "<", "<=", "==", "!=", ">="
+	default:
+		panic("unsupported binary operator")
+	}
 }
 
 func (x64 *X64Generator) EmitUnOp(q ir.QUnOp) {

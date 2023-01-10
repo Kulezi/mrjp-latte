@@ -105,6 +105,15 @@ type QBinOp struct {
 
 func (q QBinOp) String() string { return fmt.Sprintf("%s = %s %s %s", q.Dst, q.Lhs, q.Op, q.Rhs) }
 
+type QRelOp struct {
+	QBase
+	Op       string
+	Dst      Location
+	Lhs, Rhs Location
+}
+
+func (q QRelOp) String() string { return fmt.Sprintf("%s = %s %s %s", q.Dst, q.Lhs, q.Op, q.Rhs) }
+
 type QJmp struct {
 	Dst Label
 }

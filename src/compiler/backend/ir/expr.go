@@ -142,7 +142,7 @@ func (v *Visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
 
 	dst := v.FreshTemp("rel_tmp", lhs.Type())
 
-	v.EmitQuad(QBinOp{
+	v.EmitQuad(QRelOp{
 		Op:  op,
 		Dst: dst,
 		Lhs: lhs,
