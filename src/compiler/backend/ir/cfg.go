@@ -4,7 +4,6 @@ import (
 	"latte/compiler/config"
 	"latte/compiler/frontend"
 	"latte/compiler/frontend/typecheck"
-	"log"
 )
 
 type ControlFlowGraph struct {
@@ -55,7 +54,7 @@ func Generate(s frontend.State, config config.Config) (ControlFlowGraph, FunInfo
 				cfg.Succ[label] = append(cfg.Succ[label], cfg.Nodes[i+1].Label)
 			}
 		} else {
-			log.Println("empty label wtf")
+			// log.Println("empty label wtf")
 			cfg.Succ[label] = append(cfg.Succ[label], cfg.Nodes[i+1].Label)
 		}
 	}

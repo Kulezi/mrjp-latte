@@ -6,6 +6,7 @@ import (
 	. "latte/compiler/config"
 	"latte/compiler/frontend"
 	"latte/compiler/frontend/types"
+	"log"
 )
 
 // const sampleASM = `; ----------------------------------------s------------------------------------------------
@@ -123,6 +124,7 @@ func (x64 *X64Generator) GenFromBlock(block ir.BasicBlock) {
 }
 
 func (x64 *X64Generator) GenFromQuad(q ir.Quadruple) {
+	log.Printf("%#v", q)
 	switch q := q.(type) {
 	case ir.QMov:
 		x64.EmitQMov(q)
@@ -158,11 +160,13 @@ func (x64 *X64Generator) getLoc(loc ir.Location) string {
 }
 
 func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
+	// fmt.Printf("YYY %#v\n", loc)
 	switch loc := loc.(type) {
 	case ir.LConst:
 		x64.EmitOp("movq $%s, %s", loc, register)
 	case ir.LReg:
 		// Temporaries go on stack, so we need to pop
+		// log.Println(loc.Name, loc.Variable)
 		if loc.Variable == "" {
 			x64.EmitOp("popq %s", register)
 		} else {

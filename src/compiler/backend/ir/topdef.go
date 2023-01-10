@@ -3,7 +3,6 @@ package ir
 import (
 	. "latte/compiler/frontend/types"
 	"latte/parser"
-	"log"
 )
 
 func (v *Visitor) VisitTopDef(ctx *parser.TopDefContext) interface{} {
@@ -20,7 +19,7 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	signature := t.Type.(TFun)
 
 	v.Depth++
-	log.Println(signature)
+	// log.Println(signature)
 	label := v.GetFunctionLabel(ident)
 
 	v.StartBlock(label)

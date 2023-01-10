@@ -117,6 +117,8 @@ func (v *Visitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
 		Rhs: rhs,
 	})
 
+	// log.Printf("%#v\n, %#v\n, %#v", dst, lhs, rhs)
+
 	return dst
 }
 

@@ -44,14 +44,14 @@ func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 		}
 		ident := item.ID().GetText()
 
-		src := LConst{
-			Type_: t,
-		}
-
+		var src Location
 		if item.Expr() != nil {
-			src.Value = v.evalSExp(item.Expr())
+			src = v.evalSExp(item.Expr())
 		} else {
-			src.Value = t.DefaultValue()
+			src = LConst{
+				Type_: t,
+				Value: t.DefaultValue(),
+			}
 		}
 
 		dst, drop := v.ShadowLocal(ident, t)

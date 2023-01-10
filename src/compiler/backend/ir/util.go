@@ -3,7 +3,6 @@ package ir
 import (
 	"fmt"
 	. "latte/compiler/frontend/types"
-	"log"
 )
 
 func (v *Visitor) GetFunctionLabel(ident string) Label {
@@ -61,7 +60,7 @@ func (v *Visitor) ShadowLocal(ident string, t Type) (location Location, drop fun
 	loc := v.FreshTemp(ident, t)
 	loc.Variable = ident
 	loc.Index = v.varCount
-	log.Printf("var %s -> %d", ident, loc.Index)
+	// log.Printf("var %s -> %d", ident, loc.Index)
 	v.varCount++
 
 	oldSignature, ok := v.Signatures.Locals[ident]
@@ -121,6 +120,6 @@ func (v *Visitor) EmitLoadArg(loc Location, typ Type) {
 	} else {
 		// Function argument passing is done entirely using stack.
 		v.EmitQuad(QPop{Dst: loc})
-		log.Println("emitted pop")
+		// log.Println("emitted pop")
 	}
 }
