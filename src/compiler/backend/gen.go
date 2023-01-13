@@ -255,7 +255,7 @@ func (x64 *X64Generator) getLoc(loc ir.Location) string {
 }
 
 func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
-	// fmt.Printf("YYY %#v\n", loc)
+	fmt.Printf("YYY %#v\n", loc)
 	switch loc := loc.(type) {
 	case ir.LConst:
 		if s, ok := loc.Value.(string); ok {
@@ -375,7 +375,6 @@ func (x64 *X64Generator) EmitJnz(q ir.QJnz) {
 }
 
 func (x64 *X64Generator) EmitRet(q ir.QRet) {
-
 	log.Println(x64.curFun)
 	if x64.curFun.Function.Name == "main" {
 		x64.EmitFunctionEpilog()

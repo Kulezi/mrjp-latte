@@ -44,6 +44,7 @@ func (v *Visitor) VisitLVId(ctx *parser.LVIdContext) interface{} {
 	old := v.GetLocal(ident)
 	new := v.FreshTemp("lv_new", old.Type())
 	new.Variable = ident
+	new.Index = v.variableLocations[ident].(LReg).Index
 	v.variableLocations[ident] = new
 
 	return locPair{
