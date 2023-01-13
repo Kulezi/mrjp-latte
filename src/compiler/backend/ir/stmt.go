@@ -115,8 +115,16 @@ func (v *Visitor) VisitSRet(ctx *parser.SRetContext) interface{} {
 			Value: loc,
 		})
 	} else {
+		if _, ok := v.CurFun.Result.(types.TBool); ok {
+			lTrue, lFalse := v.FreshLabel("retTrue"), v.FreshLabel("retFalse")
+			defer v.PushLabels(lTrue, lFalse, lTrue)()
+		}
+		ret := v.evalExpr(ctx.Expr())
+		if _, ok := ret.(LUnassigned); ok {
+			ret = v.GetBoolLoc()
+		}
 		v.EmitQuad(QRet{
-			Value: v.evalExpr(ctx.Expr()),
+			Value: ret,
 		})
 	}
 	return nil

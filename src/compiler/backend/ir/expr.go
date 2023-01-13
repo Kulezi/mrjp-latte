@@ -10,7 +10,7 @@ func (v *Visitor) evalExpr(tree parser.IExprContext) Location {
 	return v.Visit(tree).(Location)
 }
 
-func (v *Visitor) getBoolLoc() Location {
+func (v *Visitor) GetBoolLoc() Location {
 	t := types.TBool{}
 	loc := v.FreshTemp("bool_loc", t)
 	lEnd := v.FreshLabel("lBEnd")
@@ -129,7 +129,7 @@ func (v *Visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
 	pop := v.PushLabels(lTrue, lFalse, lTrue)
 	lhs := v.evalExpr(ctx.Expr(0))
 	if _, ok := lhs.(LUnassigned); ok {
-		lhs = v.getBoolLoc()
+		lhs = v.GetBoolLoc()
 	}
 	pop()
 
@@ -137,7 +137,7 @@ func (v *Visitor) VisitERelOp(ctx *parser.ERelOpContext) interface{} {
 	pop = v.PushLabels(lTrue, lFalse, lTrue)
 	rhs := v.evalExpr(ctx.Expr(1))
 	if _, ok := rhs.(LUnassigned); ok {
-		rhs = v.getBoolLoc()
+		rhs = v.GetBoolLoc()
 	}
 	pop()
 
@@ -296,7 +296,7 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 		arg := v.evalExpr(e)
 		switch arg.(type) {
 		case LUnassigned:
-			arg = v.getBoolLoc()
+			arg = v.GetBoolLoc()
 		case LConst:
 			v.EmitQuad(QPush{
 				Src: arg,
@@ -311,6 +311,7 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 	}
 
 	dst := v.FreshTemp("call_tmp", signature.Result)
+
 	// Emit call.
 	v.EmitQuad(QCall{
 		Signature: signature,
@@ -318,6 +319,18 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 		Dst:       dst,
 		Args:      args,
 	})
+
+	if _, ok := signature.Result.(types.TBool); ok {
+		v.EmitQuad(QRelOp{
+			Op:     "==",
+			LFalse: v.lFalse,
+			LTrue:  v.lTrue,
+			LNext:  v.lNext,
+			Lhs:    dst,
+			Rhs:    LConst{Type_: types.TBool{}, Value: true},
+		})
+		return LUnassigned{Type_: types.TBool{}}
+	}
 
 	return dst
 }

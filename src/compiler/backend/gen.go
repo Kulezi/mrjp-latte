@@ -74,12 +74,12 @@ func GenX64(s frontend.State, config Config) string {
 	// cfg := MakeSSA(ir.Generate(s, config))
 
 	cfg, finfo := ir.Generate(s, config)
-	for _, block := range cfg.Nodes {
-		fmt.Println(block.Label)
-		for _, op := range block.Ops {
-			fmt.Println("\t" + op.String())
-		}
-	}
+	// for _, block := range cfg.Nodes {
+	// 	fmt.Println(block.Label)
+	// 	for _, op := range block.Ops {
+	// 		fmt.Println("\t" + op.String())
+	// 	}
+	// }
 
 	x64 := X64Generator{FunInfo: finfo, stringAdressses: make(map[string]string)}
 
@@ -247,6 +247,9 @@ func (x64 *X64Generator) GenFromQuad(q ir.Quadruple) {
 
 func (x64 *X64Generator) getLoc(loc ir.Location) string {
 	reg := loc.(ir.LReg)
+	if reg.Variable == "" {
+		return ""
+	}
 	varOffset := reg.Index
 	funOffset := x64.curFun.Offset
 	offset := (varOffset - funOffset + 1) * 8
@@ -281,7 +284,12 @@ func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
 
 func (x64 *X64Generator) EmitQMov(q ir.QMov) {
 	x64.EmitLoad(rax, q.Src)
-	x64.EmitOp("movq %s, %s", rax, x64.getLoc(q.Dst))
+	dst := x64.getLoc(q.Dst)
+	if dst == "" {
+		x64.EmitOp("pushq %s", rax)
+	} else {
+		x64.EmitOp("movq %s, %s", rax, x64.getLoc(q.Dst))
+	}
 }
 
 func (x64 *X64Generator) EmitPush(q ir.QPush) {
@@ -425,7 +433,7 @@ func (x64 *X64Generator) EmitJz(q ir.QJz) {
 func (x64 *X64Generator) EmitJnz(q ir.QJnz) {
 	x64.EmitLoad(rax, q.Value)
 	x64.EmitOp("test %s, %s", rax, rax)
-	x64.EmitOp("jz %s", q.Dst)
+	x64.EmitOp("jnz %s", q.Dst)
 }
 
 func (x64 *X64Generator) EmitRet(q ir.QRet) {
