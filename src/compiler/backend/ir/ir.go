@@ -151,13 +151,6 @@ type QCall struct {
 
 func (q QCall) String() string { return fmt.Sprintf("%s = call %s(%s)", q.Dst, q.Label, q.Args) }
 
-type QPop struct {
-	QBase
-	Dst Location
-}
-
-func (q QPop) String() string { return fmt.Sprintf("%s = pop", q.Dst) }
-
 type QPush struct {
 	QBase
 	Src Location

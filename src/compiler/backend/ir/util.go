@@ -113,13 +113,3 @@ func (v *Visitor) TypeOf(ident string) (TypeInfo, bool) {
 
 	return v.TypeOfGlobal(ident)
 }
-
-func (v *Visitor) EmitLoadArg(loc Location, typ Type) {
-	if v.config.AllocRegisters {
-		panic("register allocation is not yet supported")
-	} else {
-		// Function argument passing is done entirely using stack.
-		v.EmitQuad(QPop{Dst: loc})
-		// log.Println("emitted pop")
-	}
-}

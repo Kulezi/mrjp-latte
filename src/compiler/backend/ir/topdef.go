@@ -26,8 +26,7 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 
 	beforeVars := v.varCount
 	for _, arg := range signature.Args {
-		loc, drop := v.ShadowLocal(arg.Ident, arg.Type)
-		v.EmitLoadArg(loc, arg.Type)
+		_, drop := v.ShadowLocal(arg.Ident, arg.Type)
 		defer drop()
 	}
 	v.Depth--
@@ -38,6 +37,7 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	v.Visit(ctx.Block())
 	afterVars := v.varCount
 	v.FunInfo[label] = VarInfo{
+		Signature:     signature,
 		Function:      label,
 		Offset:        beforeVars,
 		VariableCount: afterVars - beforeVars,

@@ -136,7 +136,11 @@ func (x64 *X64Generator) EmitDataForLoc(loc ir.Location) {
 			if _, ok := x64.stringAdressses[s]; !ok {
 				label := fmt.Sprintf("_str_%d", len(x64.stringAdressses))
 				x64.stringAdressses[s] = label
-				x64.Emit("%s:\n\t.asciz \"%s\"\n", label, s)
+				x64.EmitLabel(label)
+				for _, v := range s {
+					x64.EmitOp(".byte 0x%x", v)
+				}
+				x64.EmitOp(".byte %x", 0)
 			}
 		}
 	}
@@ -165,14 +169,21 @@ func (x64 *X64Generator) EmitFunctionProlog() {
 
 	varCnt := x64.curFun.VariableCount
 	if varCnt > 0 {
-		x64.EmitOp("subq $%d, %s", varCnt*8, rsp)
+		x64.EmitOp("subq $%#x, %s", varCnt*8, rsp)
+	}
+
+	// The stack is now [args], return address, oldRbp.
+	offset := (len(x64.curFun.Signature.Args) + 1)
+	for i := range x64.curFun.Signature.Args {
+		x64.EmitOp("movq %#x(%s), %s", 8*(offset-i), rbp, rax)
+		x64.EmitOp("movq %s, %#x(%s)", rax, -8*(i+1), rbp)
 	}
 }
 
 func (x64 *X64Generator) EmitFunctionEpilog() {
 	varCnt := x64.curFun.VariableCount
 	if varCnt > 0 {
-		x64.EmitOp("addq $%d, %s", varCnt*8, rsp)
+		x64.EmitOp("addq $%#x, %s", varCnt*8, rsp)
 	}
 
 	for i := len(preservedRegisters) - 1; i >= 0; i-- {
@@ -227,8 +238,6 @@ func (x64 *X64Generator) GenFromQuad(q ir.Quadruple) {
 		x64.EmitVRet(q)
 	case ir.QCall:
 		x64.EmitCall(q)
-	case ir.QPop:
-		x64.EmitPop(q)
 	case ir.QPush:
 		x64.EmitPush(q)
 	default:
@@ -242,7 +251,7 @@ func (x64 *X64Generator) getLoc(loc ir.Location) string {
 	varOffset := reg.Index
 	funOffset := x64.curFun.Offset
 	offset := (varOffset - funOffset + 1) * 8
-	return fmt.Sprintf("-%d(%s)", offset, rbp)
+	return fmt.Sprintf("%#x(%s)", -offset, rbp)
 }
 
 func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
@@ -343,28 +352,6 @@ func (x64 *X64Generator) EmitRelOp(q ir.QRelOp) {
 	}
 }
 
-// func (v *Visitor) dispatchBool(loc Location) {
-// 	if v.lTrue == v.lNext {
-// 		v.EmitQuad(QJz{
-// 			Value: loc,
-// 			Dst:   v.lFalse,
-// 		})
-// 	} else if v.lFalse == v.lNext {
-// 		v.EmitQuad(QJnz{
-// 			Value: loc,
-// 			Dst:   v.lTrue,
-// 		})
-// 	} else {
-// 		v.EmitQuad(QJz{
-// 			Value: loc,
-// 			Dst:   v.lFalse,
-// 		})
-// 		v.EmitQuad(QJmp{
-// 			Dst: v.lTrue,
-// 		})
-// 	}
-// }
-
 func (x64 *X64Generator) EmitNeg(q ir.QNeg) {
 	x64.EmitLoad(rax, q.Arg)
 	x64.EmitOp("neg %s", rax)
@@ -388,15 +375,16 @@ func (x64 *X64Generator) EmitJnz(q ir.QJnz) {
 }
 
 func (x64 *X64Generator) EmitRet(q ir.QRet) {
-	x64.EmitFunctionEpilog()
 
 	log.Println(x64.curFun)
 	if x64.curFun.Function.Name == "main" {
+		x64.EmitFunctionEpilog()
 		x64.EmitLoad(rax, ir.LConst{Type_: types.TInt{}, Value: 60})
 		x64.EmitLoad(rdi, q.Value)
 		x64.EmitOp("syscall")
 	} else {
 		x64.EmitLoad(rax, q.Value)
+		x64.EmitFunctionEpilog()
 		x64.EmitOp("ret")
 	}
 }
@@ -407,41 +395,49 @@ func (x64 *X64Generator) EmitVRet(q ir.QVRet) {
 	x64.EmitOp("ret")
 }
 
-func (x64 *X64Generator) EmitPop(q ir.QPop) {
-	dst := q.Dst.(ir.LReg)
-	x64.EmitOp("pop %s", rax)
-	x64.EmitOp("movq %s, %s", rax, x64.getLoc(dst))
+var foreignFunctions = map[string]struct{}{
+	"printInt":    {},
+	"readInt":     {},
+	"error":       {},
+	"printString": {},
+	"readString":  {},
 }
 
 func (x64 *X64Generator) EmitCall(q ir.QCall) {
+	// Calling runtime functions with arguments needs passing them through rdi register.
 	if q.Label.Name == "printInt" || q.Label.Name == "printString" {
 		x64.EmitOp("pop %s", rdi)
 	}
 
-	x64.EmitOp("testq %s, %s", "$0x000000000000000F", rsp)
-	lAlign := fmt.Sprintf("_align_%d", x64.alignLabelCnt)
-	x64.alignLabelCnt++
-	x64.EmitOp("jnz %s", lAlign)
-	x64.EmitOp("call %s", q.Label.Name)
+	// If we are calling a foreign function we need to before calling.
+	if _, ok := foreignFunctions[q.Label.Name]; ok {
+		// Check stack alignment.
+		x64.EmitOp("testq %s, %s", "$0x000000000000000F", rsp)
+		lAlign := fmt.Sprintf("_align_%d", x64.alignLabelCnt)
+		x64.alignLabelCnt++
+		lEnd := fmt.Sprintf("_alignEnd_%d", x64.alignLabelCnt)
+		x64.alignLabelCnt++
+
+		x64.EmitOp("jnz %s", lAlign)
+
+		// If alignment is not needed.
+		x64.EmitOp("call %s", q.Label.Name)
+		x64.EmitOp("jmp %s", lEnd)
+
+		// If alignment is needed.
+		x64.EmitLabel(lAlign)
+		x64.EmitOp("subq $%#x, %s", 8, rsp)
+		x64.EmitOp("call %s", q.Label.Name)
+
+		x64.EmitOp("addq $%#x, %s", 8, rsp)
+		x64.EmitLabel(lEnd)
+	} else {
+		x64.EmitOp("call %s", q.Label.Name)
+		// Pop arguments from the stack.
+		x64.EmitOp("sub $%#x, %s", len(q.Args)*8, rsp)
+	}
 
 	if _, ok := q.Signature.Result.(types.TVoid); !ok {
 		x64.EmitOp("pushq %s", rax)
 	}
-
-	lEnd := fmt.Sprintf("_alignEnd_%d", x64.alignLabelCnt)
-	x64.alignLabelCnt++
-
-	x64.EmitOp("jmp %s", lEnd)
-	x64.EmitLabel(lAlign)
-	x64.EmitOp("subq $%d, %s", 8, rsp)
-	x64.EmitOp("call %s", q.Label.Name)
-
-	x64.EmitOp("addq $%d, %s", 8, rsp)
-	if _, ok := q.Signature.Result.(types.TVoid); !ok {
-		x64.EmitOp("pushq %s", rax)
-	}
-
-	x64.EmitLabel(lEnd)
-
-	// TODO: use result
 }

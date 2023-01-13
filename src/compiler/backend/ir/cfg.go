@@ -4,6 +4,7 @@ import (
 	"latte/compiler/config"
 	"latte/compiler/frontend"
 	"latte/compiler/frontend/typecheck"
+	"latte/compiler/frontend/types"
 )
 
 type ControlFlowGraph struct {
@@ -13,6 +14,7 @@ type ControlFlowGraph struct {
 }
 
 type VarInfo struct {
+	Signature     types.TFun
 	Function      Label
 	VariableCount int
 	Offset        int
