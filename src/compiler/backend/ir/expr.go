@@ -309,9 +309,10 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 	dst := v.FreshTemp("call_tmp", signature.Result)
 	// Emit call.
 	v.EmitQuad(QCall{
-		Label: v.GetFunctionLabel(ident),
-		Dst:   dst,
-		Args:  args,
+		Signature: signature,
+		Label:     v.GetFunctionLabel(ident),
+		Dst:       dst,
+		Args:      args,
 	})
 
 	return dst

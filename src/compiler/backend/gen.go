@@ -416,6 +416,11 @@ func (x64 *X64Generator) EmitCall(q ir.QCall) {
 	if q.Label.Name == "printInt" || q.Label.Name == "printString" {
 		x64.EmitOp("pop %s", rdi)
 	}
+
 	x64.EmitOp("call %s", q.Label.Name)
+
+	if _, ok := q.Signature.Result.(types.TVoid); !ok {
+		x64.EmitOp("pushq %s", rax)
+	}
 	// TODO: use result
 }

@@ -22,25 +22,9 @@ char *concat(const char *s1, const char *s2) {
 }
 
 int readInt() {
-    int res = 0;
-    int c = 0;
-    while (isspace(c)) {
-        c = getchar();
-    }
-
-    int mult = 1;
-    if (c == '-') {
-        mult = -1;
-        c = getchar();
-    }
-
-    do {
-        res = (res * 10) + c - '0';
-    } while (c >= '0' && c <= '9');
-
-    if (!isspace(c)) error();
-
-    return res;
+    int n;
+    scanf("%d ", &n);
+    return n;
 }
 
 char extend(char **buf, size_t cap) {

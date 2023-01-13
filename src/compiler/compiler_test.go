@@ -77,8 +77,7 @@ func TestBad(t *testing.T) {
 				if path.Ext(filename) == ".lat" {
 					t.Run(filename, func(t *testing.T) {
 						err := CompileX64(config.Config{
-							TypeCheck: true,
-							Source:    filename,
+							Source: filename,
 						})
 						if err == nil {
 							t.Fatal("test didn't fail!")

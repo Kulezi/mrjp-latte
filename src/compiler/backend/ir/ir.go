@@ -143,9 +143,10 @@ func (q QJnz) IsJump() bool   { return true }
 
 type QCall struct {
 	QBase
-	Label Label
-	Dst   Location
-	Args  []Location
+	Signature TFun
+	Label     Label
+	Dst       Location
+	Args      []Location
 }
 
 func (q QCall) String() string { return fmt.Sprintf("%s = call %s(%s)", q.Dst, q.Label, q.Args) }
