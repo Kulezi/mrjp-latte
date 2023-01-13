@@ -281,7 +281,7 @@ func (x64 *X64Generator) EmitQMov(q ir.QMov) {
 
 func (x64 *X64Generator) EmitPush(q ir.QPush) {
 	x64.EmitLoad(rax, q.Src)
-	x64.EmitOp("push %s", rax)
+	x64.EmitOp("pushq %s", rax)
 }
 
 func (x64 *X64Generator) EmitBinOp(q ir.QBinOp) {
@@ -295,9 +295,11 @@ func (x64 *X64Generator) EmitBinOp(q ir.QBinOp) {
 	case "*":
 		x64.EmitOp("imulq %s", rbx)
 	case "/":
-		x64.EmitOp("divq %s", rbx)
+		x64.EmitOp("xor %s, %s", rdx, rdx)
+		x64.EmitOp("idivq %s", rbx)
 	case "%":
-		x64.EmitOp("divq %s", rbx)
+		x64.EmitOp("xor %s, %s", rdx, rdx)
+		x64.EmitOp("idivq %s", rbx)
 		x64.EmitOp("xchg %s, %s", rdx, rax)
 	default:
 		panic("unsupported binary operator")
@@ -433,7 +435,7 @@ func (x64 *X64Generator) EmitCall(q ir.QCall) {
 	} else {
 		x64.EmitOp("call %s", q.Label.Name)
 		// Pop arguments from the stack.
-		x64.EmitOp("sub $%#x, %s", len(q.Args)*8, rsp)
+		x64.EmitOp("addq $%#x, %s", len(q.Args)*8, rsp)
 	}
 
 	if _, ok := q.Signature.Result.(types.TVoid); !ok {

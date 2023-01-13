@@ -96,7 +96,7 @@ func (v *Visitor) VisitEMulOp(ctx *parser.EMulOpContext) interface{} {
 	rhs := v.evalExpr(ctx.Expr(1))
 	dst := v.FreshTemp("mul_tmp", lhs.Type())
 	v.EmitQuad(QBinOp{
-		Op:  "*",
+		Op:  ctx.MulOp().GetText(),
 		Dst: dst,
 		Lhs: lhs,
 		Rhs: rhs,
