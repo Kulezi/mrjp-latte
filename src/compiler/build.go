@@ -46,6 +46,7 @@ func compileGCC(sourcePath, targetPath string) error {
 		"-O0",
 		"-m64",
 		"-fno-pie",
+		"-no-pie",
 		"-o",
 		targetPath,
 		sourcePath,
@@ -62,6 +63,10 @@ func link(sourcePath, targetPath string) error {
 		"gcc",
 		sourcePath,
 		"/home/pawelputra/studia/mrjp/latte/lib/runtime.o",
+		"-O0",
+		"-m64",
+		"-no-pie",
+		"-fno-pie",
 		"-o",
 		targetPath).CombinedOutput()
 	if err != nil {

@@ -48,10 +48,6 @@ import (
 //     movl $0, %ebx
 //     int  $0x80`
 
-const prologATT = `.text
-.globl main
-`
-
 const (
 	rax = `%rax`
 	rbx = `%rbx`
@@ -86,8 +82,16 @@ func GenX64(s frontend.State, config Config) string {
 		}
 	}
 
-	x64 := X64Generator{FunInfo: finfo}
-	x64.Emit(prologATT)
+	x64 := X64Generator{FunInfo: finfo, stringAdressses: make(map[string]string)}
+
+	x64.Emit(".data\n")
+
+	for _, block := range cfg.Nodes {
+		x64.GenDataFromBlock(block)
+	}
+
+	x64.Emit(".text\n.globl main\n")
+
 	for _, block := range cfg.Nodes {
 		x64.GenFromBlock(block)
 	}
@@ -96,9 +100,45 @@ func GenX64(s frontend.State, config Config) string {
 }
 
 type X64Generator struct {
-	FunInfo ir.FunInfo
-	curFun  ir.VarInfo
-	res     string
+	FunInfo         ir.FunInfo
+	curFun          ir.VarInfo
+	res             string
+	stringAdressses map[string]string
+}
+
+func (x64 *X64Generator) GenDataFromBlock(block ir.BasicBlock) {
+	for _, q := range block.Ops {
+		switch q := q.(type) {
+		case ir.QBinOp:
+			x64.EmitDataForLoc(q.Lhs)
+			x64.EmitDataForLoc(q.Rhs)
+		case ir.QCall:
+			for _, arg := range q.Args {
+				x64.EmitDataForLoc(arg)
+			}
+		case ir.QMov:
+			x64.EmitDataForLoc(q.Src)
+		case ir.QPush:
+			x64.EmitDataForLoc(q.Src)
+		case ir.QRelOp:
+			x64.EmitDataForLoc(q.Lhs)
+			x64.EmitDataForLoc(q.Rhs)
+		case ir.QRet:
+			x64.EmitDataForLoc(q.Value)
+		}
+	}
+}
+
+func (x64 *X64Generator) EmitDataForLoc(loc ir.Location) {
+	if loc, ok := loc.(ir.LConst); ok {
+		if s, ok := loc.Value.(string); ok {
+			if _, ok := x64.stringAdressses[s]; !ok {
+				label := fmt.Sprintf("_str_%d", len(x64.stringAdressses))
+				x64.stringAdressses[s] = label
+				x64.Emit("%s:\n\t.asciz \"%s\"\n", label, s)
+			}
+		}
+	}
 }
 
 func (x64 *X64Generator) EmitLabel(s string) {
@@ -208,7 +248,11 @@ func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
 	// fmt.Printf("YYY %#v\n", loc)
 	switch loc := loc.(type) {
 	case ir.LConst:
-		x64.EmitOp("movq $%s, %s", loc, register)
+		if s, ok := loc.Value.(string); ok {
+			x64.EmitOp("movq $%s, %s", x64.stringAdressses[s], register)
+		} else {
+			x64.EmitOp("movq $%s, %s", loc, register)
+		}
 	case ir.LReg:
 		// Temporaries go on stack, so we need to pop
 		// log.Println(loc.Name, loc.Variable)
@@ -369,7 +413,7 @@ func (x64 *X64Generator) EmitPop(q ir.QPop) {
 }
 
 func (x64 *X64Generator) EmitCall(q ir.QCall) {
-	if q.Label.Name == "printInt" {
+	if q.Label.Name == "printInt" || q.Label.Name == "printString" {
 		x64.EmitOp("pop %s", rdi)
 	}
 	x64.EmitOp("call %s", q.Label.Name)

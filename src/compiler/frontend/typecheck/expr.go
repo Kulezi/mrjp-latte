@@ -446,8 +446,7 @@ func (v *Visitor) VisitEParen(ctx *parser.EParenContext) interface{} {
 }
 
 var validInequalityOpArg = map[string]struct{}{
-	"int":    {},
-	"string": {},
+	"int": {},
 }
 
 var validAddOpArg = map[string]struct{}{

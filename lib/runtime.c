@@ -2,15 +2,24 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void printInt(int64_t x) { printf("%d\n", x); }
 
 void error() {
-    printf("runtime error\n");
+    puts("runtime error");
     exit(1);
 }
 
-void printString(char *x) { printf("%s\n", x); }
+void printString(const char *x) { puts(x); }
+
+char *concat(const char *s1, const char *s2) {
+    size_t new_len = strlen(s1) + strlen(s2) + 1;
+    char *res = malloc(sizeof(char) * new_len);
+    strcpy(res, s1);
+    strcat(res, s2);
+    return res;
+}
 
 int readInt() {
     int res = 0;

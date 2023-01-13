@@ -26,6 +26,7 @@ var goodDirs = []string{
 }
 
 var badDirs = []string{
+	"../../defaultowe_testy/lattests/bad",
 	// "../../lattests/bad",
 	// "../../mrjp-tests/bad/semantic",
 	// "../../mgtests/lattests/tests/margdoc/bad",
@@ -48,6 +49,7 @@ func TestGood(t *testing.T) {
 
 						intermediate := basename + ".s"
 						err := CompileX64(config.Config{
+							TypeCheck:    true,
 							Source:       filename,
 							Intermediate: intermediate,
 						})
@@ -152,7 +154,10 @@ func randomConstBoolExpr(maxDepth int) string {
 			}
 			fallthrough
 		case 1:
-			return "(" + randomConstStringExpr(maxDepth-1) + op + randomConstStringExpr(maxDepth-1) + ")"
+			if !(op == "<" || op == ">" || op == ">=" || op == "<=") {
+				return "(" + randomConstStringExpr(maxDepth-1) + op + randomConstStringExpr(maxDepth-1) + ")"
+			}
+			fallthrough
 		default:
 			return "(" + randomConstIntExpr(maxDepth-1) + op + randomConstIntExpr(maxDepth-1) + ")"
 		}

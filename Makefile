@@ -3,6 +3,7 @@ all: latc_x86_64
 
 .PHONY: latc_x86_64
 latc_x86_64:
+	cd lib; gcc -c runtime.c -o runtime.o
 	cd src; go build -o ../latc_x86_64 main.go
 
 clean:
