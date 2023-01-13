@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,9 +24,9 @@ char *concat(const char *s1, const char *s2) {
     return res;
 }
 
-int readInt() {
-    int n;
-    scanf("%d ", &n);
+int64_t readInt() {
+    int64_t n;
+    scanf("%" SCNd64, &n);
     return n;
 }
 
@@ -39,27 +40,12 @@ char extend(char **buf, size_t cap) {
 }
 
 char *readString() {
-    size_t len = 0;
-    size_t cap = 1;
-    char *buf = malloc(sizeof(char) * cap);
-    if (buf == NULL) error();
-    int c = getchar();
-    while (c != '\n') {
-        if (cap <= len) {
-            cap = cap * 2;
-            extend(&buf, cap);
-        }
-
-        buf[len] = c;
-        len++;
-        c = getchar();
+    char *buf = NULL;
+    size_t len;
+    size_t ret = getline(&buf, &len, stdin);
+    if (ret == -1) return "";
+    if (ret > 0 && buf[ret - 1] == '\n') {
+        buf[ret - 1] = '\0';
     }
-
-    if (cap <= len) {
-        cap++;
-        extend(&buf, cap + 1);
-        buf[len] = '\0';
-    }
-
     return buf;
 }

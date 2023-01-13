@@ -8,6 +8,7 @@ import (
 	"latte/compiler/frontend/types"
 	"math/rand"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 	"testing"
@@ -22,11 +23,11 @@ var goodDirs = []string{
 	// "../../mrjp-tests/good/hardcore",
 	// "../../mrjp-tests/good/virtual",
 	// "../../mrjp-tests/gr5",
-	"../../defaultowe_testy/lattests/good",
+	"../../defaultowe_testy/good",
 }
 
 var badDirs = []string{
-	"../../defaultowe_testy/lattests/bad",
+	"../../defaultowe_testy/bad",
 	// "../../lattests/bad",
 	// "../../mrjp-tests/bad/semantic",
 	// "../../mgtests/lattests/tests/margdoc/bad",
@@ -91,7 +92,7 @@ func TestTypecheckBad(t *testing.T) {
 	}
 }
 
-func TestGood(t *testing.T) {
+func TestGoodCompile(t *testing.T) {
 	for _, dir := range goodDirs {
 		items, err := ioutil.ReadDir(dir)
 		if err != nil {
@@ -115,6 +116,57 @@ func TestGood(t *testing.T) {
 						if err != nil {
 							t.Fatal(err)
 						}
+					})
+				}
+			}
+		}
+	}
+}
+
+func TestGoodAnswers(t *testing.T) {
+	for _, dir := range goodDirs {
+		items, err := ioutil.ReadDir(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for _, item := range items {
+			if !item.IsDir() {
+				filename := dir + "/" + item.Name()
+				if path.Ext(filename) == ".lat" {
+					t.Run(filename, func(t *testing.T) {
+						basename := strings.TrimSuffix(filename, ".lat")
+
+						intermediate := basename + ".s"
+						err := CompileX64(config.Config{
+							Source:       filename,
+							Intermediate: intermediate,
+							Target:       basename,
+						})
+
+						if err != nil {
+							t.Fatal(err)
+						}
+
+						cmd := exec.Command(fmt.Sprintf("./%s", basename))
+						inputFile, err := os.Open(basename + ".input")
+						if err != nil {
+							cmd.Stdin = inputFile
+						}
+
+						// outputFile, err := os.Create(basename + ".output_test")
+						// if err != nil {
+						// 	cmd.Stdout = outputFile
+						// }
+
+						t.Log(cmd.Output())
+						// diff, err := exec.Command("diff", basename+".output_test", basename+".output").CombinedOutput()
+						// t.Log(string(diff))
+						// if err != nil {
+						// 	t.Fatal(err)
+						// } else {
+						// 	t.Log(string(diff))
+						// }
 					})
 				}
 			}

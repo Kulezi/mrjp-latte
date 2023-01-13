@@ -298,8 +298,8 @@ func (x64 *X64Generator) EmitPush(q ir.QPush) {
 }
 
 func (x64 *X64Generator) EmitStringAdd(q ir.QBinOp) {
-	x64.EmitLoad(rdi, q.Lhs)
 	x64.EmitLoad(rsi, q.Rhs)
+	x64.EmitLoad(rdi, q.Lhs)
 	x64.EmitOp("call concat")
 	if dst, ok := q.Dst.(ir.LReg); ok && dst.Variable != "" {
 		x64.EmitOp("movq %s, %s", rax, x64.getLoc(dst))
@@ -314,21 +314,20 @@ func (x64 *X64Generator) EmitBinOp(q ir.QBinOp) {
 		return
 	}
 
-	x64.EmitLoad(rax, q.Lhs)
 	x64.EmitLoad(rbx, q.Rhs)
+	x64.EmitLoad(rax, q.Lhs)
 	switch q.Op {
 	case "+":
 		x64.EmitOp("addq %s, %s", rbx, rax)
-
 	case "-":
 		x64.EmitOp("subq %s, %s", rbx, rax)
 	case "*":
 		x64.EmitOp("imulq %s", rbx)
 	case "/":
-		x64.EmitOp("xor %s, %s", rdx, rdx)
+		x64.EmitOp("cqto")
 		x64.EmitOp("idivq %s", rbx)
 	case "%":
-		x64.EmitOp("xor %s, %s", rdx, rdx)
+		x64.EmitOp("cqto")
 		x64.EmitOp("idivq %s", rbx)
 		x64.EmitOp("xchg %s, %s", rdx, rax)
 	default:
