@@ -287,22 +287,26 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 	signature := t.Type.(types.TFun)
 
 	var args []Location
-	for _, e := range ctx.AllExpr() {
+	for i, e := range ctx.AllExpr() {
+		pop := func() {}
+		if _, ok := signature.Args[i].Type.(types.TBool); ok {
+			lTrue, lFalse := v.FreshLabel("bool_argTrue"), v.FreshLabel("bool_argFalse")
+			pop = v.PushLabels(lTrue, lFalse, lTrue)
+		}
 		arg := v.evalExpr(e)
-		if _, ok := arg.(LUnassigned); ok {
+		switch arg.(type) {
+		case LUnassigned:
 			arg = v.getBoolLoc()
-		}
-		if _, ok := arg.(LConst); ok {
+		case LConst:
+			v.EmitQuad(QPush{
+				Src: arg,
+			})
+		case LReg:
 			v.EmitQuad(QPush{
 				Src: arg,
 			})
 		}
-		if _, ok := arg.(LReg); ok {
-			v.EmitQuad(QPush{
-				Src: arg,
-			})
-		}
-
+		pop()
 		args = append(args, arg)
 	}
 

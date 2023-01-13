@@ -6,7 +6,6 @@ import (
 	. "latte/compiler/config"
 	"latte/compiler/frontend"
 	"latte/compiler/frontend/types"
-	"log"
 )
 
 // const sampleASM = `; ----------------------------------------s------------------------------------------------
@@ -241,7 +240,7 @@ func (x64 *X64Generator) GenFromQuad(q ir.Quadruple) {
 	case ir.QPush:
 		x64.EmitPush(q)
 	default:
-		log.Println(q)
+		// log.Println(q)
 		panic("unsupported quadruple")
 	}
 }
@@ -255,13 +254,19 @@ func (x64 *X64Generator) getLoc(loc ir.Location) string {
 }
 
 func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
-	fmt.Printf("YYY %#v\n", loc)
 	switch loc := loc.(type) {
 	case ir.LConst:
-		if s, ok := loc.Value.(string); ok {
-			x64.EmitOp("movq $%s, %s", x64.stringAdressses[s], register)
-		} else {
-			x64.EmitOp("movq $%s, %s", loc, register)
+		switch v := loc.Value.(type) {
+		case string:
+			x64.EmitOp("movq $%s, %s", x64.stringAdressses[v], register)
+		case bool:
+			x := 0
+			if v {
+				x = 1
+			}
+			x64.EmitOp("movq $%#x, %s", x, register)
+		case int:
+			x64.EmitOp("movq $%d, %s", v, register)
 		}
 	case ir.LReg:
 		// Temporaries go on stack, so we need to pop
@@ -284,12 +289,29 @@ func (x64 *X64Generator) EmitPush(q ir.QPush) {
 	x64.EmitOp("pushq %s", rax)
 }
 
+func (x64 *X64Generator) EmitStringAdd(q ir.QBinOp) {
+	x64.EmitLoad(rdi, q.Lhs)
+	x64.EmitLoad(rsi, q.Rhs)
+	x64.EmitOp("call concat")
+	if dst, ok := q.Dst.(ir.LReg); ok && dst.Variable != "" {
+		x64.EmitOp("movq %s, %s", rax, x64.getLoc(dst))
+	} else {
+		x64.EmitOp("pushq %s", rax)
+	}
+}
+
 func (x64 *X64Generator) EmitBinOp(q ir.QBinOp) {
+	if _, ok := q.Lhs.Type().(types.TString); ok {
+		x64.EmitStringAdd(q)
+		return
+	}
+
 	x64.EmitLoad(rax, q.Lhs)
 	x64.EmitLoad(rbx, q.Rhs)
 	switch q.Op {
 	case "+":
 		x64.EmitOp("addq %s, %s", rbx, rax)
+
 	case "-":
 		x64.EmitOp("subq %s, %s", rbx, rax)
 	case "*":
@@ -321,7 +343,37 @@ var inverseJmp = map[string]string{
 	"jle": "jg",
 }
 
+func (x64 *X64Generator) EmitStringRelOp(q ir.QRelOp) {
+	x64.EmitLoad(rdi, q.Lhs)
+	x64.EmitLoad(rsi, q.Rhs)
+	x64.EmitOp("call compare")
+	x64.EmitOp("cmp %s, %s", rax, rax)
+	var op string
+	switch q.Op {
+	case "==":
+		op = "je"
+	case "!=":
+		op = "jne"
+	default:
+		panic("unsupported string operation")
+	}
+
+	if q.LNext == q.LTrue {
+		x64.EmitOp("%s %s", inverseJmp[op], q.LFalse)
+	} else if q.LNext == q.LFalse {
+		x64.EmitOp("%s %s", op, q.LTrue)
+	} else {
+		x64.EmitOp("%s %s", op, q.LTrue)
+		x64.EmitOp("jmp %s", op, q.LFalse)
+	}
+}
+
 func (x64 *X64Generator) EmitRelOp(q ir.QRelOp) {
+	if _, ok := q.Lhs.Type().(types.TString); ok {
+		x64.EmitStringRelOp(q)
+		return
+	}
+
 	x64.EmitLoad(rax, q.Lhs)
 	x64.EmitLoad(rbx, q.Rhs)
 	x64.EmitOp("cmp %s, %s", rbx, rax)
@@ -377,7 +429,6 @@ func (x64 *X64Generator) EmitJnz(q ir.QJnz) {
 }
 
 func (x64 *X64Generator) EmitRet(q ir.QRet) {
-	log.Println(x64.curFun)
 	if x64.curFun.Function.Name == "main" {
 		x64.EmitFunctionEpilog()
 		x64.EmitLoad(rax, ir.LConst{Type_: types.TInt{}, Value: 60})

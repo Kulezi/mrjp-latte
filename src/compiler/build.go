@@ -2,13 +2,12 @@ package compiler
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 )
 
 func saveAssembly(asm, filepath string) error {
-	log.Println(filepath)
+	// log.Println(filepath)
 	f, err := os.Create(filepath)
 	if err != nil {
 		return err

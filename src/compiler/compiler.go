@@ -6,7 +6,6 @@ import (
 	"latte/compiler/backend"
 	. "latte/compiler/config"
 	"latte/compiler/frontend"
-	"log"
 	"os"
 )
 
@@ -22,7 +21,7 @@ func CompileX64(cfg Config) error {
 
 	asm := backend.GenX64(s, cfg)
 
-	log.Println(cfg.Intermediate)
+	// log.Println(cfg.Intermediate)
 	if err := saveAssembly(asm, cfg.Intermediate); err != nil {
 		return fmt.Errorf("failed to save assembly to .s file: %w", err)
 	}

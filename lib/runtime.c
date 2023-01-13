@@ -13,6 +13,8 @@ void error() {
 
 void printString(const char *x) { puts(x); }
 
+int64_t compare(const char *s1, const char *s2) { return strcmp(s1, s2); }
+
 char *concat(const char *s1, const char *s2) {
     size_t new_len = strlen(s1) + strlen(s2) + 1;
     char *res = malloc(sizeof(char) * new_len);

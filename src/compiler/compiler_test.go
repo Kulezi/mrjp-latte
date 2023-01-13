@@ -33,7 +33,7 @@ var badDirs = []string{
 	// "../../mgtests/lattests/tests/margdoc/casting",
 }
 
-func TestGood(t *testing.T) {
+func TestTypecheckGood(t *testing.T) {
 	for _, dir := range goodDirs {
 		items, err := ioutil.ReadDir(dir)
 		if err != nil {
@@ -64,7 +64,7 @@ func TestGood(t *testing.T) {
 	}
 }
 
-func TestBad(t *testing.T) {
+func TestTypecheckBad(t *testing.T) {
 	for _, dir := range badDirs {
 		items, err := ioutil.ReadDir(dir)
 		if err != nil {
@@ -83,6 +83,37 @@ func TestBad(t *testing.T) {
 							t.Fatal("test didn't fail!")
 						} else {
 							t.Log(err)
+						}
+					})
+				}
+			}
+		}
+	}
+}
+
+func TestGood(t *testing.T) {
+	for _, dir := range goodDirs {
+		items, err := ioutil.ReadDir(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		for _, item := range items {
+			if !item.IsDir() {
+				filename := dir + "/" + item.Name()
+				if path.Ext(filename) == ".lat" {
+					t.Run(filename, func(t *testing.T) {
+						basename := strings.TrimSuffix(filename, ".lat")
+
+						intermediate := basename + ".s"
+						err := CompileX64(config.Config{
+							Source:       filename,
+							Intermediate: intermediate,
+							Target:       basename,
+						})
+
+						if err != nil {
+							t.Fatal(err)
 						}
 					})
 				}
