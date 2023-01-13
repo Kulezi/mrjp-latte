@@ -103,6 +103,7 @@ type X64Generator struct {
 	FunInfo         ir.FunInfo
 	curFun          ir.VarInfo
 	res             string
+	alignLabelCnt   int
 	stringAdressses map[string]string
 }
 
@@ -417,10 +418,30 @@ func (x64 *X64Generator) EmitCall(q ir.QCall) {
 		x64.EmitOp("pop %s", rdi)
 	}
 
+	x64.EmitOp("testq %s, %s", "$0x000000000000000F", rsp)
+	lAlign := fmt.Sprintf("_align_%d", x64.alignLabelCnt)
+	x64.alignLabelCnt++
+	x64.EmitOp("jnz %s", lAlign)
 	x64.EmitOp("call %s", q.Label.Name)
 
 	if _, ok := q.Signature.Result.(types.TVoid); !ok {
 		x64.EmitOp("pushq %s", rax)
 	}
+
+	lEnd := fmt.Sprintf("_alignEnd_%d", x64.alignLabelCnt)
+	x64.alignLabelCnt++
+
+	x64.EmitOp("jmp %s", lEnd)
+	x64.EmitLabel(lAlign)
+	x64.EmitOp("subq $%d, %s", 8, rsp)
+	x64.EmitOp("call %s", q.Label.Name)
+
+	x64.EmitOp("addq $%d, %s", 8, rsp)
+	if _, ok := q.Signature.Result.(types.TVoid); !ok {
+		x64.EmitOp("pushq %s", rax)
+	}
+
+	x64.EmitLabel(lEnd)
+
 	// TODO: use result
 }
