@@ -48,6 +48,8 @@ import (
 //     int  $0x80`
 
 const (
+	syscallExit = 60
+
 	rax = `%rax`
 	rbx = `%rbx`
 	rcx = `%rcx`
@@ -259,6 +261,7 @@ func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
 		case string:
 			x64.EmitOp("movq $%s, %s", x64.stringAdressses[v], register)
 		case bool:
+			// Value 0 represents false, 1 represents true.
 			x := 0
 			if v {
 				x = 1
@@ -269,7 +272,6 @@ func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
 		}
 	case ir.LReg:
 		// Temporaries go on stack, so we need to pop
-		// log.Println(loc.Name, loc.Variable)
 		if loc.Variable == "" {
 			x64.EmitOp("popq %s", register)
 		} else {
@@ -433,9 +435,10 @@ func (x64 *X64Generator) EmitJnz(q ir.QJnz) {
 
 func (x64 *X64Generator) EmitRet(q ir.QRet) {
 	if x64.curFun.Function.Name == "main" {
-		x64.EmitFunctionEpilog()
-		x64.EmitLoad(rax, ir.LConst{Type_: types.TInt{}, Value: 60})
+		// Put return value to rdi, it's a scratch register so epilog won't change it.
 		x64.EmitLoad(rdi, q.Value)
+		x64.EmitFunctionEpilog()
+		x64.EmitLoad(rax, ir.LConst{Type_: types.TInt{}, Value: syscallExit})
 		x64.EmitOp("syscall")
 	} else {
 		x64.EmitLoad(rax, q.Value)
