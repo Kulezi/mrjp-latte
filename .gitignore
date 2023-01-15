@@ -10,7 +10,7 @@ src/*
 !src/go.mod
 !src/go.sum
 
-!src/bin/
+!src/cmd/
 
 !src/parser/
 

@@ -3,15 +3,14 @@ all: latc_x86_64 latc
 
 .PHONY: latc_x86_64
 latc_x86_64:
-	cd src/bin/latc_x86_64; go build -o ../../../latc_x86_64 main.go
+	cd src/cmd/latc_x86_64; go build -o ../../../latc_x86_64 main.go
 
 .PHONY: latc
 latc:
-	cd src/bin/latc; go build -o ../../../latc main.go
-
+	cd src/cmd/latc; go build -o ../../../latc main.go
 
 clean:
-	rm latc_x86_64
+	rm latc_x86_64 latc
 
 test: 
 	@cd src/compiler; go test . -count=1 -v

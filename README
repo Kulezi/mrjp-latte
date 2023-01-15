@@ -10,6 +10,13 @@ wpp. wypisze w niej
 `ERROR`  
 i w następnych liniach adekwatny komunikat pozwalający na zlokalizowanie błędu.
 
+## Co robi ten kompilator:
+* Generuje kod czwórkowy i kod assemblera x86_64 i kompiluje go przy użyciu gcc.
+* Wszystkie wyrażenia są obliczane przy pomocy stosu.
+* Przekazywanie argumentów realizowane jest przy pomocy stosu, (oprócz funkcji z runtime)
+* Wszystkie reprezentacje zmiennych danego typu są 64-bitowe.
+* Nie wykonuje obecnie żadnych optymalizacji ani alokacji rejestrów.
+
 ## Struktura katalogów
 .
 ├── Makefile
@@ -28,10 +35,19 @@ i w następnych liniach adekwatny komunikat pozwalający na zlokalizowanie błę
     │   │   ├── type_check_visitor.go - tu dzieje się większość analizy semantycznej z użyciem visitor pattern
     │   │   └── types.go - deklaracje typów dostępnych w języku Latte
     │   └── gen.go
+    │   ├── backend
+    │   │   ├── gen.go - generacja kodu GAS z kodu pośredniego
+    │   │   ├── liveness.go - w przyszłości tu będzie implementacja wyliczania zmiennych żywych.
+    │   │   ├── ssa.go - w przyszłości tu będzie implementacja konwersji do SSA.
+    │   │   └── ir
+    │   │       ├── cfg.go - reprezentacja grafu kontrolic przepływu
+    │   │       ├── ir.go - reprezentacja kodu pośredniego "czwórkowego"
+    │   │       └── visitor.go, expr.go, i reszta to implementacja visitora generującego kod pośredni
+    │   └── gen.go
     ├── go.mod
     ├── go.sum
     ├── Latte.g4 - opis gramatyki języka Latte z rozszerzeniami dla ANTLRv4
-    ├── main.go
+    ├── cmd - tu są main.go z których generuje się binarki latc i latc_x86_64
     └── parser/ - parser wygenerowany automatycznie przy użyciu ANTLRv4
 
 
@@ -60,9 +76,11 @@ i w następnych liniach adekwatny komunikat pozwalający na zlokalizowanie błę
         * Type check
         * Return check
 
-## Plan na 08.01.2023:
+## Plan na 15.01.2023:
 * (+10) Backend:
     * Generator kodu x86_64 (NASM)
+
+## Plan na 30.01.2023:
 
 * (+11) Bazowe Latte plus następujące rozszerzenia:
     * (+1) Tablice jednowymiarowe
@@ -71,11 +89,9 @@ i w następnych liniach adekwatny komunikat pozwalający na zlokalizowanie błę
         * (+4) Metody wirtualne 
         * (+4) Dziedziczenie (bez wielodziedziczenia) z nadpisywaniem metod wirtualnych
 
-## Plan na 23.01.2023:
-
-* (+8) Optymalizacje:
+* (+5) Optymalizacje:
     * (+5) Wykorzystanie rejestrów
-    * (+3) Local Common Subexpression Elimination
 
 
-Łącznie: 4 + 10 + 8 + 11 = 31
+
+Łącznie: 4 + 10 - 2 + 11 + 5 - 2 = 26
