@@ -271,6 +271,7 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 func (v *Visitor) VisitEStr(ctx *parser.EStrContext) interface{} {
 	withBraces := ctx.STR().GetText()
 	s := withBraces[1 : len(withBraces)-1]
+	s, _ = strconv.Unquote("\"" + s + "\"")
 	return LConst{Type_: types.TString{}, Value: s}
 }
 

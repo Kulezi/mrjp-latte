@@ -362,3 +362,13 @@ func (e ZeroDivisionError) Error() string {
 		PosFromToken(e.Ctx.GetStart()),
 	)
 }
+
+type InvalidStringError struct {
+	Ctx antlr.ParserRuleContext
+}
+
+func (e InvalidStringError) Error() string {
+	return fmt.Sprintf(`invalid string literal
+	%s
+	at %s`, showSource(e.Ctx), PosFromToken(e.Ctx.GetStart()))
+}

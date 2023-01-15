@@ -117,15 +117,15 @@ func (x64 *X64Generator) EmitOp(format string, args ...interface{}) {
 func (x64 *X64Generator) EmitFunctionProlog() {
 	x64.EmitOp("pushq %s", rbp)
 	x64.EmitOp("movq %s, %s", rsp, rbp)
+	varCnt := x64.curFun.VariableCount
+	if varCnt > 0 {
+		x64.EmitOp("subq $%#x, %s", varCnt*8, rsp)
+	}
+
 	for _, reg := range preservedRegisters {
 		if reg != rbp && reg != rsp {
 			x64.EmitOp("pushq %s", reg)
 		}
-	}
-
-	varCnt := x64.curFun.VariableCount
-	if varCnt > 0 {
-		x64.EmitOp("subq $%#x, %s", varCnt*8, rsp)
 	}
 
 	// The stack is now [args], return address, oldRbp.
@@ -137,16 +137,16 @@ func (x64 *X64Generator) EmitFunctionProlog() {
 }
 
 func (x64 *X64Generator) EmitFunctionEpilog() {
-	varCnt := x64.curFun.VariableCount
-	if varCnt > 0 {
-		x64.EmitOp("addq $%#x, %s", varCnt*8, rsp)
-	}
-
 	for i := len(preservedRegisters) - 1; i >= 0; i-- {
 		reg := preservedRegisters[i]
 		if reg != rbp && reg != rsp {
 			x64.EmitOp("popq %s", reg)
 		}
+	}
+
+	varCnt := x64.curFun.VariableCount
+	if varCnt > 0 {
+		x64.EmitOp("addq $%#x, %s", varCnt*8, rsp)
 	}
 
 	x64.EmitOp("movq %s, %s", rbp, rsp)
@@ -209,6 +209,11 @@ func (x64 *X64Generator) getLoc(loc ir.Location) string {
 }
 
 func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
+	// Void doesn't need to be stored anywhere, and won't be popped from stack.
+	if _, ok := loc.Type().(types.TVoid); ok {
+		return
+	}
+
 	switch loc := loc.(type) {
 	case ir.LConst:
 		switch v := loc.Value.(type) {
@@ -236,6 +241,10 @@ func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
 
 func (x64 *X64Generator) EmitQMov(q ir.QMov) {
 	x64.EmitLoad(rax, q.Src)
+	// In case of a standalone expression we can forget the result.
+	if _, ok := q.Dst.(ir.LDrop); ok {
+		return
+	}
 	dst := x64.getLoc(q.Dst)
 	if dst == "" {
 		x64.EmitOp("pushq %s", rax)

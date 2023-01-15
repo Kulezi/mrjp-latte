@@ -244,7 +244,29 @@ func (v *Visitor) VisitSFor(ctx *parser.SForContext) interface{} {
 }
 
 func (v *Visitor) VisitSExp(ctx *parser.SExpContext) interface{} {
-	return v.evalSExp(ctx.Expr())
+	expr := ctx.Expr()
+	t := v.Visitor.Visit(expr).(types.Type)
+	// If expression is constant we don't need to generate any code as it doesn't do anything to the state.
+	if _, ok := t.Const(); ok {
+		return nil
+	}
+
+	// We don't care about the result but we need to give jumping code some label it can jump to.
+	if _, ok := t.(types.TBool); ok {
+		label := v.FreshLabel("_sexp_end")
+		defer v.PushLabels(label, label, label)()
+		v.evalSExp(ctx.Expr())
+		v.StartBlock(label)
+		return nil
+	}
+
+	loc := v.evalSExp(ctx.Expr())
+	// We need to pop the result from stack as we won't use it.
+	v.EmitQuad(QMov{
+		Src: loc,
+		Dst: LDrop{Type_: t},
+	})
+	return nil
 }
 
 func (v *Visitor) evalSExp(expr parser.IExprContext) Location {

@@ -18,7 +18,7 @@ var goodDirs = []string{
 	// "../../lattests/good",
 	// "../../mgtests/lattests/tests/margdoc",
 	// "../../mgtests/lattests/tests/margdoc/lvalues",
-	// "../../mrjp-tests/good/basic",
+	"../../mrjp-tests/good/basic",
 	// "../../mrjp-tests/good/arrays",
 	// "../../mrjp-tests/good/hardcore",
 	// "../../mrjp-tests/good/virtual",

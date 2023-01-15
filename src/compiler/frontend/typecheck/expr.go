@@ -419,6 +419,12 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 func (v *Visitor) VisitEStr(ctx *parser.EStrContext) interface{} {
 	withBraces := ctx.STR().GetText()
 	s := withBraces[1 : len(withBraces)-1]
+	s, err := strconv.Unquote("\"" + s + "\"")
+	if err != nil {
+		return InvalidStringError{
+			Ctx: ctx,
+		}
+	}
 	return TString{
 		StartToken: ctx.GetStart(),
 		Value:      &s,

@@ -11,6 +11,11 @@ type Location interface {
 	Type() Type
 }
 
+type LDrop struct{ Type_ Type }
+
+func (v LDrop) String() string { return "LDrop" }
+func (v LDrop) Type() Type     { return v.Type_ }
+
 type LConst struct {
 	Type_ Type
 	Value Const
