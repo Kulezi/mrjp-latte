@@ -43,6 +43,7 @@ echo "running good tests"
 for i in $GOOD/*.lat; do
     TOTAL_GOOD=$((TOTAL_GOOD+1))
     printf "$i: "
+    TESTNAME=${i%.lat}
     compiler_output=$(mktemp)
     compiler_output_head=$(mktemp)
     ./$COMPILER $i 2> $compiler_output
@@ -52,6 +53,13 @@ for i in $GOOD/*.lat; do
         cmp $compiler_output $OKFILE
         if [ $? -eq 0 ]; then
             printf "exit code ${GREEN}$?${RESET}\n"
+            if [ -f "${i%.lat}.input" ]; then
+                echo "./$TESTNAME < $TESTNAME.input > $TESTNAME.output_test"
+            else
+                echo "./$TESTNAME > $TESTNAME.output_test"
+            fi
+
+           echo "cmp $TESTNAME.output_test $TESTNAME.output"
         else 
             printf "${RED}expected $(cat $OKFILE) got $(cat $compiler_output) ${RESET}\n"
             continue

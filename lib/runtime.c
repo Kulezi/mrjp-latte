@@ -5,14 +5,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-void printInt(int64_t x) { printf("%d\n", x); }
+void printInt(int64_t x) {
+    printf("%d\n", x);
+    fflush(stdout);
+}
 
 void error() {
     puts("runtime error");
+    fflush(stdout);
     exit(1);
 }
 
-void printString(const char *x) { puts(x); }
+void printString(const char *x) {
+    puts(x);
+    fflush(stdout);
+}
 
 int64_t compare(const char *s1, const char *s2) { return strcmp(s1, s2); }
 
@@ -26,17 +33,8 @@ char *concat(const char *s1, const char *s2) {
 
 int64_t readInt() {
     int64_t n;
-    scanf("%" SCNd64, &n);
+    scanf("%" SCNd64 " ", &n);
     return n;
-}
-
-char extend(char **buf, size_t cap) {
-    char *tmp = realloc(buf, sizeof(char) * cap);
-    if (tmp == NULL) {
-        free(buf);
-        error();
-    }
-    *buf = tmp;
 }
 
 char *readString() {

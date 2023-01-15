@@ -150,23 +150,33 @@ func TestGoodAnswers(t *testing.T) {
 
 						cmd := exec.Command(fmt.Sprintf("./%s", basename))
 						inputFile, err := os.Open(basename + ".input")
-						if err != nil {
+						if err == nil {
 							cmd.Stdin = inputFile
 						}
 
-						// outputFile, err := os.Create(basename + ".output_test")
-						// if err != nil {
-						// 	cmd.Stdout = outputFile
-						// }
+						outputFile, err := os.Create(basename + ".output_test")
+						if err != nil {
+							t.Fatal(err)
+						}
+						cmd.Stdout = outputFile
 
-						t.Log(cmd.Output())
-						// diff, err := exec.Command("diff", basename+".output_test", basename+".output").CombinedOutput()
-						// t.Log(string(diff))
-						// if err != nil {
-						// 	t.Fatal(err)
-						// } else {
-						// 	t.Log(string(diff))
-						// }
+						if err := cmd.Start(); err != nil {
+							t.Fatal(err)
+						}
+
+						if err := cmd.Wait(); err != nil {
+							t.Fatal(err)
+						}
+
+						diff, err := exec.Command("cmp", basename+".output_test", basename+".output").CombinedOutput()
+						t.Log(string(diff))
+						if err != nil {
+							t.Fatal(err)
+						} else {
+							if len(diff) > 0 {
+								t.Fatal(diff)
+							}
+						}
 					})
 				}
 			}

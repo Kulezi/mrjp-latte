@@ -198,11 +198,7 @@ func (x64 *X64Generator) EmitFunctionEpilog() {
 
 func (x64 *X64Generator) GenFromBlock(block ir.BasicBlock) {
 	label := block.Label
-	// if label.Name == "main" {
-	// 	x64.EmitLabel("_start")
-	// } else {
 	x64.EmitLabel(label.Name)
-	// }
 
 	// Prepare stack frame.
 	if label.IsFunction {
@@ -351,8 +347,8 @@ var inverseJmp = map[string]string{
 }
 
 func (x64 *X64Generator) EmitStringRelOp(q ir.QRelOp) {
-	x64.EmitLoad(rdi, q.Lhs)
 	x64.EmitLoad(rsi, q.Rhs)
+	x64.EmitLoad(rdi, q.Lhs)
 	x64.EmitOp("call compare")
 	x64.EmitOp("cmp %s, %s", rax, rax)
 	var op string
@@ -381,8 +377,8 @@ func (x64 *X64Generator) EmitRelOp(q ir.QRelOp) {
 		return
 	}
 
-	x64.EmitLoad(rax, q.Lhs)
 	x64.EmitLoad(rbx, q.Rhs)
+	x64.EmitLoad(rax, q.Lhs)
 	x64.EmitOp("cmp %s, %s", rbx, rax)
 
 	var op string
