@@ -8,45 +8,6 @@ import (
 	"latte/compiler/frontend/types"
 )
 
-// const sampleASM = `; ----------------------------------------s------------------------------------------------
-// ; Writes "Hello, World" to the console using only system calls. Runs on 64-bit Linux only.
-// ; To assemble and run:
-// ;
-// ;     nasm -felf64 hello.asm && ld hello.o && ./a.out
-// ; ----------------------------------------------------------------------------------------
-
-//           global    _start
-
-//           section   .text
-// _start:   mov       rax, 1                  ; system call for write
-//           mov       rdi, 1                  ; file handle 1 is stdout
-//           mov       rsi, message            ; address of string to output
-//           mov       rdx, 13                 ; number of bytes
-//           syscall                           ; invoke operating system to do the write
-//           mov       rax, 60                 ; system call for exit
-//           xor       rdi, rdi                ; exit code 0
-//           syscall                           ; invoke operating system to exit
-
-//           section   .data
-// message:  db        "Hello, World", 10      ; note the newline at the end`
-
-// const sampleATT = `.data
-// hello:
-//     .string "Hello world!\n"
-
-// .text
-// .globl _start
-// _start:
-//     movl $4, %eax # write(1, hello, strlen(hello))
-//     movl $1, %ebx
-//     movl $hello, %ecx
-//     movl $13, %edx
-//     int  $0x80
-
-//     movl $1, %eax # exit(0)
-//     movl $0, %ebx
-//     int  $0x80`
-
 const (
 	syscallExit = 60
 
@@ -71,10 +32,7 @@ const (
 var scratchRegisters = []string{rax, rdi, rsi, rdx, rcx, r8, r9, r10, r11}
 var preservedRegisters = []string{rbx, rsp, rbp, r12, r13, r14, r15}
 
-// FIXME: generate code.
 func GenX64(s frontend.State, config Config) string {
-	// cfg := MakeSSA(ir.Generate(s, config))
-
 	cfg, finfo := ir.Generate(s, config)
 	// for _, block := range cfg.Nodes {
 	// 	fmt.Println(block.Label)
@@ -238,7 +196,6 @@ func (x64 *X64Generator) GenFromQuad(q ir.Quadruple) {
 	case ir.QPush:
 		x64.EmitPush(q)
 	default:
-		// log.Println(q)
 		panic("unsupported quadruple")
 	}
 }
@@ -339,15 +296,6 @@ func (x64 *X64Generator) EmitBinOp(q ir.QBinOp) {
 	}
 }
 
-var inverseJmp = map[string]string{
-	"jge": "jl",
-	"jg":  "jle",
-	"je":  "jne",
-	"jne": "je",
-	"jl":  "jge",
-	"jle": "jg",
-}
-
 func (x64 *X64Generator) EmitStringRelOp(q ir.QRelOp) {
 	x64.EmitLoad(rsi, q.Rhs)
 	x64.EmitLoad(rdi, q.Lhs)
@@ -371,6 +319,15 @@ func (x64 *X64Generator) EmitStringRelOp(q ir.QRelOp) {
 		x64.EmitOp("%s %s", op, q.LTrue)
 		x64.EmitOp("jmp %s", op, q.LFalse)
 	}
+}
+
+var inverseJmp = map[string]string{
+	"jge": "jl",
+	"jg":  "jle",
+	"je":  "jne",
+	"jne": "je",
+	"jl":  "jge",
+	"jle": "jg",
 }
 
 func (x64 *X64Generator) EmitRelOp(q ir.QRelOp) {
@@ -449,16 +406,7 @@ func (x64 *X64Generator) EmitRet(q ir.QRet) {
 
 func (x64 *X64Generator) EmitVRet(q ir.QVRet) {
 	x64.EmitFunctionEpilog()
-
 	x64.EmitOp("ret")
-}
-
-var foreignFunctions = map[string]struct{}{
-	"printInt":    {},
-	"readInt":     {},
-	"error":       {},
-	"printString": {},
-	"readString":  {},
 }
 
 func (x64 *X64Generator) EmitCall(q ir.QCall) {
@@ -498,4 +446,12 @@ func (x64 *X64Generator) EmitCall(q ir.QCall) {
 	if _, ok := q.Signature.Result.(types.TVoid); !ok {
 		x64.EmitOp("pushq %s", rax)
 	}
+}
+
+var foreignFunctions = map[string]struct{}{
+	"printInt":    {},
+	"readInt":     {},
+	"error":       {},
+	"printString": {},
+	"readString":  {},
 }
