@@ -92,6 +92,16 @@ func TestTypecheckBad(t *testing.T) {
 	}
 }
 
+func getRuntimePath(t *testing.T) string {
+	wd, err := os.Getwd()
+	fmt.Println(wd)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return path.Join(wd, "../../lib/runtime.o")
+}
+
 func TestGoodCompile(t *testing.T) {
 	for _, dir := range goodDirs {
 		items, err := ioutil.ReadDir(dir)
@@ -107,10 +117,12 @@ func TestGoodCompile(t *testing.T) {
 						basename := strings.TrimSuffix(filename, ".lat")
 
 						intermediate := basename + ".s"
+
 						err := CompileX64(config.Config{
 							Source:       filename,
 							Intermediate: intermediate,
 							Target:       basename,
+							Runtime:      getRuntimePath(t),
 						})
 
 						if err != nil {
@@ -138,10 +150,11 @@ func TestGoodAnswers(t *testing.T) {
 						basename := strings.TrimSuffix(filename, ".lat")
 
 						intermediate := basename + ".s"
-						err := CompileX64(config.Config{
+						err = CompileX64(config.Config{
 							Source:       filename,
 							Intermediate: intermediate,
 							Target:       basename,
+							Runtime:      getRuntimePath(t),
 						})
 
 						if err != nil {
