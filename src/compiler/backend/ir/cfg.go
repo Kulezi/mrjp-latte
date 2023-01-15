@@ -1,6 +1,7 @@
 package ir
 
 import (
+	"fmt"
 	"latte/compiler/config"
 	"latte/compiler/frontend"
 	"latte/compiler/frontend/typecheck"
@@ -11,6 +12,18 @@ type ControlFlowGraph struct {
 	Nodes    []BasicBlock
 	Succ     map[Label][]Label
 	BlockIdx map[Label]int
+}
+
+func (cfg ControlFlowGraph) String() string {
+	var res string
+	for _, block := range cfg.Nodes {
+		res += fmt.Sprintf("%s:\n", block.Label)
+		for _, op := range block.Ops {
+			res += fmt.Sprintln("\t" + op.String())
+		}
+	}
+
+	return res
 }
 
 type VarInfo struct {
@@ -62,16 +75,4 @@ func Generate(s frontend.State, config config.Config) (ControlFlowGraph, FunInfo
 	}
 
 	return cfg, v.FunInfo
-}
-
-func (cfg *ControlFlowGraph) String() string {
-	ir := ""
-	for _, block := range cfg.Nodes {
-		ir += block.Label.Name + "\n"
-		for _, op := range block.Ops {
-			ir += "\t" + op.String() + "\n"
-		}
-	}
-
-	return ir
 }

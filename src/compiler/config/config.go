@@ -12,6 +12,7 @@ const optLevels = 3
 
 type Config struct {
 	TypeCheck bool
+	PrintIR   bool
 
 	// Level one optimizations.
 	AllocRegisters                bool
@@ -31,6 +32,13 @@ type Config struct {
 
 func ReadConfig() Config {
 	config := Config{}
+
+	flag.BoolVar(
+		&config.PrintIR,
+		"print-ir",
+		false,
+		"Print intermediate representation (doesn't work with typecheck flag)",
+	)
 
 	flag.BoolVar(
 		&config.TypeCheck,

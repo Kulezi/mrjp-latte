@@ -34,12 +34,9 @@ var preservedRegisters = []string{rbx, rsp, rbp, r12, r13, r14, r15}
 
 func GenX64(s frontend.State, config Config) string {
 	cfg, finfo := ir.Generate(s, config)
-	// for _, block := range cfg.Nodes {
-	// 	fmt.Println(block.Label)
-	// 	for _, op := range block.Ops {
-	// 		fmt.Println("\t" + op.String())
-	// 	}
-	// }
+	if config.PrintIR {
+		fmt.Println(cfg)
+	}
 
 	x64 := X64Generator{FunInfo: finfo, stringAdressses: make(map[string]string)}
 
