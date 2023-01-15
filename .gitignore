@@ -5,9 +5,12 @@
 
 !src/
 src/*
+
 !src/Latte.g4
 !src/go.mod
 !src/go.sum
+
+!src/bin/
 
 !src/parser/
 

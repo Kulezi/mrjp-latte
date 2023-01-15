@@ -1,10 +1,14 @@
 .PHONY: all
-all: latc_x86_64
+all: latc_x86_64 latc
 
 .PHONY: latc_x86_64
 latc_x86_64:
-	cd lib; gcc -c runtime.c -o runtime.o
-	cd src; go build -o ../latc_x86_64 main.go
+	cd src/bin/latc_x86_64; go build -o ../../../latc_x86_64 main.go
+
+.PHONY: latc
+latc:
+	cd src/bin/latc; go build -o ../../../latc main.go
+
 
 clean:
 	rm latc_x86_64
