@@ -37,7 +37,7 @@ type LReg struct {
 }
 
 func (v LReg) String() string {
-	return fmt.Sprintf("%s", v.Name)
+	return v.Name
 }
 
 func (v LReg) Type() Type {

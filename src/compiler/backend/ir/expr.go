@@ -35,42 +35,10 @@ func (v *Visitor) GetBoolLoc() Location {
 
 func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
 	panic("can't access field - classes are not yet supported")
-	// t, err := v.evalExpr(ctx.Expr(0))
-	// if err != nil {
-	// 	return err
-	// }
-
-	// class, ok := t.(TClass)
-	// if ok {
-	// 	defer v.EnterClass(class)()
-	// } else if _, ok = t.(TArray); ok {
-	// 	defer v.ShadowLocal("length", TInt{})()
-	// }
-
-	// // Evaluate right-hand side in this environment.
-	// return v.Visit(ctx.Expr(1))
 }
 
 func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
 	panic("arrays are not yet supported")
-	// t, err := v.evalExpr(ctx.Expr(0))
-	// if err != nil {
-	// 	return err
-	// }
-
-	// arr, ok := t.(TArray)
-	// if !ok {
-	// 	return ExpectedArrayError{
-	// 		Expr: ctx,
-	// 		Got:  t,
-	// 	}
-	// }
-
-	// if err := v.ExpectType(TInt{}, ctx.Expr(1)); err != nil {
-	// 	return err
-	// }
-
-	// return arr.Elem
 }
 
 func (v *Visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
@@ -116,8 +84,6 @@ func (v *Visitor) VisitEAddOp(ctx *parser.EAddOpContext) interface{} {
 		Lhs: lhs,
 		Rhs: rhs,
 	})
-
-	// log.Printf("%#v\n, %#v\n, %#v", dst, lhs, rhs)
 
 	return dst
 }
@@ -203,51 +169,14 @@ func (v *Visitor) VisitEOr(ctx *parser.EOrContext) interface{} {
 
 func (v *Visitor) VisitENewArray(ctx *parser.ENewArrayContext) interface{} {
 	panic("can't use new - arrays are not yet supported")
-	// t, err := v.evalType(ctx.Singular_type_())
-	// if err != nil {
-	// 	return err
-	// }
-
-	// e := ctx.Expr()
-	// idxType, err := v.evalExpr(e)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// if _, ok := idxType.(TInt); !ok {
-	// 	return ArraySizeTypeError{
-	// 		Expr: e,
-	// 		Type: idxType,
-	// 	}
-	// }
-
-	// t = TArray{
-	// 	Elem: t,
-	// }
-
-	// return t
 }
 
 func (v *Visitor) VisitENew(ctx *parser.ENewContext) interface{} {
 	panic("can't use new - classes are not yet supported")
-	// t, err := v.evalType(ctx.Singular_type_())
-	// if err != nil {
-	// 	return err
-	// }
-
-	// class, ok := t.(TClass)
-	// if !ok {
-	// 	return UnknownClassError{
-	// 		Type: t,
-	// 	}
-	// }
-
-	// return class
 }
 
 func (v *Visitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
 	panic("can't use self - classes are not yet supported")
-	// return v.CurClass
 }
 
 func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
@@ -312,7 +241,6 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 
 	dst := v.FreshTemp("call_tmp", signature.Result)
 
-	// Emit call.
 	v.EmitQuad(QCall{
 		Signature: signature,
 		Label:     v.GetFunctionLabel(ident),
@@ -343,38 +271,8 @@ func (v *Visitor) VisitEStr(ctx *parser.EStrContext) interface{} {
 
 func (v *Visitor) VisitENull(ctx *parser.ENullContext) interface{} {
 	panic("nulls are not yet supported")
-	// classRef := TClassRef{ctx.ID()}
-	// t, ok := v.TypeOfGlobal(classRef.String())
-	// if !ok {
-	// 	return UnknownClassError{classRef}
-	// }
-
-	// class, ok := t.Type.(TClass)
-	// if !ok {
-	// 	return UnknownClassError{
-	// 		Type: t,
-	// 	}
-	// }
-	// return class
 }
 
 func (v *Visitor) VisitEParen(ctx *parser.EParenContext) interface{} {
 	return v.Visit(ctx.Expr())
 }
-
-// var validInequalityOpArg = map[string]struct{}{
-// 	"int":    {},
-// 	"string": {},
-// }
-
-// var validAddOpArg = map[string]struct{}{
-// 	"int":    {},
-// 	"string": {},
-// }
-// var validSubOpArg = map[string]struct{}{
-// 	"int": {},
-// }
-
-// var validMulOpArg = map[string]struct{}{
-// 	"int": {},
-// }

@@ -60,7 +60,6 @@ func (v *Visitor) ShadowLocal(ident string, t Type) (location Location, drop fun
 	loc := v.FreshTemp(ident, t)
 	loc.Variable = ident
 	loc.Index = v.varCount
-	// log.Printf("var %s -> %d", ident, loc.Index)
 	v.varCount++
 
 	oldSignature, ok := v.Signatures.Locals[ident]

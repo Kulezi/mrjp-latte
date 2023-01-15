@@ -240,41 +240,6 @@ func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 
 func (v *Visitor) VisitSFor(ctx *parser.SForContext) interface{} {
 	panic("arrays are not supported yet")
-	// t, err := v.evalType(ctx.Type_())
-	// if err != nil {
-	// 	return err
-	// }
-
-	// arrType, err := v.evalExpr(ctx.Expr())
-	// if err != nil {
-	// 	return err
-	// }
-
-	// arr, ok := arrType.(TArray)
-	// if !ok {
-	// 	return NotAnArrayError{
-	// 		Ctx:  ctx,
-	// 		Expr: ctx.Expr(),
-	// 		Type: arrType,
-	// 	}
-	// }
-
-	// if !SameType(t, arr.Elem) && !v.isSubClass(t, arr.Elem) {
-	// 	return UnexpectedTypeError{.Visit(ctx.Expr())
-	// 		Got:      t,
-	// 	}
-	// }
-
-	// defer v.ShadowLocal(ctx.ID().GetText(), arr.Elem)()
-	// returns, err := v.evalNonDeclStmt(ctx.Stmt())
-	// if err != nil {
-	// 	return err
-	// }
-
-	// return doesReturn{
-	// 	always:    false,
-	// 	sometimes: returns.sometimes,
-	// }
 }
 
 func (v *Visitor) VisitSExp(ctx *parser.SExpContext) interface{} {

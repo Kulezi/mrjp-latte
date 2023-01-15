@@ -19,7 +19,6 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	signature := t.Type.(TFun)
 
 	v.Depth++
-	// log.Println(signature)
 	label := v.GetFunctionLabel(ident)
 
 	v.StartBlock(label)
