@@ -239,7 +239,8 @@ func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 }
 
 func (v *Visitor) VisitSFor(ctx *parser.SForContext) interface{} {
-	panic("arrays are not supported yet")
+	Unimplemented("arrays are not supported yet\n\t%s", types.PosFromToken(ctx.GetStart()))
+	return nil
 }
 
 func (v *Visitor) VisitSExp(ctx *parser.SExpContext) interface{} {

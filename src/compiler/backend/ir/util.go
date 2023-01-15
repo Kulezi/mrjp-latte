@@ -3,7 +3,14 @@ package ir
 import (
 	"fmt"
 	. "latte/compiler/frontend/types"
+	"os"
 )
+
+func Unimplemented(format string, args ...interface{}) {
+	format = "ERROR\n" + format
+	fmt.Fprintf(os.Stderr, format, args...)
+	os.Exit(1)
+}
 
 func (v *Visitor) GetFunctionLabel(ident string) Label {
 	// TODO: This will need a change when objects are introduced.

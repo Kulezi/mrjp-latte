@@ -1,15 +1,18 @@
 package ir
 
 import (
+	"latte/compiler/frontend/types"
 	"latte/parser"
 )
 
 func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
-	panic("classes are not yet supported")
+	Unimplemented("classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
+	return nil
 }
 
 func (v *Visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
-	panic("arrays are not yet suppoted")
+	Unimplemented("arrays are not yet suppoted\n\t%s", types.PosFromToken(ctx.GetStart()))
+	return nil
 }
 
 func (v *Visitor) VisitLVId(ctx *parser.LVIdContext) interface{} {

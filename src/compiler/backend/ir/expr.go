@@ -34,11 +34,13 @@ func (v *Visitor) GetBoolLoc() Location {
 }
 
 func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
-	panic("can't access field - classes are not yet supported")
+	Unimplemented("can't access field - classes are not yet supported\n\tat %s", types.PosFromToken(ctx.GetStart()))
+	return nil
 }
 
 func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
-	panic("arrays are not yet supported")
+	Unimplemented("arrays are not yet supported\n\tat %s", types.PosFromToken(ctx.GetStart()))
+	return nil
 }
 
 func (v *Visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
@@ -168,15 +170,18 @@ func (v *Visitor) VisitEOr(ctx *parser.EOrContext) interface{} {
 }
 
 func (v *Visitor) VisitENewArray(ctx *parser.ENewArrayContext) interface{} {
-	panic("can't use new - arrays are not yet supported")
+	Unimplemented("can't use new - arrays are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
+	return nil
 }
 
 func (v *Visitor) VisitENew(ctx *parser.ENewContext) interface{} {
-	panic("can't use new - classes are not yet supported")
+	Unimplemented("can't use new - classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
+	return nil
 }
 
 func (v *Visitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
-	panic("can't use self - classes are not yet supported")
+	Unimplemented("can't use self - classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
+	return nil
 }
 
 func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
@@ -270,7 +275,8 @@ func (v *Visitor) VisitEStr(ctx *parser.EStrContext) interface{} {
 }
 
 func (v *Visitor) VisitENull(ctx *parser.ENullContext) interface{} {
-	panic("nulls are not yet supported")
+	Unimplemented("nulls are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
+	return nil
 }
 
 func (v *Visitor) VisitEParen(ctx *parser.EParenContext) interface{} {

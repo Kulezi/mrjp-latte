@@ -1,6 +1,7 @@
 package ir
 
 import (
+	"latte/compiler/frontend/types"
 	. "latte/compiler/frontend/types"
 	"latte/parser"
 )
@@ -48,9 +49,11 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 }
 
 func (v *Visitor) VisitBaseClassDef(ctx *parser.BaseClassDefContext) interface{} {
-	panic("Classes are not supported in this revision.")
+	Unimplemented("Classes are not supported in this revision\n\tFound one at %s", types.PosFromToken(ctx.GetStart()))
+	return nil
 }
 
 func (v *Visitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefContext) interface{} {
-	panic("Classes are not supported in this revision.")
+	Unimplemented("Classes are not supported in this revision\n\tFound one at %s", types.PosFromToken(ctx.GetStart()))
+	return nil
 }
