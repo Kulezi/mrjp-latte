@@ -28,6 +28,7 @@ type Config struct {
 	Source       string
 	Intermediate string
 	Target       string
+	Runtime      string
 }
 
 func ReadConfig() Config {
@@ -109,5 +110,12 @@ func ReadConfig() Config {
 
 	config.Intermediate = basename + ".s"
 
+	wd, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR\n", err)
+		os.Exit(1)
+	}
+
+	config.Runtime = path.Join(wd, "lib/runtime.o")
 	return config
 }

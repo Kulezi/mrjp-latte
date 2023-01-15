@@ -21,7 +21,6 @@ func CompileX64(cfg Config) error {
 
 	asm := backend.GenX64(s, cfg)
 
-	// log.Println(cfg.Intermediate)
 	if err := saveAssembly(asm, cfg.Intermediate); err != nil {
 		return fmt.Errorf("failed to save assembly to .s file: %w", err)
 	}
@@ -32,15 +31,11 @@ func CompileX64(cfg Config) error {
 	}
 	defer os.Remove(linkFile.Name())
 
-	// if err := compileNASM(cfg.Intermediate, linkFile.Name()); err != nil {
-	// 	return fmt.Errorf("nasm compilation error: %w", err)
-	// }
-
 	if err := compileGCC(cfg.Intermediate, linkFile.Name()); err != nil {
 		return fmt.Errorf("gcc compilation error: %w", err)
 	}
 
-	if err := link(linkFile.Name(), cfg.Target); err != nil {
+	if err := link(cfg.Runtime, linkFile.Name(), cfg.Target); err != nil {
 		return fmt.Errorf("link error: %w", err)
 	}
 

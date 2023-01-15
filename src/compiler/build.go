@@ -57,11 +57,11 @@ func compileGCC(sourcePath, targetPath string) error {
 	return nil
 }
 
-func link(sourcePath, targetPath string) error {
+func link(runtimePath, sourcePath, targetPath string) error {
 	out, err := exec.Command(
 		"gcc",
 		sourcePath,
-		"/home/pawelputra/studia/mrjp/latte/lib/runtime.o",
+		runtimePath,
 		"-O0",
 		"-m64",
 		"-no-pie",
