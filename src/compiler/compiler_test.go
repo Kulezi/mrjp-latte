@@ -94,7 +94,6 @@ func TestTypecheckBad(t *testing.T) {
 
 func getRuntimePath(t *testing.T) string {
 	wd, err := os.Getwd()
-	fmt.Println(wd)
 	if err != nil {
 		t.Fatal(err)
 	}

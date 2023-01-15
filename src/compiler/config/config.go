@@ -111,7 +111,6 @@ func ReadConfig() Config {
 	config.Intermediate = basename + ".s"
 
 	wd, err := os.Getwd()
-	fmt.Println(wd)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR\n%v", err)
 		os.Exit(1)

@@ -11,7 +11,7 @@ func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
 }
 
 func (v *Visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
-	Unimplemented("arrays are not yet suppoted\n\t%s", types.PosFromToken(ctx.GetStart()))
+	Unimplemented("arrays are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
 	return nil
 }
 
