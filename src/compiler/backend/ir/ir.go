@@ -162,3 +162,29 @@ type QPush struct {
 }
 
 func (q QPush) String() string { return fmt.Sprintf("push %s", q.Src) }
+
+type QArrayAccess struct {
+	QBase
+	Array Location
+	Index Location
+	Dst   Location
+}
+
+func (q QArrayAccess) String() string { return fmt.Sprintf("%s = %s[%s]", q.Dst, q.Array, q.Index) }
+
+type QDeref struct {
+	QBase
+	Src Location
+	Dst Location
+}
+
+func (q QDeref) String() string { return fmt.Sprintf("%s = *%s", q.Dst, q.Src) }
+
+type QNewArray struct {
+	QBase
+	Type Type
+	Size Location
+	Dst  Location
+}
+
+func (q QNewArray) String() string { return fmt.Sprintf("%s = new %s[%s]", q.Dst, q.Type, q.Dst) }

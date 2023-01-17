@@ -8,7 +8,6 @@ import (
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 )
 
-type Addr = uint
 type Label struct {
 	IsFunction bool
 	Name       string
