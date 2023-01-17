@@ -23,6 +23,13 @@ void printString(const char *x) {
 
 int64_t compare(const char *s1, const char *s2) { return strcmp(s1, s2); }
 
+int64_t *newArray(int64_t size) {
+    int64_t *arr = calloc(8, size + 1);
+    arr[0] = size;
+    for (int i = 1; i <= size; i++) arr[i] = i;
+    return arr;
+}
+
 char *concat(const char *s1, const char *s2) {
     size_t new_len = strlen(s1) + strlen(s2) + 1;
     char *res = malloc(sizeof(char) * new_len);

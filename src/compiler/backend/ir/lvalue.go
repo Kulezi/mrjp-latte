@@ -11,29 +11,23 @@ func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
 }
 
 func (v *Visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
-	Unimplemented("arrays are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
-	return nil
+	array := v.evalExpr(ctx.Expr(0))
+	index := v.evalExpr(ctx.Expr(1))
+	dst := v.FreshTemp("array_ref", array.Type().BaseType())
+	v.EmitQuad(QArrayAccess{
+		Array: array,
+		Index: index,
+		Dst:   dst,
+	})
+
+	return dst
 }
 
 func (v *Visitor) VisitLVId(ctx *parser.LVIdContext) interface{} {
 	ident := ctx.ID().GetText()
-	old := v.GetLocal(ident)
-	new := v.FreshTemp("lv_new", old.Type())
-	new.Variable = ident
-	new.Index = v.variableLocations[ident].(LReg).Index
-	v.variableLocations[ident] = new
-
-	return locPair{
-		old: old,
-		new: new,
-	}
+	return v.GetLocal(ident)
 }
 
-type locPair struct {
-	old, new Location
-}
-
-func (v *Visitor) evalLV(ctx parser.ILvalueContext) (old, new Location) {
-	locs := v.Visit(ctx).(locPair)
-	return locs.old, locs.new
+func (v *Visitor) evalLV(ctx parser.ILvalueContext) (loc Location) {
+	return v.Visit(ctx).(Location)
 }

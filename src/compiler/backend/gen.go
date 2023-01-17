@@ -10,6 +10,7 @@ import (
 
 const (
 	syscallExit = 60
+	QWORD       = 8
 
 	rax = `%rax`
 	rbx = `%rbx`
@@ -119,7 +120,7 @@ func (x64 *X64Generator) EmitFunctionProlog() {
 	x64.EmitOp("movq %s, %s", rsp, rbp)
 	varCnt := x64.curFun.VariableCount
 	if varCnt > 0 {
-		x64.EmitOp("subq $%#x, %s", varCnt*8, rsp)
+		x64.EmitOp("subq $%#x, %s", varCnt*QWORD, rsp)
 	}
 
 	for _, reg := range preservedRegisters {
@@ -131,8 +132,8 @@ func (x64 *X64Generator) EmitFunctionProlog() {
 	// The stack is now [args], return address, oldRbp.
 	offset := (len(x64.curFun.Signature.Args) + 1)
 	for i := range x64.curFun.Signature.Args {
-		x64.EmitOp("movq %#x(%s), %s", 8*(offset-i), rbp, rax)
-		x64.EmitOp("movq %s, %#x(%s)", rax, -8*(i+1), rbp)
+		x64.EmitOp("movq %#x(%s), %s", QWORD*(offset-i), rbp, rax)
+		x64.EmitOp("movq %s, %#x(%s)", rax, -QWORD*(i+1), rbp)
 	}
 }
 
@@ -146,7 +147,7 @@ func (x64 *X64Generator) EmitFunctionEpilog() {
 
 	varCnt := x64.curFun.VariableCount
 	if varCnt > 0 {
-		x64.EmitOp("addq $%#x, %s", varCnt*8, rsp)
+		x64.EmitOp("addq $%#x, %s", varCnt*QWORD, rsp)
 	}
 
 	x64.EmitOp("movq %s, %s", rbp, rsp)
@@ -192,6 +193,12 @@ func (x64 *X64Generator) GenFromQuad(q ir.Quadruple) {
 		x64.EmitCall(q)
 	case ir.QPush:
 		x64.EmitPush(q)
+	case ir.QArrayAccess:
+		x64.EmitArrayAccess(q)
+	case ir.QDeref:
+		x64.EmitDeref(q)
+	case ir.QNewArray:
+		x64.EmitNewArray(q)
 	default:
 		panic("unsupported quadruple")
 	}
@@ -204,7 +211,7 @@ func (x64 *X64Generator) getLoc(loc ir.Location) string {
 	}
 	varOffset := reg.Index
 	funOffset := x64.curFun.Offset
-	offset := (varOffset - funOffset + 1) * 8
+	offset := (varOffset - funOffset + 1) * QWORD
 	return fmt.Sprintf("%#x(%s)", -offset, rbp)
 }
 
@@ -417,7 +424,7 @@ func (x64 *X64Generator) EmitVRet(q ir.QVRet) {
 
 func (x64 *X64Generator) EmitCall(q ir.QCall) {
 	// Calling runtime functions with arguments needs passing them through rdi register.
-	if q.Label.Name == "printInt" || q.Label.Name == "printString" {
+	if q.Label.Name == "printInt" || q.Label.Name == "printString" || q.Label.Name == "newArray" {
 		x64.EmitOp("pop %s", rdi)
 	}
 
@@ -438,15 +445,15 @@ func (x64 *X64Generator) EmitCall(q ir.QCall) {
 
 		// If alignment is needed.
 		x64.EmitLabel(lAlign)
-		x64.EmitOp("subq $%#x, %s", 8, rsp)
+		x64.EmitOp("subq $%#x, %s", QWORD, rsp)
 		x64.EmitOp("call %s", q.Label.Name)
 
-		x64.EmitOp("addq $%#x, %s", 8, rsp)
+		x64.EmitOp("addq $%#x, %s", QWORD, rsp)
 		x64.EmitLabel(lEnd)
 	} else {
 		x64.EmitOp("call %s", q.Label.Name)
 		// Pop arguments from the stack.
-		x64.EmitOp("addq $%#x, %s", len(q.Args)*8, rsp)
+		x64.EmitOp("addq $%#x, %s", len(q.Args)*QWORD, rsp)
 	}
 
 	if _, ok := q.Signature.Result.(types.TVoid); !ok {
@@ -455,9 +462,40 @@ func (x64 *X64Generator) EmitCall(q ir.QCall) {
 }
 
 var foreignFunctions = map[string]struct{}{
+	"newArray":    {},
 	"printInt":    {},
 	"readInt":     {},
 	"error":       {},
 	"printString": {},
 	"readString":  {},
+}
+
+func (x64 *X64Generator) EmitArrayAccess(q ir.QArrayAccess) {
+	x64.EmitLoad(rax, q.Array)
+	x64.EmitLoad(rbx, q.Index)
+
+	// First field of an array stores its length.
+	displacement := QWORD
+	x64.EmitOp("leaq %d(%s, %s, %d), %s", displacement, rax, rbx, QWORD, rax)
+	x64.EmitOp("push %s", rax)
+}
+
+func (x64 *X64Generator) EmitDeref(q ir.QDeref) {
+	x64.EmitLoad(rax, q.Src)
+	x64.EmitOp("push (%s)", rax)
+}
+
+func (x64 *X64Generator) EmitNewArray(q ir.QNewArray) {
+	x64.EmitCall(ir.QCall{
+		Signature: newArraySignature,
+		Label:     ir.Label{IsFunction: true, Name: "newArray"},
+		Dst:       q.Dst,
+		Args:      []ir.Location{q.Size},
+	})
+}
+
+var newArraySignature = types.TFun{
+	Ident:  "newArray",
+	Args:   []types.FArg{{Ident: "size", Type: types.TInt{}}},
+	Result: types.TInt{},
 }

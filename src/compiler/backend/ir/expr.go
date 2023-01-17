@@ -39,8 +39,23 @@ func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{}
 }
 
 func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
-	Unimplemented("arrays are not yet supported\n\tat %s", types.PosFromToken(ctx.GetStart()))
-	return nil
+	array := v.evalExpr(ctx.Expr(0))
+	index := v.evalExpr(ctx.Expr(1))
+	ptr := v.FreshTemp("arr_access", array.Type().BaseType())
+
+	v.EmitQuad(QArrayAccess{
+		Array: array,
+		Index: index,
+		Dst:   ptr,
+	})
+
+	value := v.FreshTemp("arr_deref", array.Type().BaseType())
+	v.EmitQuad(QDeref{
+		Src: ptr,
+		Dst: value,
+	})
+
+	return value
 }
 
 func (v *Visitor) VisitENegOp(ctx *parser.ENegOpContext) interface{} {
@@ -170,8 +185,15 @@ func (v *Visitor) VisitEOr(ctx *parser.EOrContext) interface{} {
 }
 
 func (v *Visitor) VisitENewArray(ctx *parser.ENewArrayContext) interface{} {
-	Unimplemented("can't use new - arrays are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
-	return nil
+	t, _ := v.EvalType(ctx.Singular_type_())
+	size := v.evalExpr(ctx.Expr())
+	dst := v.FreshTemp("new_array", t)
+	v.EmitQuad(QNewArray{
+		Type: t,
+		Dst:  dst,
+		Size: size,
+	})
+	return dst
 }
 
 func (v *Visitor) VisitENew(ctx *parser.ENewContext) interface{} {

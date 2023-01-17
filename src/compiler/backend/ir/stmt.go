@@ -70,7 +70,7 @@ func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 
 func (v *Visitor) VisitSAss(ctx *parser.SAssContext) interface{} {
 	src := v.evalSExp(ctx.Expr())
-	_, dst := v.evalLV(ctx.Lvalue())
+	dst := v.evalLV(ctx.Lvalue())
 	v.EmitQuad(QMov{
 		Src: src,
 		Dst: dst,
@@ -80,11 +80,11 @@ func (v *Visitor) VisitSAss(ctx *parser.SAssContext) interface{} {
 }
 
 func (v *Visitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
-	src, dst := v.evalLV(ctx.Lvalue())
+	dst := v.evalLV(ctx.Lvalue())
 	v.EmitQuad(QBinOp{
 		Dst: dst,
 		Op:  "+",
-		Lhs: src,
+		Lhs: dst,
 		Rhs: LConst{
 			Type_: types.TInt{},
 			Value: 1,
@@ -95,11 +95,11 @@ func (v *Visitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
 }
 
 func (v *Visitor) VisitSDecr(ctx *parser.SDecrContext) interface{} {
-	src, dst := v.evalLV(ctx.Lvalue())
+	dst := v.evalLV(ctx.Lvalue())
 	v.EmitQuad(QBinOp{
 		Dst: dst,
 		Op:  "-",
-		Lhs: src,
+		Lhs: dst,
 		Rhs: LConst{
 			Type_: types.TInt{},
 			Value: 1,

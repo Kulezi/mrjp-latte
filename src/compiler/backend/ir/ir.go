@@ -187,4 +187,4 @@ type QNewArray struct {
 	Dst  Location
 }
 
-func (q QNewArray) String() string { return fmt.Sprintf("%s = new %s[%s]", q.Dst, q.Type, q.Dst) }
+func (q QNewArray) String() string { return fmt.Sprintf("%s = new %s[%s]", q.Dst, q.Type, q.Size) }
