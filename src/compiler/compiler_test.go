@@ -28,10 +28,10 @@ var goodDirs = []string{
 
 var badDirs = []string{
 	"../../defaultowe_testy/bad",
-	// "../../lattests/bad",
-	// "../../mrjp-tests/bad/semantic",
-	// "../../mgtests/lattests/tests/margdoc/bad",
-	// "../../mgtests/lattests/tests/margdoc/casting",
+	"../../lattests/bad",
+	"../../mrjp-tests/bad/semantic",
+	"../../mgtests/lattests/tests/margdoc/bad",
+	"../../mgtests/lattests/tests/margdoc/casting",
 }
 
 func TestTypecheckGood(t *testing.T) {
