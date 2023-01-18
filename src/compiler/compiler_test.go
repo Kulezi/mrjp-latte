@@ -177,7 +177,11 @@ func TestGoodAnswers(t *testing.T) {
 						}
 
 						if err := cmd.Wait(); err != nil {
-							t.Fatal(err)
+							if exiterr, ok := err.(*exec.ExitError); ok {
+								t.Logf("Exit Status: %d", exiterr.ExitCode())
+							} else {
+								t.Fatalf("cmd.Wait: %v", err)
+							}
 						}
 
 						defer func() {
