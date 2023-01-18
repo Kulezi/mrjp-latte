@@ -46,7 +46,14 @@ func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 
 		var src Location
 		if item.Expr() != nil {
+			if _, ok := t.(types.TBool); ok {
+				lTrue, lFalse := v.FreshLabel("retTrue"), v.FreshLabel("retFalse")
+				defer v.PushLabels(lTrue, lFalse, lTrue)()
+			}
 			src = v.evalSExp(item.Expr())
+			if _, ok := src.(LUnassigned); ok {
+				src = v.GetBoolLoc()
+			}
 		} else {
 			src = LConst{
 				Type_: t,
