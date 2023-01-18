@@ -98,7 +98,60 @@ func (v *globalDeclVisitor) Run(tree antlr.ParseTree) (Signatures, error) {
 		return Signatures{}, err
 	}
 
-	return v.signatures, v.CheckCyclicInheritance()
+	if err := v.CheckCyclicInheritance(); err != nil {
+		return Signatures{}, err
+	}
+
+	return v.signatures, v.CheckFunctionsSignatures()
+}
+
+func (v *globalDeclVisitor) checkType(t Type) error {
+	if classRef, ok := t.(TClassRef); ok {
+		if signature, ok := v.signatures.Globals[classRef.String()]; ok {
+			if _, ok := signature.Type.(TFun); ok {
+				return UnknownClassError{Type: t}
+			}
+		} else {
+			return UnknownClassError{Type: t}
+		}
+	}
+
+	return nil
+}
+
+func (v *globalDeclVisitor) checkFunctionSignature(fun TFun) error {
+	if err := v.checkType(fun.Result); err != nil {
+		return err
+	}
+
+	for _, arg := range fun.Args {
+		if err := v.checkType(arg.Type); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (v *globalDeclVisitor) CheckFunctionsSignatures() error {
+	for _, signature := range v.signatures.Globals {
+		switch t := signature.Type.(type) {
+		case TFun:
+			if err := v.checkFunctionSignature(t); err != nil {
+				return err
+			}
+		case TClass:
+			for _, field := range t.Fields {
+				if fun, ok := field.(TFun); ok {
+					if err := v.checkFunctionSignature(fun); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func (v *globalDeclVisitor) Visit(tree antlr.ParseTree) interface{} {

@@ -16,7 +16,6 @@ func (v *Visitor) VisitTopDef(ctx *parser.TopDefContext) interface{} {
 
 func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	ident := ctx.ID().GetText()
-
 	t, ok := v.TypeOf(ident)
 	if !ok {
 		panic(fmt.Sprintf("undeclared identifier %s found at %s", ident, PosFromToken(ctx.GetStart())))
