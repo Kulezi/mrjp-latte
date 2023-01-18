@@ -1,0 +1,9 @@
+int main() {
+    int a = 10;
+    return foo(a);
+}
+
+int foo(int a) {
+    int r = a % 10;
+    return r;
+}

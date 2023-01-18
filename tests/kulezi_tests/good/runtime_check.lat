@@ -1,0 +1,10 @@
+int main() {
+    int rep = 10;
+    int x;
+    while (rep > 0) {
+        int x = readInt();
+        printInt(rep);
+        rep--;
+    }
+    error();
+}

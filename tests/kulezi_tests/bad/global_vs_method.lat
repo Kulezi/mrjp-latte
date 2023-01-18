@@ -1,0 +1,10 @@
+class A {
+    int main() {
+        return 0;
+    }
+}
+
+int main() {
+    A.main();
+    return 0;
+}

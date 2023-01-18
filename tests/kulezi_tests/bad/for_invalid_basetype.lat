@@ -1,0 +1,8 @@
+int main() {
+    boolean[] y = new boolean[2];
+    for (int x : y) {
+        return x;
+    }
+
+    return 0;
+}

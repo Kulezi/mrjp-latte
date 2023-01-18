@@ -1,0 +1,17 @@
+/* Test boolean operators */
+
+int main() {
+    printBool(implies(false, false));
+    return 0;
+}
+
+void printBool(boolean b) {
+    if (b) {
+        printString("true");
+    } else {
+        printString("false");
+    }
+    return;
+}
+
+boolean implies(boolean x, boolean y) { return !x || x == y; }

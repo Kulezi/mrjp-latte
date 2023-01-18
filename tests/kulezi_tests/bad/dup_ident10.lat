@@ -1,0 +1,11 @@
+class C {
+   
+}
+
+class B extends C {
+     int f(int x, int x) {}
+}
+
+int main() {
+    return 0;
+}

@@ -15,23 +15,23 @@ import (
 )
 
 var goodDirs = []string{
-	// "../../lattests/good",
+	"../../tests/kulezi_tests/good",
 	// "../../mgtests/lattests/tests/margdoc",
 	// "../../mgtests/lattests/tests/margdoc/lvalues",
-	"../../mrjp-tests/good/basic",
+	"../../tests/mrjp-tests/good/basic",
 	// "../../mrjp-tests/good/arrays",
 	// "../../mrjp-tests/good/hardcore",
 	// "../../mrjp-tests/good/virtual",
 	// "../../mrjp-tests/gr5",
-	"../../defaultowe_testy/good",
+	"../../tests/official_tests/good",
 }
 
 var badDirs = []string{
-	"../../defaultowe_testy/bad",
-	"../../lattests/bad",
-	"../../mrjp-tests/bad/semantic",
-	"../../mgtests/lattests/tests/margdoc/bad",
-	"../../mgtests/lattests/tests/margdoc/casting",
+	"../../tests/official_tests/bad",
+	"../../tests/kulezi_tests/bad",
+	"../../tests/mrjp-tests/bad/semantic",
+	"../../tests/mgtests/lattests/tests/margdoc/bad",
+	"../../tests/mgtests/lattests/tests/margdoc/casting",
 }
 
 func TestTypecheckGood(t *testing.T) {
@@ -179,6 +179,13 @@ func TestGoodAnswers(t *testing.T) {
 						if err := cmd.Wait(); err != nil {
 							t.Fatal(err)
 						}
+
+						defer func() {
+							_ = os.Remove(intermediate)
+							_ = os.Remove(basename)
+							outputFile.Close()
+							_ = os.Remove(basename + ".output_test")
+						}()
 
 						diff, err := exec.Command("cmp", basename+".output_test", basename+".output").CombinedOutput()
 						t.Log(string(diff))

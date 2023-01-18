@@ -1,0 +1,8 @@
+class c {
+    
+}
+
+int main() {
+    c d = c;
+    return d();
+}

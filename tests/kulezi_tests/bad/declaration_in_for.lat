@@ -1,0 +1,6 @@
+int main() {
+    int[] x = new int[5];
+    for (int y : x)
+        int z = y;
+    return 0;
+}

@@ -1,0 +1,15 @@
+int main() {
+    int x = readInt();
+    if (x <= 0) {
+        x = 10;
+    } else {
+        x = 20;
+    }
+    x++;
+
+    while (x > 0) {
+        x--;
+    }
+
+    return 0;
+}

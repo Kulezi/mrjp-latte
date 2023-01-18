@@ -1,0 +1,20 @@
+class A {
+    int f() {
+        return 1;
+    }
+}
+
+class B extends A {
+}
+
+int main() {
+    A x;
+    x.f();
+
+    x = new B;
+    x.f();
+
+    B y;
+    y.f();
+    return 0;
+}

@@ -1,0 +1,8 @@
+class c {
+    int x;
+}
+
+int main() {
+    printInt(c.x);
+    return 0;
+}

@@ -1,0 +1,7 @@
+int main() {
+    int x;
+    for (int a : x) {
+    }
+
+    return 0;
+}

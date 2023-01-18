@@ -6,7 +6,7 @@
 #include <string.h>
 
 void printInt(int64_t x) {
-    printf("%d\n", x);
+    printf("%" SCNd64 "\n", x);
     fflush(stdout);
 }
 

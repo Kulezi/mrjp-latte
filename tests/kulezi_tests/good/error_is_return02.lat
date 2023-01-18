@@ -1,0 +1,12 @@
+int main() {
+    f();
+    return 0;
+}
+
+void f() {
+    int x = 10;
+    while (true) {
+        x--;
+        if (x < 0) error();
+    }
+}

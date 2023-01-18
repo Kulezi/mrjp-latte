@@ -1,0 +1,14 @@
+int main() {
+    xd().x[1] = 5;
+    return 0;
+}
+
+class A {
+    int[] x;
+}
+
+A xd() {
+    A res = new A;
+    res.x = new int[5];
+    return res;
+}

@@ -1,0 +1,10 @@
+int main() {
+    int[][] x = new int[2][5];
+    for (int []y : x) {
+        for (int z : y) {
+            printInt(z);
+        }
+    }
+
+    return 0;
+}

@@ -1,0 +1,8 @@
+int main() {
+    boolean x = true;
+    if (x) {
+        return 0;
+    }
+
+    return 1;
+}

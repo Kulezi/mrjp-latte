@@ -1,0 +1,14 @@
+int main() {
+    int a = 2, b = 3;
+    int[] x = new int[a * b];
+
+    int i = 0;
+    while (i < a * b) {
+        x[i] = i;
+        printInt(x[i]);
+        // printInt(i);
+        i++;
+    }
+
+    return 0;
+}

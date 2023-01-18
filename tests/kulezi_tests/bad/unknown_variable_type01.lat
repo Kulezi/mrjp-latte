@@ -1,0 +1,4 @@
+int main() {
+    unknownType x;
+    return 0;
+}

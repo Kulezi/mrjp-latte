@@ -1,0 +1,12 @@
+int main() {
+    int two = 2;
+    int power = 1;
+    int exponent = 1;
+    while (exponent < 63) {
+        power = power * two;
+        printInt(power);
+        exponent++;
+    }
+
+    return 0;
+}

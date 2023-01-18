@@ -1,0 +1,11 @@
+class A {
+    int[] x;
+}
+
+A xd() {
+    return new A;
+}
+
+int main() {
+    xd() = new A;
+}

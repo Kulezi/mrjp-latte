@@ -1,0 +1,5 @@
+int main() {
+    string s = "abcdef";
+    printString(s);
+    return 0;
+}

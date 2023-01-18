@@ -1,0 +1,9 @@
+int main() {
+    string s1 = "abcdef";
+    string s2 = "abcdee";
+    if (s1 < s2) {
+        return 0;
+    } else {
+        return 1;
+    }
+}

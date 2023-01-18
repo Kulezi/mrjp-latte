@@ -1,0 +1,7 @@
+class c {
+    unknownType x;
+}
+
+int main() {
+    return 0;
+}

@@ -1,0 +1,33 @@
+class c0 {}
+class c1 extends c0 {}
+class c2 extends c1 {}
+class c3 extends c1 {}
+class c4 extends c2 {}
+class c5 extends c2 {}
+class c6 extends c3 {}
+class c7 extends c3 {}
+class c8 extends c4 {}
+class c9 extends c4 {}
+class c10 extends c5 {}
+class c11 extends c5 {}
+class c12 extends c6 {}
+class c13 extends c6 {}
+class c14 extends c7 {}
+class c15 extends c7 {}
+class c16 extends c8 {}
+class c17 extends c8 {}
+class c18 extends c9 {}
+class c19 extends c9 {}
+class c20 extends c10 {}
+class c21 extends c10 {}
+class c22 extends c11 {}
+class c23 extends c11 {}
+class c24 extends c12 {}
+class c25 extends c12 {}
+class c26 extends c13 {}
+class c27 extends c13 {}
+class c28 extends c14 {}
+class c29 extends c14 {}
+class c30 extends c15 {}
+class c31 extends c15 {}
+int main() { return 0; }   

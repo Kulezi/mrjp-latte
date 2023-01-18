@@ -1,0 +1,17 @@
+int main() {
+    -3;
+    !false;
+    
+    1+1;
+    1-(1);
+    (1*1);
+    (1)/1;
+    1%1;
+
+    "a"+"a";
+
+    true || true;
+    false && true;
+
+    return 0;
+}

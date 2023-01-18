@@ -1,0 +1,13 @@
+class A {
+    int a;
+    int b;
+    void xd(int a, int b) {}
+}
+
+class B extends A {
+    int a;
+    int b;
+    void xd(int a, int b, int c) {}
+}
+
+int main() {}

@@ -1,0 +1,6 @@
+int main() {
+    boolean x = f();
+    return 0;
+}
+
+boolean f() { return true; }

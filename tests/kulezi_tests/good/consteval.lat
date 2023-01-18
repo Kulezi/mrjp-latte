@@ -1,0 +1,35 @@
+int main() {
+    if ((1 + 1) == 2 &&
+        (1 / 1) == 1 &&
+        (1 * 1) == 1 &&
+        (1 % 1) == 0 &&
+        (1 - 1) == 0 &&
+        (1 < 1) == false &&
+        (1 <= 1) == true &&
+        (1 == 1) == true &&
+        (1 != 1) == false && 
+        (1 > 1) == false &&
+        (1 >= 1) == true &&
+        ("2" < "2") == false &&
+        ("2" <= "2") == true &&
+        ("2" == "2") == true &&
+        ("2" != "2") == false && 
+        ("2" > "2") == false &&
+        ("2" >= "2") == true &&
+        (false == false) == true &&
+        (false != false) == false &&
+        ("1" + "1") == "11" &&
+        (true && true) == true &&
+        (true && false) == false &&
+        (false && true) == false &&
+        (false && false) == false &&
+        (true || true) == true &&
+        (true || false) == true &&
+        (false || true) == true &&
+        (false || false) == false &&
+        !false == true &&
+        !true == false &&
+        -1 == (0 - 1) &&
+        true)
+        return 0;
+}

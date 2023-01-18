@@ -1,0 +1,4 @@
+int main() {
+    true && "1";
+    return 0;
+}

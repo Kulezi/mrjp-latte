@@ -1,0 +1,12 @@
+class Matrix {
+    int[][] mat;
+
+    int at(int x, int y) {
+        return mat[x][y];
+    }
+}
+
+int main() {
+    Matrix[][] x = new Matrix[2][3];
+    return 0;
+}

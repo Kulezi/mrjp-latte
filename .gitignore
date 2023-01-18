@@ -25,3 +25,11 @@ src/compiler/*
 !src/compiler/backend
 
 !lib/
+
+!tests
+tests/*
+
+!tests/official_tests
+!tests/kulezi_tests
+
+

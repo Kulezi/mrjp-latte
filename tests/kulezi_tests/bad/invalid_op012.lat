@@ -1,0 +1,6 @@
+int main() {
+    true<true;
+
+
+    return 0;
+}

@@ -1,0 +1,11 @@
+int main() {
+    boolean a = true;
+    boolean b = false;
+    boolean c = true;
+    boolean d = false;
+    if (a || b || c || d) {
+        printInt(42);
+    }
+
+    return 0;
+}

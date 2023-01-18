@@ -1,0 +1,9 @@
+int main() {
+    int x = 1;
+    {
+        int x = 10, y = x + 1;
+        printInt(y);
+    }
+
+    return 0;
+}

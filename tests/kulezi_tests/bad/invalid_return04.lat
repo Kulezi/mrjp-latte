@@ -1,0 +1,11 @@
+class C {
+    bool x;
+    C main()  {
+        return self.x;
+    }
+}
+
+
+int main() {
+    return 0;
+}

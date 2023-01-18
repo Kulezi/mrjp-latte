@@ -1,0 +1,9 @@
+class A {}
+
+int main() {
+
+}
+
+class B {}
+
+int main() {}

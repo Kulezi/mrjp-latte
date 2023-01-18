@@ -1,0 +1,16 @@
+int main () {
+  Counter c = new Counter;
+  int x = c.value[0].x;
+  // c = c.clone().value[c.clone().value[2+2*2].x].clone().value[0];
+  return 0;
+}
+
+class Counter {
+  Counter[] value;
+  int x;
+
+  Counter clone () {
+    return self;
+  }
+}
+

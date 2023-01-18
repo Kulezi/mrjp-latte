@@ -1,0 +1,16 @@
+int main() {
+    string a = "abc";
+    string b = "abc";
+    if (a == b) {
+        printString(a + b);
+    }
+
+    string c = "aba";
+    if (a != c) {
+        printString(a + b);
+    } else {
+        printString(a + b + c);
+    }
+
+    return 0;
+}

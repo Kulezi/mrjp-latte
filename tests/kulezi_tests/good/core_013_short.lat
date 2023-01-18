@@ -1,0 +1,20 @@
+/* Test boolean operators. */
+
+int main() {
+    printBool(test(-1) && test(0));
+    return 0;
+}
+
+void printBool(boolean b) {
+    if (!b) {
+        printString("false");
+    } else {
+        printString("true");
+    }
+    return;
+}
+
+boolean test(int i) {
+    printInt(i);
+    return i > 0;
+}

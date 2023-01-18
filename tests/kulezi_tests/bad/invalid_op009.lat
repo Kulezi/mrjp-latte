@@ -1,0 +1,5 @@
+int main() {
+    false*false;
+
+    return 0;
+}
