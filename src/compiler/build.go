@@ -23,7 +23,7 @@ func saveAssembly(asm, filepath string) error {
 
 func compileGCC(sourcePath, targetPath string) error {
 	out, err := exec.Command(
-		"gcc",
+		"i686-linux-gnu-gcc",
 		"-c",
 		"-O0",
 		"-m32",
@@ -42,7 +42,7 @@ func compileGCC(sourcePath, targetPath string) error {
 
 func link(runtimePath, sourcePath, targetPath string) error {
 	out, err := exec.Command(
-		"gcc",
+		"i686-linux-gnu-gcc",
 		sourcePath,
 		runtimePath,
 		"-O0",
