@@ -2,7 +2,7 @@ int main() {
     int two = 2;
     int power = 1;
     int exponent = 1;
-    while (exponent < 63) {
+    while (exponent < 31) {
         power = power * two;
         printInt(power);
         exponent++;

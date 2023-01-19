@@ -3,6 +3,7 @@ package typecheck
 import (
 	. "latte/compiler/frontend/types"
 	"latte/parser"
+	"math"
 	"strconv"
 )
 
@@ -351,7 +352,7 @@ func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
 
 func (v *Visitor) VisitEInt(ctx *parser.EIntContext) interface{} {
 	n, err := strconv.Atoi(ctx.INT().GetText())
-	if err != nil {
+	if err != nil || n > math.MaxInt32 || n < math.MinInt32 {
 		return ConstOutOfRangeError{
 			Ctx: ctx,
 		}

@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-void printInt(int64_t x) {
-    printf("%" SCNd64 "\n", x);
+void printInt(int32_t x) {
+    printf("%d\n", x);
     fflush(stdout);
 }
 
@@ -21,12 +21,18 @@ void printString(const char *x) {
     fflush(stdout);
 }
 
-int64_t compare(const char *s1, const char *s2) { return strcmp(s1, s2); }
+int32_t compare(const char *s1, const char *s2) {
+    if (strcmp(s1, s2)) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
 
-int64_t *newArray(int64_t size) {
-    int64_t *arr = calloc(8, size + 1);
+int32_t *newArray(int32_t size) {
+    int32_t *arr = calloc(4, size + 1);
     arr[0] = size;
-    for (int i = 1; i <= size; i++) arr[i] = i;
+    for (int32_t i = 1; i <= size; i++) arr[i] = i;
     return arr;
 }
 
@@ -38,9 +44,9 @@ char *concat(const char *s1, const char *s2) {
     return res;
 }
 
-int64_t readInt() {
-    int64_t n;
-    scanf("%" SCNd64 " ", &n);
+int32_t readInt() {
+    int32_t n;
+    scanf("%d ", &n);
     return n;
 }
 

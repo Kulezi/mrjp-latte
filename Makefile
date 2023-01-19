@@ -1,19 +1,19 @@
 .PHONY: all
-all: latc_x86_64 latc
+all: latc_x86 latc
 
-.PHONY: latc_x86_64
-latc_x86_64:
-	cd src/cmd/latc_x86_64; go build -o ../../../latc_x86_64 main.go
+.PHONY: latc_x86
+latc_x86:
+	cd src/cmd/latc_x86; go build -o ../../../latc_x86 main.go
 
 .PHONY: latc
 latc:
 	cd src/cmd/latc; go build -o ../../../latc main.go
 
 clean:
-	rm latc_x86_64 latc
+	rm latc_x86 latc
 
 test: 
-	@cd src/compiler; go test . -count=1 -v
+	@cd src/compiler; go test . -count=1
 
 .PHONY: cover
 PACKAGES = $(shell cat testpackages.txt)

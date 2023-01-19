@@ -10,28 +10,20 @@ import (
 
 const (
 	syscallExit = 60
-	QWORD       = 8
+	DWORD       = 4
 
-	rax = `%rax`
-	rbx = `%rbx`
-	rcx = `%rcx`
-	rdx = `%rdx`
-	rsi = `%rsi`
-	rdi = `%rdi`
-	rsp = `%rsp`
-	rbp = `%rbp`
-	r8  = `%r8`
-	r9  = `%r9`
-	r10 = `%r10`
-	r11 = `%r11`
-	r12 = `%r12`
-	r13 = `%r13`
-	r14 = `%r14`
-	r15 = `%r15`
+	eax = "%eax"
+	ebx = "%ebx"
+	ecx = "%ecx"
+	edx = "%edx"
+	esi = "%esi"
+	edi = "%edi"
+	esp = "%esp"
+	ebp = "%ebp"
 )
 
-var scratchRegisters = []string{rax, rdi, rsi, rdx, rcx, r8, r9, r10, r11}
-var preservedRegisters = []string{rbx, rsp, rbp, r12, r13, r14, r15}
+var scratchRegisters = []string{eax, ecx, edx, esp}
+var preservedRegisters = []string{ebp, esi, edi, ebx}
 
 func GenX64(s frontend.State, config Config) string {
 	cfg, finfo := ir.Generate(s, config)
@@ -39,183 +31,184 @@ func GenX64(s frontend.State, config Config) string {
 		fmt.Println(cfg)
 	}
 
-	x64 := X64Generator{FunInfo: finfo, stringAdressses: make(map[string]string)}
+	x86 := X86Generator{FunInfo: finfo, stringAdresses: make(map[string]string)}
 
-	x64.Emit(".data\n")
-
-	for _, block := range cfg.Nodes {
-		x64.GenDataFromBlock(block)
-	}
-
-	x64.Emit(".text\n.globl main\n")
+	x86.Emit(".data\n")
 
 	for _, block := range cfg.Nodes {
-		x64.GenFromBlock(block)
+		x86.GenDataFromBlock(block)
 	}
 
-	return x64.res
+	x86.Emit(".text\n.globl main\n")
+
+	for _, block := range cfg.Nodes {
+		x86.GenFromBlock(block)
+	}
+
+	return x86.res
 }
 
-type X64Generator struct {
-	FunInfo         ir.FunInfo
-	curFun          ir.VarInfo
-	res             string
-	alignLabelCnt   int
-	stringAdressses map[string]string
+type X86Generator struct {
+	FunInfo        ir.FunInfo
+	curFun         ir.VarInfo
+	res            string
+	alignLabelCnt  int
+	stringAdresses map[string]string
 }
 
-func (x64 *X64Generator) GenDataFromBlock(block ir.BasicBlock) {
+func (x86 *X86Generator) GenDataFromBlock(block ir.BasicBlock) {
 	for _, q := range block.Ops {
 		switch q := q.(type) {
 		case ir.QBinOp:
-			x64.EmitDataForLoc(q.Lhs)
-			x64.EmitDataForLoc(q.Rhs)
+			x86.EmitDataForLoc(q.Lhs)
+			x86.EmitDataForLoc(q.Rhs)
 		case ir.QCall:
 			for _, arg := range q.Args {
-				x64.EmitDataForLoc(arg)
+				x86.EmitDataForLoc(arg)
 			}
 		case ir.QMov:
-			x64.EmitDataForLoc(q.Src)
+			x86.EmitDataForLoc(q.Src)
 		case ir.QPush:
-			x64.EmitDataForLoc(q.Src)
+			x86.EmitDataForLoc(q.Src)
 		case ir.QRelOp:
-			x64.EmitDataForLoc(q.Lhs)
-			x64.EmitDataForLoc(q.Rhs)
+			x86.EmitDataForLoc(q.Lhs)
+			x86.EmitDataForLoc(q.Rhs)
 		case ir.QRet:
-			x64.EmitDataForLoc(q.Value)
+			x86.EmitDataForLoc(q.Value)
 		}
 	}
 }
 
-func (x64 *X64Generator) EmitDataForLoc(loc ir.Location) {
+func (x86 *X86Generator) EmitDataForLoc(loc ir.Location) {
 	if loc, ok := loc.(ir.LConst); ok {
 		if s, ok := loc.Value.(string); ok {
-			if _, ok := x64.stringAdressses[s]; !ok {
-				label := fmt.Sprintf("_str_%d", len(x64.stringAdressses))
-				x64.stringAdressses[s] = label
-				x64.EmitLabel(label)
+			if _, ok := x86.stringAdresses[s]; !ok {
+				label := fmt.Sprintf("_str_%d", len(x86.stringAdresses))
+				x86.stringAdresses[s] = label
+				x86.EmitLabel(label)
 				for _, v := range s {
-					x64.EmitOp(".byte 0x%x", v)
+					x86.EmitOp(".byte 0x%x", v)
 				}
-				x64.EmitOp(".byte %x", 0)
+				x86.EmitOp(".byte %x", 0)
 			}
 		}
 	}
 }
 
-func (x64 *X64Generator) EmitLabel(s string) {
-	x64.res += s + ":\n"
+func (x86 *X86Generator) EmitLabel(s string) {
+	x86.res += s + ":\n"
 }
 
-func (x64 *X64Generator) Emit(format string, args ...interface{}) {
-	x64.res += fmt.Sprintf(format, args...)
+func (x86 *X86Generator) Emit(format string, args ...interface{}) {
+	x86.res += fmt.Sprintf(format, args...)
 }
 
-func (x64 *X64Generator) EmitOp(format string, args ...interface{}) {
-	x64.Emit("\t"+format+"\n", args...)
+func (x86 *X86Generator) EmitOp(format string, args ...interface{}) {
+	x86.Emit("\t"+format+"\n", args...)
 }
 
-func (x64 *X64Generator) EmitFunctionProlog() {
-	x64.EmitOp("pushq %s", rbp)
-	x64.EmitOp("movq %s, %s", rsp, rbp)
-	varCnt := x64.curFun.VariableCount
+func (x86 *X86Generator) EmitFunctionProlog() {
+	x86.EmitOp("pushl %s", ebp)
+	x86.EmitOp("movl %s, %s", esp, ebp)
+	varCnt := x86.curFun.VariableCount
 	if varCnt > 0 {
-		x64.EmitOp("subq $%#x, %s", varCnt*QWORD, rsp)
+		x86.EmitOp("subl $%#x, %s", varCnt*DWORD, esp)
 	}
 
 	for _, reg := range preservedRegisters {
-		if reg != rbp && reg != rsp {
-			x64.EmitOp("pushq %s", reg)
+		if reg != ebp && reg != esp {
+			x86.EmitOp("pushl %s", reg)
 		}
 	}
 
 	// The stack is now [args], return address, oldRbp.
-	offset := (len(x64.curFun.Signature.Args) + 1)
-	for i := range x64.curFun.Signature.Args {
-		x64.EmitOp("movq %#x(%s), %s", QWORD*(offset-i), rbp, rax)
-		x64.EmitOp("movq %s, %#x(%s)", rax, -QWORD*(i+1), rbp)
+	offset := (len(x86.curFun.Signature.Args) + 1)
+	for i := range x86.curFun.Signature.Args {
+		x86.EmitOp("movl %#x(%s), %s", DWORD*(offset-i), ebp, eax)
+		x86.EmitOp("movl %s, %#x(%s)", eax, -DWORD*(i+1), ebp)
 	}
 }
 
-func (x64 *X64Generator) EmitFunctionEpilog() {
+func (x86 *X86Generator) EmitFunctionEpilog() {
 	for i := len(preservedRegisters) - 1; i >= 0; i-- {
 		reg := preservedRegisters[i]
-		if reg != rbp && reg != rsp {
-			x64.EmitOp("popq %s", reg)
+		if reg != ebp && reg != esp {
+			x86.EmitOp("popl %s", reg)
 		}
 	}
 
-	varCnt := x64.curFun.VariableCount
+	varCnt := x86.curFun.VariableCount
 	if varCnt > 0 {
-		x64.EmitOp("addq $%#x, %s", varCnt*QWORD, rsp)
+		x86.EmitOp("addl $%#x, %s", varCnt*DWORD, esp)
 	}
 
-	x64.EmitOp("movq %s, %s", rbp, rsp)
-	x64.EmitOp("popq %s", rbp)
+	x86.EmitOp("movl %s, %s", ebp, esp)
+	x86.EmitOp("popl %s", ebp)
 }
 
-func (x64 *X64Generator) GenFromBlock(block ir.BasicBlock) {
+func (x86 *X86Generator) GenFromBlock(block ir.BasicBlock) {
 	label := block.Label
-	x64.EmitLabel(label.Name)
+	x86.EmitLabel(label.Name)
 
 	// Prepare stack frame.
 	if label.IsFunction {
-		x64.curFun = x64.FunInfo[label]
-		x64.EmitFunctionProlog()
+		x86.curFun = x86.FunInfo[label]
+		x86.EmitFunctionProlog()
 	}
 
 	for _, op := range block.Ops {
-		x64.GenFromQuad(op)
+		x86.GenFromQuad(op)
 	}
 }
 
-func (x64 *X64Generator) GenFromQuad(q ir.Quadruple) {
+func (x86 *X86Generator) GenFromQuad(q ir.Quadruple) {
 	switch q := q.(type) {
 	case ir.QMov:
-		x64.EmitQMov(q)
+		x86.EmitQMov(q)
 	case ir.QBinOp:
-		x64.EmitBinOp(q)
+		x86.EmitBinOp(q)
 	case ir.QRelOp:
-		x64.EmitRelOp(q)
+		x86.EmitRelOp(q)
 	case ir.QNeg:
-		x64.EmitNeg(q)
+		x86.EmitNeg(q)
 	case ir.QJmp:
-		x64.EmitJmp(q)
+		x86.EmitJmp(q)
 	case ir.QJz:
-		x64.EmitJz(q)
+		x86.EmitJz(q)
 	case ir.QJnz:
-		x64.EmitJnz(q)
+		x86.EmitJnz(q)
 	case ir.QRet:
-		x64.EmitRet(q)
+		x86.EmitRet(q)
 	case ir.QVRet:
-		x64.EmitVRet(q)
+		x86.EmitVRet(q)
 	case ir.QCall:
-		x64.EmitCall(q)
+		x86.EmitCall(q)
 	case ir.QPush:
-		x64.EmitPush(q)
+		x86.EmitPush(q)
 	case ir.QArrayAccess:
-		x64.EmitArrayAccess(q)
+		x86.EmitArrayAccess(q)
 	case ir.QDeref:
-		x64.EmitDeref(q)
+		x86.EmitDeref(q)
 	case ir.QNewArray:
-		x64.EmitNewArray(q)
+		x86.EmitNewArray(q)
 	default:
 		panic("unsupported quadruple")
 	}
 }
 
-func (x64 *X64Generator) getLoc(loc ir.Location) string {
+// Returns the address of a variable relative to rbp, or "" if it's a temporary.
+func (x86 *X86Generator) getLoc(loc ir.Location) string {
 	reg := loc.(ir.LReg)
 	if reg.Variable == "" {
 		return ""
 	}
 	varOffset := reg.Index
-	funOffset := x64.curFun.Offset
-	offset := (varOffset - funOffset + 1) * QWORD
-	return fmt.Sprintf("%#x(%s)", -offset, rbp)
+	funOffset := x86.curFun.Offset
+	offset := (varOffset - funOffset + 1) * DWORD
+	return fmt.Sprintf("%#x(%s)", -offset, ebp)
 }
 
-func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
+func (x86 *X86Generator) EmitLoad(register string, loc ir.Location) {
 	// Void doesn't need to be stored anywhere, and won't be popped from stack.
 	if _, ok := loc.Type().(types.TVoid); ok {
 		return
@@ -225,95 +218,109 @@ func (x64 *X64Generator) EmitLoad(register string, loc ir.Location) {
 	case ir.LConst:
 		switch v := loc.Value.(type) {
 		case string:
-			x64.EmitOp("movq $%s, %s", x64.stringAdressses[v], register)
+			x86.EmitOp("movl $%s, %s", x86.stringAdresses[v], register)
 		case bool:
 			// Value 0 represents false, 1 represents true.
 			x := 0
 			if v {
 				x = 1
 			}
-			x64.EmitOp("movq $%#x, %s", x, register)
+			x86.EmitOp("movl $%#x, %s", x, register)
 		case int:
-			x64.EmitOp("movq $%d, %s", v, register)
+			x86.EmitOp("movl $%d, %s", v, register)
 		}
 	case ir.LReg:
 		// Temporaries go on stack, so we need to pop
 		if loc.Variable == "" {
-			x64.EmitOp("popq %s", register)
+			x86.EmitOp("popl %s", register)
 		} else {
-			x64.EmitOp("movq %s, %s", x64.getLoc(loc), register)
+			x86.EmitOp("movl %s, %s", x86.getLoc(loc), register)
 		}
 	}
 }
 
-func (x64 *X64Generator) EmitQMov(q ir.QMov) {
-	x64.EmitLoad(rax, q.Src)
+func (x86 *X86Generator) EmitQMov(q ir.QMov) {
+	x86.EmitLoad(eax, q.Src)
 	// In case of a standalone expression we can forget the result.
 	if _, ok := q.Dst.(ir.LDrop); ok {
 		return
 	}
-	dst := x64.getLoc(q.Dst)
+	dst := x86.getLoc(q.Dst)
 	if dst == "" {
-		x64.EmitOp("pushq %s", rax)
+		x86.EmitOp("pushl %s", eax)
 	} else {
-		x64.EmitOp("movq %s, %s", rax, x64.getLoc(q.Dst))
+		x86.EmitOp("movl %s, %s", eax, x86.getLoc(q.Dst))
 	}
 }
 
-func (x64 *X64Generator) EmitPush(q ir.QPush) {
-	x64.EmitLoad(rax, q.Src)
-	x64.EmitOp("pushq %s", rax)
+func (x86 *X86Generator) EmitPush(q ir.QPush) {
+	x86.EmitLoad(eax, q.Src)
+	x86.EmitOp("pushl %s", eax)
 }
 
-func (x64 *X64Generator) EmitStringAdd(q ir.QBinOp) {
-	x64.EmitLoad(rsi, q.Rhs)
-	x64.EmitLoad(rdi, q.Lhs)
-	x64.EmitOp("call concat")
+func (x86 *X86Generator) EmitStringAdd(q ir.QBinOp) {
+	x86.EmitPush(ir.QPush{
+		Src: q.Rhs,
+	})
+	x86.EmitPush(ir.QPush{
+		Src: q.Lhs,
+	})
+
+	x86.EmitOp("call concat")
+	x86.EmitOp("addl $%#x, %s", 2*DWORD, esp)
+
 	if dst, ok := q.Dst.(ir.LReg); ok && dst.Variable != "" {
-		x64.EmitOp("movq %s, %s", rax, x64.getLoc(dst))
+		x86.EmitOp("movl %s, %s", eax, x86.getLoc(dst))
 	} else {
-		x64.EmitOp("pushq %s", rax)
+		x86.EmitOp("pushl %s", eax)
 	}
 }
 
-func (x64 *X64Generator) EmitBinOp(q ir.QBinOp) {
+func (x86 *X86Generator) EmitBinOp(q ir.QBinOp) {
 	if _, ok := q.Lhs.Type().(types.TString); ok {
-		x64.EmitStringAdd(q)
+		x86.EmitStringAdd(q)
 		return
 	}
 
-	x64.EmitLoad(rbx, q.Rhs)
-	x64.EmitLoad(rax, q.Lhs)
+	x86.EmitLoad(ebx, q.Rhs)
+	x86.EmitLoad(eax, q.Lhs)
 	switch q.Op {
 	case "+":
-		x64.EmitOp("addq %s, %s", rbx, rax)
+		x86.EmitOp("addl %s, %s", ebx, eax)
 	case "-":
-		x64.EmitOp("subq %s, %s", rbx, rax)
+		x86.EmitOp("subl %s, %s", ebx, eax)
 	case "*":
-		x64.EmitOp("imulq %s", rbx)
+		x86.EmitOp("imull %s", ebx)
 	case "/":
-		x64.EmitOp("cqto")
-		x64.EmitOp("idivq %s", rbx)
+		x86.EmitOp("cdq")
+		x86.EmitOp("idivl %s", ebx)
 	case "%":
-		x64.EmitOp("cqto")
-		x64.EmitOp("idivq %s", rbx)
-		x64.EmitOp("xchg %s, %s", rdx, rax)
+		x86.EmitOp("cdq")
+		x86.EmitOp("idivl %s", ebx)
+		x86.EmitOp("xchg %s, %s", edx, eax)
 	default:
 		panic("unsupported binary operator")
 	}
 
 	if dst, ok := q.Dst.(ir.LReg); ok && dst.Variable != "" {
-		x64.EmitOp("movq %s, %s", rax, x64.getLoc(dst))
+		x86.EmitOp("movl %s, %s", eax, x86.getLoc(dst))
 	} else {
-		x64.EmitOp("pushq %s", rax)
+		x86.EmitOp("pushl %s", eax)
 	}
 }
 
-func (x64 *X64Generator) EmitStringRelOp(q ir.QRelOp) {
-	x64.EmitLoad(rsi, q.Rhs)
-	x64.EmitLoad(rdi, q.Lhs)
-	x64.EmitOp("call compare")
-	x64.EmitOp("cmp %s, %s", rax, rax)
+func (x86 *X86Generator) EmitStringRelOp(q ir.QRelOp) {
+	x86.EmitPush(ir.QPush{
+		Src: q.Rhs,
+	})
+	x86.EmitPush(ir.QPush{
+		Src: q.Lhs,
+	})
+
+	x86.EmitOp("call compare")
+	x86.EmitOp("addl $%#x, %s", 2*DWORD, esp)
+
+	x86.EmitOp("cmp %s, %s", eax, eax)
 	var op string
 	switch q.Op {
 	case "==":
@@ -325,12 +332,12 @@ func (x64 *X64Generator) EmitStringRelOp(q ir.QRelOp) {
 	}
 
 	if q.LNext == q.LTrue {
-		x64.EmitOp("%s %s", inverseJmp[op], q.LFalse)
+		x86.EmitOp("%s %s", inverseJmp[op], q.LFalse)
 	} else if q.LNext == q.LFalse {
-		x64.EmitOp("%s %s", op, q.LTrue)
+		x86.EmitOp("%s %s", op, q.LTrue)
 	} else {
-		x64.EmitOp("%s %s", op, q.LTrue)
-		x64.EmitOp("jmp %s", op, q.LFalse)
+		x86.EmitOp("%s %s", op, q.LTrue)
+		x86.EmitOp("jmp %s", op, q.LFalse)
 	}
 }
 
@@ -343,15 +350,15 @@ var inverseJmp = map[string]string{
 	"jle": "jg",
 }
 
-func (x64 *X64Generator) EmitRelOp(q ir.QRelOp) {
+func (x86 *X86Generator) EmitRelOp(q ir.QRelOp) {
 	if _, ok := q.Lhs.Type().(types.TString); ok {
-		x64.EmitStringRelOp(q)
+		x86.EmitStringRelOp(q)
 		return
 	}
 
-	x64.EmitLoad(rbx, q.Rhs)
-	x64.EmitLoad(rax, q.Lhs)
-	x64.EmitOp("cmp %s, %s", rbx, rax)
+	x86.EmitLoad(ebx, q.Rhs)
+	x86.EmitLoad(eax, q.Lhs)
+	x86.EmitOp("cmp %s, %s", ebx, eax)
 
 	var op string
 	switch q.Op {
@@ -372,121 +379,83 @@ func (x64 *X64Generator) EmitRelOp(q ir.QRelOp) {
 	}
 
 	if q.LNext == q.LTrue {
-		x64.EmitOp("%s %s", inverseJmp[op], q.LFalse)
+		x86.EmitOp("%s %s", inverseJmp[op], q.LFalse)
 	} else if q.LNext == q.LFalse {
-		x64.EmitOp("%s %s", op, q.LTrue)
+		x86.EmitOp("%s %s", op, q.LTrue)
 	} else {
-		x64.EmitOp("%s %s", op, q.LTrue)
-		x64.EmitOp("jmp %s", op, q.LFalse)
+		x86.EmitOp("%s %s", op, q.LTrue)
+		x86.EmitOp("jmp %s", op, q.LFalse)
 	}
 }
 
-func (x64 *X64Generator) EmitNeg(q ir.QNeg) {
-	x64.EmitLoad(rax, q.Arg)
-	x64.EmitOp("neg %s", rax)
-	x64.EmitOp("pushq %s", rax)
+func (x86 *X86Generator) EmitNeg(q ir.QNeg) {
+	x86.EmitLoad(eax, q.Arg)
+	x86.EmitOp("neg %s", eax)
+	x86.EmitOp("pushl %s", eax)
 }
 
-func (x64 *X64Generator) EmitJmp(q ir.QJmp) {
-	x64.EmitOp("jmp %s", q.Dst)
+func (x86 *X86Generator) EmitJmp(q ir.QJmp) {
+	x86.EmitOp("jmp %s", q.Dst)
 }
 
-func (x64 *X64Generator) EmitJz(q ir.QJz) {
-	x64.EmitLoad(rax, q.Value)
-	x64.EmitOp("test %s, %s", rax, rax)
-	x64.EmitOp("jz %s", q.Dst)
+func (x86 *X86Generator) EmitJz(q ir.QJz) {
+	x86.EmitLoad(eax, q.Value)
+	x86.EmitOp("test %s, %s", eax, eax)
+	x86.EmitOp("jz %s", q.Dst)
 }
 
-func (x64 *X64Generator) EmitJnz(q ir.QJnz) {
-	x64.EmitLoad(rax, q.Value)
-	x64.EmitOp("test %s, %s", rax, rax)
-	x64.EmitOp("jnz %s", q.Dst)
+func (x86 *X86Generator) EmitJnz(q ir.QJnz) {
+	x86.EmitLoad(eax, q.Value)
+	x86.EmitOp("test %s, %s", eax, eax)
+	x86.EmitOp("jnz %s", q.Dst)
 }
 
-func (x64 *X64Generator) EmitRet(q ir.QRet) {
-	if x64.curFun.Function.Name == "main" {
-		// Put return value to rdi, it's a scratch register so epilog won't change it.
-		x64.EmitLoad(rdi, q.Value)
-		x64.EmitFunctionEpilog()
-		x64.EmitLoad(rax, ir.LConst{Type_: types.TInt{}, Value: syscallExit})
-		x64.EmitOp("syscall")
-	} else {
-		x64.EmitLoad(rax, q.Value)
-		x64.EmitFunctionEpilog()
-		x64.EmitOp("ret")
-	}
+func (x86 *X86Generator) EmitRet(q ir.QRet) {
+	// if x86.curFun.Function.Name == "main" {
+	// 	// Put return value to rdi, it's a scratch register so epilog won't change it.
+	// 	x86.EmitLoad(rdi, q.Value)
+	// 	x86.EmitFunctionEpilog()
+	// 	x86.EmitLoad(rax, ir.LConst{Type_: types.TInt{}, Value: syscallExit})
+	// 	x86.EmitOp("syscall")
+	// } else {
+	x86.EmitLoad(eax, q.Value)
+	x86.EmitFunctionEpilog()
+	x86.EmitOp("ret")
+	// }
 }
 
-func (x64 *X64Generator) EmitVRet(q ir.QVRet) {
-	x64.EmitFunctionEpilog()
-	x64.EmitOp("ret")
+func (x86 *X86Generator) EmitVRet(q ir.QVRet) {
+	x86.EmitFunctionEpilog()
+	x86.EmitOp("ret")
 }
 
-func (x64 *X64Generator) EmitCall(q ir.QCall) {
-	// Calling runtime functions with arguments needs passing them through rdi register.
-	if q.Label.Name == "printInt" || q.Label.Name == "printString" || q.Label.Name == "newArray" {
-		x64.EmitOp("pop %s", rdi)
-	}
-
-	// If we are calling a foreign function we need to before calling.
-	if _, ok := foreignFunctions[q.Label.Name]; ok {
-		// Check stack alignment.
-		x64.EmitOp("testq %s, %s", "$0x000000000000000F", rsp)
-		lAlign := fmt.Sprintf("_align_%d", x64.alignLabelCnt)
-		x64.alignLabelCnt++
-		lEnd := fmt.Sprintf("_alignEnd_%d", x64.alignLabelCnt)
-		x64.alignLabelCnt++
-
-		x64.EmitOp("jnz %s", lAlign)
-
-		// If alignment is not needed.
-		x64.EmitOp("call %s", q.Label.Name)
-		x64.EmitOp("jmp %s", lEnd)
-
-		// If alignment is needed.
-		x64.EmitLabel(lAlign)
-		x64.EmitOp("subq $%#x, %s", QWORD, rsp)
-		x64.EmitOp("call %s", q.Label.Name)
-
-		x64.EmitOp("addq $%#x, %s", QWORD, rsp)
-		x64.EmitLabel(lEnd)
-	} else {
-		x64.EmitOp("call %s", q.Label.Name)
-		// Pop arguments from the stack.
-		x64.EmitOp("addq $%#x, %s", len(q.Args)*QWORD, rsp)
-	}
+func (x86 *X86Generator) EmitCall(q ir.QCall) {
+	x86.EmitOp("call %s", q.Label.Name)
+	// Pop arguments from the stack.
+	x86.EmitOp("addl $%#x, %s", len(q.Args)*DWORD, esp)
 
 	if _, ok := q.Signature.Result.(types.TVoid); !ok {
-		x64.EmitOp("pushq %s", rax)
+		x86.EmitOp("pushl %s", eax)
 	}
 }
 
-var foreignFunctions = map[string]struct{}{
-	"newArray":    {},
-	"printInt":    {},
-	"readInt":     {},
-	"error":       {},
-	"printString": {},
-	"readString":  {},
-}
-
-func (x64 *X64Generator) EmitArrayAccess(q ir.QArrayAccess) {
-	x64.EmitLoad(rax, q.Array)
-	x64.EmitLoad(rbx, q.Index)
+func (x86 *X86Generator) EmitArrayAccess(q ir.QArrayAccess) {
+	x86.EmitLoad(eax, q.Array)
+	x86.EmitLoad(ebx, q.Index)
 
 	// First field of an array stores its length.
-	displacement := QWORD
-	x64.EmitOp("leaq %d(%s, %s, %d), %s", displacement, rax, rbx, QWORD, rax)
-	x64.EmitOp("push %s", rax)
+	displacement := DWORD
+	x86.EmitOp("leal %d(%s, %s, %d), %s", displacement, eax, ebx, DWORD, eax)
+	x86.EmitOp("pushl %s", eax)
 }
 
-func (x64 *X64Generator) EmitDeref(q ir.QDeref) {
-	x64.EmitLoad(rax, q.Src)
-	x64.EmitOp("push (%s)", rax)
+func (x86 *X86Generator) EmitDeref(q ir.QDeref) {
+	x86.EmitLoad(eax, q.Src)
+	x86.EmitOp("pushl (%s)", eax)
 }
 
-func (x64 *X64Generator) EmitNewArray(q ir.QNewArray) {
-	x64.EmitCall(ir.QCall{
+func (x86 *X86Generator) EmitNewArray(q ir.QNewArray) {
+	x86.EmitCall(ir.QCall{
 		Signature: newArraySignature,
 		Label:     ir.Label{IsFunction: true, Name: "newArray"},
 		Dst:       q.Dst,
