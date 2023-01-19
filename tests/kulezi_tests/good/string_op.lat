@@ -7,7 +7,7 @@ int main() {
 
     string c = "aba";
     if (a != c) {
-        printString(a + b);
+        printString(a + c);
     } else {
         printString(a + b + c);
     }

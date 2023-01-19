@@ -52,7 +52,6 @@ type X86Generator struct {
 	FunInfo        ir.FunInfo
 	curFun         ir.VarInfo
 	res            string
-	alignLabelCnt  int
 	stringAdresses map[string]string
 }
 
@@ -259,12 +258,10 @@ func (x86 *X86Generator) EmitPush(q ir.QPush) {
 }
 
 func (x86 *X86Generator) EmitStringAdd(q ir.QBinOp) {
-	x86.EmitPush(ir.QPush{
-		Src: q.Rhs,
-	})
-	x86.EmitPush(ir.QPush{
-		Src: q.Lhs,
-	})
+	x86.EmitLoad(eax, q.Lhs)
+	x86.EmitLoad(ebx, q.Rhs)
+	x86.EmitOp("pushl %s", ebx)
+	x86.EmitOp("pushl %s", eax)
 
 	x86.EmitOp("call concat")
 	x86.EmitOp("addl $%#x, %s", 2*DWORD, esp)
@@ -310,23 +307,21 @@ func (x86 *X86Generator) EmitBinOp(q ir.QBinOp) {
 }
 
 func (x86 *X86Generator) EmitStringRelOp(q ir.QRelOp) {
-	x86.EmitPush(ir.QPush{
-		Src: q.Rhs,
-	})
-	x86.EmitPush(ir.QPush{
-		Src: q.Lhs,
-	})
+	x86.EmitLoad(eax, q.Lhs)
+	x86.EmitLoad(ebx, q.Rhs)
+	x86.EmitOp("pushl %s", ebx)
+	x86.EmitOp("pushl %s", eax)
 
 	x86.EmitOp("call compare")
 	x86.EmitOp("addl $%#x, %s", 2*DWORD, esp)
 
-	x86.EmitOp("cmp %s, %s", eax, eax)
+	x86.EmitOp("test %s, %s", eax, eax)
 	var op string
 	switch q.Op {
 	case "==":
-		op = "je"
+		op = "jz"
 	case "!=":
-		op = "jne"
+		op = "jnz"
 	default:
 		panic("unsupported string operation")
 	}
@@ -342,6 +337,8 @@ func (x86 *X86Generator) EmitStringRelOp(q ir.QRelOp) {
 }
 
 var inverseJmp = map[string]string{
+	"jz":  "jnz",
+	"jnz": "jz",
 	"jge": "jl",
 	"jg":  "jle",
 	"je":  "jne",
