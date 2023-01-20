@@ -35,11 +35,17 @@ type LatteVisitor interface {
 	// Visit a parse tree produced by LatteParser#block.
 	VisitBlock(ctx *BlockContext) interface{}
 
-	// Visit a parse tree produced by LatteParser#LVField.
-	VisitLVField(ctx *LVFieldContext) interface{}
-
 	// Visit a parse tree produced by LatteParser#LVArrayRef.
 	VisitLVArrayRef(ctx *LVArrayRefContext) interface{}
+
+	// Visit a parse tree produced by LatteParser#LVFieldArrayRef.
+	VisitLVFieldArrayRef(ctx *LVFieldArrayRefContext) interface{}
+
+	// Visit a parse tree produced by LatteParser#LVFieldMethodCall.
+	VisitLVFieldMethodCall(ctx *LVFieldMethodCallContext) interface{}
+
+	// Visit a parse tree produced by LatteParser#LVField.
+	VisitLVField(ctx *LVFieldContext) interface{}
 
 	// Visit a parse tree produced by LatteParser#LVId.
 	VisitLVId(ctx *LVIdContext) interface{}
@@ -140,6 +146,9 @@ type LatteVisitor interface {
 	// Visit a parse tree produced by LatteParser#EStr.
 	VisitEStr(ctx *EStrContext) interface{}
 
+	// Visit a parse tree produced by LatteParser#EFieldArrayAccess.
+	VisitEFieldArrayAccess(ctx *EFieldArrayAccessContext) interface{}
+
 	// Visit a parse tree produced by LatteParser#ENotOp.
 	VisitENotOp(ctx *ENotOpContext) interface{}
 
@@ -148,6 +157,9 @@ type LatteVisitor interface {
 
 	// Visit a parse tree produced by LatteParser#EAnd.
 	VisitEAnd(ctx *EAndContext) interface{}
+
+	// Visit a parse tree produced by LatteParser#EMethodCall.
+	VisitEMethodCall(ctx *EMethodCallContext) interface{}
 
 	// Visit a parse tree produced by LatteParser#ENegOp.
 	VisitENegOp(ctx *ENegOpContext) interface{}

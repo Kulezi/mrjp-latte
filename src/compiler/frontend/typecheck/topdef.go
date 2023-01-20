@@ -61,6 +61,7 @@ func (v *Visitor) VisitBaseClassDef(ctx *parser.BaseClassDefContext) interface{}
 	signature := v.evalClass(ctx.ID().GetText())
 
 	defer v.EnterClass(signature)()
+
 	v.CurClass = &signature
 	// Evaluate methods
 	for _, field := range ctx.AllField() {
@@ -77,6 +78,7 @@ func (v *Visitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefContext) inter
 	signature := v.evalClass(ctx.ID(0).GetText())
 
 	defer v.EnterClass(signature)()
+
 	v.CurClass = &signature
 	// Evaluate methods
 	for _, field := range ctx.AllField() {

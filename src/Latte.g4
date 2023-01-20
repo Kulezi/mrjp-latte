@@ -17,9 +17,11 @@ field: nvtype_ ID ';' # ClassFieldDef | fundef # ClassMethodDef;
 block: '{' stmt* '}';
 
 lvalue:
-	expr '.' lvalue		# LVField
-	| expr '[' expr ']'	# LVArrayRef
-	| ID				# LVId;
+	expr '[' expr ']'			# LVArrayRef
+	| expr '.' ID '[' expr ']'	# LVFieldArrayRef
+	| expr '.' ID '(' expr ')'	# LVFieldMethodCall
+	| expr '.' ID				# LVField
+	| ID						# LVId;
 
 stmt:
 	';'										# SEmpty
@@ -51,26 +53,28 @@ singular_type_:
 item: ID | ID '=' expr;
 
 expr:
-	expr '.' expr						# EFieldAccess
-	| expr '[' expr ']'					# EArrayRef
-	| '-' expr							# ENegOp
-	| '!' expr							# ENotOp
-	| expr mulOp expr					# EMulOp
-	| expr addOp expr					# EAddOp
-	| expr relOp expr					# ERelOp
-	| <assoc = right> expr '&&' expr	# EAnd
-	| <assoc = right> expr '||' expr	# EOr
-	| 'new' singular_type_ '[' expr ']'	# ENewArray
-	| 'new' singular_type_				# ENew
-	| 'self'							# ESelf
-	| ID								# EId
-	| INT								# EInt
-	| 'true'							# ETrue
-	| 'false'							# EFalse
-	| ID '(' ( expr ( ',' expr)*)? ')'	# EFunCall
-	| STR								# EStr
-	| '(' ID ')' 'null'					# ENull
-	| '(' expr ')'						# EParen;
+	expr '.' ID '(' (expr ( ',' expr)*)? ')'	# EMethodCall
+	| expr '.' ID '[' expr ']'					# EFieldArrayAccess
+	| expr '.' ID								# EFieldAccess
+	| expr '[' expr ']'							# EArrayRef
+	| '-' expr									# ENegOp
+	| '!' expr									# ENotOp
+	| expr mulOp expr							# EMulOp
+	| expr addOp expr							# EAddOp
+	| expr relOp expr							# ERelOp
+	| <assoc = right> expr '&&' expr			# EAnd
+	| <assoc = right> expr '||' expr			# EOr
+	| 'new' singular_type_ '[' expr ']'			# ENewArray
+	| 'new' singular_type_						# ENew
+	| 'self'									# ESelf
+	| ID										# EId
+	| INT										# EInt
+	| 'true'									# ETrue
+	| 'false'									# EFalse
+	| ID '(' ( expr ( ',' expr)*)? ')'			# EFunCall
+	| STR										# EStr
+	| '(' ID ')' 'null'							# ENull
+	| '(' expr ')'								# EParen;
 
 addOp: '+' | '-';
 

@@ -44,11 +44,19 @@ func (v *BaseLatteVisitor) VisitBlock(ctx *BlockContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseLatteVisitor) VisitLVField(ctx *LVFieldContext) interface{} {
+func (v *BaseLatteVisitor) VisitLVArrayRef(ctx *LVArrayRefContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseLatteVisitor) VisitLVArrayRef(ctx *LVArrayRefContext) interface{} {
+func (v *BaseLatteVisitor) VisitLVFieldArrayRef(ctx *LVFieldArrayRefContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseLatteVisitor) VisitLVFieldMethodCall(ctx *LVFieldMethodCallContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseLatteVisitor) VisitLVField(ctx *LVFieldContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
@@ -184,6 +192,10 @@ func (v *BaseLatteVisitor) VisitEStr(ctx *EStrContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
+func (v *BaseLatteVisitor) VisitEFieldArrayAccess(ctx *EFieldArrayAccessContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
 func (v *BaseLatteVisitor) VisitENotOp(ctx *ENotOpContext) interface{} {
 	return v.VisitChildren(ctx)
 }
@@ -193,6 +205,10 @@ func (v *BaseLatteVisitor) VisitEMulOp(ctx *EMulOpContext) interface{} {
 }
 
 func (v *BaseLatteVisitor) VisitEAnd(ctx *EAndContext) interface{} {
+	return v.VisitChildren(ctx)
+}
+
+func (v *BaseLatteVisitor) VisitEMethodCall(ctx *EMethodCallContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 

@@ -1,0 +1,13 @@
+class C {
+    int x;
+    C y;
+}
+
+int main() {
+    int y;
+    int z;
+    C x = new C;
+    x.x = 1;
+    x.y.y.x.z = 2;
+    return 0;
+}

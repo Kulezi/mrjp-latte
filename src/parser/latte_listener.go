@@ -35,11 +35,17 @@ type LatteListener interface {
 	// EnterBlock is called when entering the block production.
 	EnterBlock(c *BlockContext)
 
-	// EnterLVField is called when entering the LVField production.
-	EnterLVField(c *LVFieldContext)
-
 	// EnterLVArrayRef is called when entering the LVArrayRef production.
 	EnterLVArrayRef(c *LVArrayRefContext)
+
+	// EnterLVFieldArrayRef is called when entering the LVFieldArrayRef production.
+	EnterLVFieldArrayRef(c *LVFieldArrayRefContext)
+
+	// EnterLVFieldMethodCall is called when entering the LVFieldMethodCall production.
+	EnterLVFieldMethodCall(c *LVFieldMethodCallContext)
+
+	// EnterLVField is called when entering the LVField production.
+	EnterLVField(c *LVFieldContext)
 
 	// EnterLVId is called when entering the LVId production.
 	EnterLVId(c *LVIdContext)
@@ -140,6 +146,9 @@ type LatteListener interface {
 	// EnterEStr is called when entering the EStr production.
 	EnterEStr(c *EStrContext)
 
+	// EnterEFieldArrayAccess is called when entering the EFieldArrayAccess production.
+	EnterEFieldArrayAccess(c *EFieldArrayAccessContext)
+
 	// EnterENotOp is called when entering the ENotOp production.
 	EnterENotOp(c *ENotOpContext)
 
@@ -148,6 +157,9 @@ type LatteListener interface {
 
 	// EnterEAnd is called when entering the EAnd production.
 	EnterEAnd(c *EAndContext)
+
+	// EnterEMethodCall is called when entering the EMethodCall production.
+	EnterEMethodCall(c *EMethodCallContext)
 
 	// EnterENegOp is called when entering the ENegOp production.
 	EnterENegOp(c *ENegOpContext)
@@ -206,11 +218,17 @@ type LatteListener interface {
 	// ExitBlock is called when exiting the block production.
 	ExitBlock(c *BlockContext)
 
-	// ExitLVField is called when exiting the LVField production.
-	ExitLVField(c *LVFieldContext)
-
 	// ExitLVArrayRef is called when exiting the LVArrayRef production.
 	ExitLVArrayRef(c *LVArrayRefContext)
+
+	// ExitLVFieldArrayRef is called when exiting the LVFieldArrayRef production.
+	ExitLVFieldArrayRef(c *LVFieldArrayRefContext)
+
+	// ExitLVFieldMethodCall is called when exiting the LVFieldMethodCall production.
+	ExitLVFieldMethodCall(c *LVFieldMethodCallContext)
+
+	// ExitLVField is called when exiting the LVField production.
+	ExitLVField(c *LVFieldContext)
 
 	// ExitLVId is called when exiting the LVId production.
 	ExitLVId(c *LVIdContext)
@@ -311,6 +329,9 @@ type LatteListener interface {
 	// ExitEStr is called when exiting the EStr production.
 	ExitEStr(c *EStrContext)
 
+	// ExitEFieldArrayAccess is called when exiting the EFieldArrayAccess production.
+	ExitEFieldArrayAccess(c *EFieldArrayAccessContext)
+
 	// ExitENotOp is called when exiting the ENotOp production.
 	ExitENotOp(c *ENotOpContext)
 
@@ -319,6 +340,9 @@ type LatteListener interface {
 
 	// ExitEAnd is called when exiting the EAnd production.
 	ExitEAnd(c *EAndContext)
+
+	// ExitEMethodCall is called when exiting the EMethodCall production.
+	ExitEMethodCall(c *EMethodCallContext)
 
 	// ExitENegOp is called when exiting the ENegOp production.
 	ExitENegOp(c *ENegOpContext)

@@ -5,21 +5,6 @@ import (
 	"latte/parser"
 )
 
-func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
-	t, err := v.EvalExpr(ctx.Expr())
-	if err != nil {
-		return err
-	}
-
-	if class, ok := t.(TClass); ok {
-		defer v.EnterClass(class)()
-	} else if _, ok := t.(TArray); ok {
-		defer v.ShadowLocal("length", TReadOnly{Type: TInt{StartToken: ctx.GetStart()}})()
-	}
-
-	return v.Visit(ctx.Lvalue())
-}
-
 func (v *Visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
 	t, err := v.EvalExpr(ctx.Expr(0))
 	if err != nil {
@@ -28,16 +13,102 @@ func (v *Visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
 
 	arr, ok := t.(TArray)
 	if !ok {
-		return ExpectedArrayError{
-			Expr: ctx,
-			Got:  t,
-		}
+		return NotAnArrayError{Ctx: ctx, Expr: ctx.Expr(0), Type: t}
 	}
 
 	if err := v.ExpectType(TInt{}, ctx.Expr(1)); err != nil {
 		return err
 	}
+
 	return arr.Elem
+}
+
+func (v *Visitor) VisitLVFieldArrayRef(ctx *parser.LVFieldArrayRefContext) interface{} {
+	lhs, err := v.EvalExpr(ctx.Expr(0))
+	if err != nil {
+		return err
+	}
+
+	drop := v.EnterType(lhs, true)
+	t, ok := v.TypeOfLocal(ctx.ID().GetText())
+	if !ok {
+		return UndeclaredIdentifierError{
+			Ident: ctx.ID(),
+		}
+	}
+	drop()
+
+	arr, ok := t.Type.(TArray)
+	if !ok {
+		return NotAnArrayError{Ctx: ctx, Expr: ctx.Expr(0), Type: t}
+	}
+
+	if err := v.ExpectType(TInt{}, ctx.Expr(1)); err != nil {
+		return err
+	}
+
+	return arr.Elem
+}
+
+func (v *Visitor) VisitLVFieldMethodCall(ctx *parser.LVFieldMethodCallContext) interface{} {
+	lhs, err := v.EvalExpr(ctx.Expr(0))
+	if err != nil {
+		return err
+	}
+
+	drop := v.EnterType(lhs, false)
+	t, ok := v.TypeOfLocal(ctx.ID().GetText())
+	if !ok {
+		return UndeclaredIdentifierError{
+			Ident: ctx.ID(),
+		}
+	}
+	drop()
+
+	signature, ok := t.Type.(TFun)
+	if !ok {
+		return NotAFunctionError{Ident: ctx.ID(), Type: t}
+	}
+
+	args := ctx.AllExpr()[1:]
+	if len(signature.Args) != len(args) {
+		return InvalidFunctionArgumentCountError{
+			Expr:     ctx,
+			Provided: args,
+			Fun:      signature,
+		}
+	}
+
+	for i, e := range args {
+		if err := v.ExpectType(signature.Args[i].Type, e); err != nil {
+			return err
+		}
+	}
+
+	if classRef, ok := signature.Result.(TClassRef); ok {
+		class, _ := v.TypeOfGlobal(classRef.String())
+		return class.Type.(TClass)
+	}
+
+	return signature.Result
+}
+
+func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
+	lhs, err := v.EvalExpr(ctx.Expr())
+	if err != nil {
+		return err
+	}
+
+	drop := v.EnterType(lhs, true)
+	t, ok := v.TypeOfLocal(ctx.ID().GetText())
+	if !ok {
+		return UndeclaredIdentifierError{
+			Ident: ctx.ID(),
+		}
+	}
+	drop()
+
+	return t.Type
 }
 
 func (v *Visitor) VisitLVId(ctx *parser.LVIdContext) interface{} {

@@ -59,3 +59,5 @@ func (v *Visitor) VisitClassMethodDef(ctx *parser.ClassMethodDefContext) interfa
 	// Check method validity.
 	return v.Visit(ctx.Fundef())
 }
+
+var _ parser.LatteVisitor = &Visitor{}

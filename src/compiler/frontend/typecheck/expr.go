@@ -25,21 +25,92 @@ func (v *Visitor) EvalExpr(tree parser.IExprContext) (Type, error) {
 	panic("evalExpr called in wrong context, visiting the tree should return a type")
 }
 
-func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
-	t, err := v.EvalExpr(ctx.Expr(0))
+func (v *Visitor) VisitEMethodCall(ctx *parser.EMethodCallContext) interface{} {
+	lhs, err := v.EvalExpr(ctx.Expr(0))
 	if err != nil {
 		return err
 	}
 
-	class, ok := t.(TClass)
-	if ok {
-		defer v.EnterClass(class)()
-	} else if _, ok = t.(TArray); ok {
-		defer v.ShadowLocal("length", TInt{})()
+	drop := v.EnterType(lhs, false)
+	t, ok := v.TypeOfLocal(ctx.ID().GetText())
+	if !ok {
+		return UndeclaredIdentifierError{
+			Ident: ctx.ID(),
+		}
+	}
+	drop()
+
+	signature, ok := t.Type.(TFun)
+	if !ok {
+		return NotAFunctionError{Ident: ctx.ID(), Type: t}
 	}
 
-	// Evaluate right-hand side in this environment.
-	return v.Visit(ctx.Expr(1))
+	args := ctx.AllExpr()[1:]
+	if len(signature.Args) != len(args) {
+		return InvalidFunctionArgumentCountError{
+			Expr:     ctx,
+			Provided: args,
+			Fun:      signature,
+		}
+	}
+
+	for i, e := range args {
+		if err := v.ExpectType(signature.Args[i].Type, e); err != nil {
+			return err
+		}
+	}
+
+	if classRef, ok := signature.Result.(TClassRef); ok {
+		class, _ := v.TypeOfGlobal(classRef.String())
+		return class.Type.(TClass)
+	}
+
+	return signature.Result
+}
+
+func (v *Visitor) VisitEFieldArrayAccess(ctx *parser.EFieldArrayAccessContext) interface{} {
+	lhs, err := v.EvalExpr(ctx.Expr(0))
+	if err != nil {
+		return err
+	}
+
+	drop := v.EnterType(lhs, false)
+	t, ok := v.TypeOfLocal(ctx.ID().GetText())
+	if !ok {
+		return UndeclaredIdentifierError{
+			Ident: ctx.ID(),
+		}
+	}
+	drop()
+
+	arr, ok := t.Type.(TArray)
+	if !ok {
+		return NotAnArrayError{Ctx: ctx, Expr: ctx.Expr(0), Type: t}
+	}
+
+	if err := v.ExpectType(TInt{}, ctx.Expr(1)); err != nil {
+		return err
+	}
+
+	return arr.Elem
+}
+
+func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
+	lhs, err := v.EvalExpr(ctx.Expr())
+	if err != nil {
+		return err
+	}
+
+	drop := v.EnterType(lhs, false)
+	t, ok := v.TypeOfLocal(ctx.ID().GetText())
+	if !ok {
+		return UndeclaredIdentifierError{
+			Ident: ctx.ID(),
+		}
+	}
+	drop()
+
+	return t.Type
 }
 
 func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
@@ -338,7 +409,11 @@ func (v *Visitor) VisitENew(ctx *parser.ENewContext) interface{} {
 }
 
 func (v *Visitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
-	return v.CurClass
+	if v.CurClass == nil {
+		return SelfOutsideOfClassError{Ctx: ctx}
+	}
+
+	return *v.CurClass
 }
 
 func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
@@ -399,8 +474,9 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 
 	if len(signature.Args) != len(ctx.AllExpr()) {
 		return InvalidFunctionArgumentCountError{
-			Expr: ctx,
-			Fun:  signature,
+			Expr:     ctx,
+			Provided: ctx.AllExpr(),
+			Fun:      signature,
 		}
 	}
 

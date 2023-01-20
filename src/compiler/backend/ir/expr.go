@@ -33,19 +33,19 @@ func (v *Visitor) GetBoolLoc() Location {
 	return loc
 }
 
-func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
-	object := v.evalExpr(ctx.Expr(0))
-	switch object.Type().(type) {
-	case types.TClass:
-		panic("classes not supported")
-	case types.TArray:
-		defer v.PushField("length", LMem{
-			Type_: types.TInt{},
-			Addr:  object,
-		})()
-	}
-	return v.evalExpr(ctx.Expr(1))
-}
+// func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
+// 	object := v.evalExpr(ctx.Expr(0))
+// 	switch object.Type().(type) {
+// 	case types.TClass:
+// 		panic("classes not supported")
+// 	case types.TArray:
+// 		defer v.PushField("length", LMem{
+// 			Type_: types.TInt{},
+// 			Addr:  object,
+// 		})()
+// 	}
+// 	return v.evalExpr(ctx.Expr(1))
+// }
 
 func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
 	array := v.evalExpr(ctx.Expr(0))

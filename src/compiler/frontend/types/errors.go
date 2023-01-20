@@ -220,8 +220,9 @@ in expression
 }
 
 type InvalidFunctionArgumentCountError struct {
-	Expr *parser.EFunCallContext
-	Fun  TFun
+	Expr     antlr.ParserRuleContext
+	Provided []parser.IExprContext
+	Fun      TFun
 }
 
 func (e InvalidFunctionArgumentCountError) Error() string {
@@ -233,7 +234,7 @@ expects %d arguments, but %d were provided in call
 	at %s`,
 		e.Fun,
 		len(e.Fun.Args),
-		len(e.Expr.AllExpr()),
+		len(e.Provided),
 		showSource(e.Expr),
 		PosFromToken(e.Expr.GetStart()),
 	)
@@ -386,4 +387,15 @@ func (e InvalidStringError) Error() string {
 	return fmt.Sprintf(`invalid string literal
 	%s
 	at %s`, showSource(e.Ctx), PosFromToken(e.Ctx.GetStart()))
+}
+
+type SelfOutsideOfClassError struct {
+	Ctx antlr.ParserRuleContext
+}
+
+func (e SelfOutsideOfClassError) Error() string {
+	return fmt.Sprintf(`found
+	%s
+	at %s
+which is not inside any class`, showSource(e.Ctx), PosFromToken(e.Ctx.GetStart()))
 }

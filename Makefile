@@ -12,6 +12,9 @@ latc:
 clean:
 	rm latc_x86 latc
 
+test-typecheck:
+	@cd src/compiler; go test . -run TestTypecheck -count=1
+
 test: 
 	@cd src/compiler; go test . -count=1
 

@@ -46,18 +46,44 @@ func (v *Visitor) TypeOf(ident string) (TypeInfo, bool) {
 	return v.TypeOfGlobal(ident)
 }
 
-func (v *Visitor) EnterClass(signature TClass) (exit func()) {
-	v.Depth++
-	// Put all fields into enviroment.
-	var exits []func()
-	for ident, t := range signature.Fields {
-		exits = append(exits, v.ShadowLocal(ident, t))
+func (v *Visitor) EnterType(t Type, lvalue bool) (exit func()) {
+	oldLocals := v.Signatures.Locals
+	oldGlobals := v.Signatures.Globals
+	v.Signatures.Locals = make(Env)
+	v.Signatures.Globals = make(Env)
+
+	switch t := t.(type) {
+	case TClass:
+		for ident, t := range t.Fields {
+			v.ShadowLocal(ident, t)
+		}
+	case TArray:
+		if lvalue {
+			v.ShadowLocal("length", TReadOnly{Type: TInt{}})
+		} else {
+			v.ShadowLocal("length", TInt{})
+		}
 	}
 
 	return func() {
-		for _, exit := range exits {
-			exit()
-		}
+		v.Signatures.Locals = oldLocals
+		v.Signatures.Globals = oldGlobals
+	}
+}
+
+func (v *Visitor) EnterClass(signature TClass) (exit func()) {
+	v.Depth++
+	// Put all fields into enviroment.
+	oldLocals := v.Signatures.Locals
+	v.Signatures.Locals = make(Env)
+	for ident, t := range signature.Fields {
+		v.ShadowLocal(ident, t)
+	}
+
+	v.ShadowLocal("self", signature)
+
+	return func() {
+		v.Signatures.Locals = oldLocals
 		v.Depth--
 	}
 }
