@@ -13,6 +13,8 @@ func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
 
 	if class, ok := t.(TClass); ok {
 		defer v.EnterClass(class)()
+	} else if _, ok := t.(TArray); ok {
+		defer v.ShadowLocal("length", TReadOnly{Type: TInt{StartToken: ctx.GetStart()}})()
 	}
 
 	return v.Visit(ctx.Lvalue())

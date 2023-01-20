@@ -1,0 +1,8 @@
+int main() {
+    int[] arr;
+    arr = new int[5];
+    printInt(arr.length);
+    arr.length = 0;
+    printInt(arr.length);
+    return 0;
+}

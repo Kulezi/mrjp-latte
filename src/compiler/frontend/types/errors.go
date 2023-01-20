@@ -94,6 +94,11 @@ type UnexpectedTypeError struct {
 }
 
 func (e UnexpectedTypeError) Error() string {
+	if _, ok := e.Expected.(TReadOnly); ok {
+		return fmt.Sprintf(`can't assign to a readonly variable
+	at %s`, PosFromToken(e.Expr.GetStart()))
+	}
+
 	return fmt.Sprintf(
 		`expected type
 	%s 
@@ -114,6 +119,16 @@ type UndeclaredIdentifierError struct {
 }
 
 func (e UndeclaredIdentifierError) Error() string {
+	if e.Ident.GetText() == "length" {
+		return fmt.Sprintf(
+			`undeclared identifier %s found
+	at %s
+remember that array's length is not a lvalue`,
+			e.Ident,
+			PosFromToken(e.Ident.GetSymbol()),
+		)
+	}
+
 	return fmt.Sprintf(
 		`undeclared identifier %s found
 	at %s`,

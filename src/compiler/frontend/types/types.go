@@ -389,3 +389,13 @@ func (t TFun) Const() (value interface{}, ok bool) {
 func (t TFun) DefaultValue() interface{} {
 	panic("can't take default value of a function")
 }
+
+type TReadOnly struct {
+	Type Type
+}
+
+func (t TReadOnly) String() string                      { return fmt.Sprintf("readonly(%s)", t.Type) }
+func (t TReadOnly) Position() string                    { return t.Type.Position() }
+func (t TReadOnly) BaseType() Type                      { return t.Type }
+func (t TReadOnly) Const() (value interface{}, ok bool) { return nil, false }
+func (t TReadOnly) DefaultValue() interface{}           { panic("can't take default value of a readonly") }
