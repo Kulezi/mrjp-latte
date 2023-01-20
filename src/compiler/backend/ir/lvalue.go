@@ -5,6 +5,17 @@ import (
 	"latte/parser"
 )
 
+func (v *Visitor) VisitLVFieldArrayRef(ctx *parser.LVFieldArrayRefContext) interface{} {
+	Unimplemented("classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
+	return nil
+
+}
+
+func (v *Visitor) VisitLVFieldMethodCall(ctx *parser.LVFieldMethodCallContext) interface{} {
+	Unimplemented("classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
+	return nil
+}
+
 func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
 	Unimplemented("classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
 	return nil

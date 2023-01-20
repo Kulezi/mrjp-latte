@@ -5,6 +5,7 @@ import (
 	"latte/compiler/frontend/typecheck"
 	. "latte/compiler/frontend/types"
 	"latte/parser"
+	"log"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 )
@@ -12,6 +13,36 @@ import (
 type State struct {
 	Tree       parser.IProgramContext
 	Signatures Signatures
+}
+
+func printClass(class TClass) {
+	s := fmt.Sprintf("class %s {\n", class.ID)
+	s += fmt.Sprintf("\tvtable of size %d:\n", class.TotalMethods)
+	vtable := make([]Type, class.TotalMethods)
+	layout := make([]Type, class.TotalNonMethods+1)
+	for _, v := range class.Fields {
+		if _, ok := v.Type.(TFun); ok {
+			vtable[v.Offset] = v.Type
+		} else {
+			layout[v.Offset] = v.Type
+		}
+	}
+
+	for i, v := range vtable {
+		s += fmt.Sprintf("\t\ti = %d: %s\n", i, v)
+	}
+
+	s += fmt.Sprintf("\tstruct layout of size %d:\n", class.TotalNonMethods+1)
+	for i, v := range layout {
+		if i == 0 {
+			s += "\t\ti = 0: vtable ptr\n"
+		} else {
+			s += fmt.Sprintf("i = %d: %s\n", i, v)
+		}
+	}
+
+	s += "}\n"
+	log.Println(s)
 }
 
 func Run(filename string) (State, error) {
@@ -22,6 +53,12 @@ func Run(filename string) (State, error) {
 
 	if err := s.semanticCheck(); err != nil {
 		return State{}, err
+	}
+
+	for _, v := range s.Signatures.Globals {
+		if class, ok := v.Type.(TClass); ok {
+			printClass(class)
+		}
 	}
 
 	return s, nil

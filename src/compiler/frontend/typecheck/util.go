@@ -55,7 +55,7 @@ func (v *Visitor) EnterType(t Type, lvalue bool) (exit func()) {
 	switch t := t.(type) {
 	case TClass:
 		for ident, t := range t.Fields {
-			v.ShadowLocal(ident, t)
+			v.ShadowLocal(ident, t.Type)
 		}
 	case TArray:
 		if lvalue {
@@ -77,7 +77,7 @@ func (v *Visitor) EnterClass(signature TClass) (exit func()) {
 	oldLocals := v.Signatures.Locals
 	v.Signatures.Locals = make(Env)
 	for ident, t := range signature.Fields {
-		v.ShadowLocal(ident, t)
+		v.ShadowLocal(ident, t.Type)
 	}
 
 	v.ShadowLocal("self", signature)

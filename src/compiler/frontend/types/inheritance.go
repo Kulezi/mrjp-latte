@@ -8,10 +8,9 @@ func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[
 		}
 	}
 
-	var err error
 	if _, ok := evaluated[parent.String()]; !ok {
 		if grandparent, ok := s.Parent[parent.String()]; ok {
-			err = s.inheritClass(parent.String(), grandparent, evaluated)
+			err := s.inheritClass(parent.String(), grandparent, evaluated)
 			if err != nil {
 				return err
 			}
@@ -20,29 +19,50 @@ func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[
 
 	childClass := s.Globals[child].Type.(TClass)
 	childFields := childClass.Fields
-	parentFields := s.Globals[parent.String()].Type.(TClass).Fields
+	parentClass := s.Globals[parent.String()].Type.(TClass)
+	parentFields := parentClass.Fields
 
-	for ident, parentFieldType := range parentFields {
-		parentFieldType, ok := parentFieldType.(TFun)
+	// Inherit methods.
+	for ident, parentFieldInfo := range parentFields {
+		parentFieldType, ok := parentFieldInfo.Type.(TFun)
 		if !ok {
 			continue
 		}
 
-		if childFieldType, ok := childFields[ident]; ok {
-			if !SameType(parentFieldType, childFieldType) {
+		// Function overriding needs matching signatures.
+		if childFieldInfo, ok := childFields[ident]; ok {
+			if !SameType(parentFieldType, childFieldInfo.Type) {
 				return MethodOverrideError{
 					ParentClass:  s.Globals[parent.String()],
 					ChildClass:   s.Globals[child],
 					ParentMethod: parentFieldType,
-					ChildMethod:  childFieldType,
+					ChildMethod:  childFieldInfo.Type,
 					MethodName:   ident,
 				}
 			}
-		} else {
-			childFields[ident] = parentFieldType
 		}
+
+		// Overriden methods have the same offset in vtable.
+		childFields[ident] = parentFieldInfo
 	}
 
+	// Eval offsets for fields and methods that are not present in the parent.
+	childClass.TotalMethods = parentClass.TotalMethods
+	childClass.TotalNonMethods = parentClass.TotalNonMethods
+	for ident, childFieldInfo := range childFields {
+		switch childFieldInfo.Type.(type) {
+		case TFun:
+			if _, ok := parentFields[ident]; !ok {
+				childFieldInfo.Offset = childClass.TotalMethods
+				childClass.TotalMethods++
+			}
+		default:
+			childClass.TotalNonMethods++
+			childFieldInfo.Offset = childClass.TotalNonMethods
+		}
+
+		childFields[ident] = childFieldInfo
+	}
 	evaluated[child] = struct{}{}
 
 	s.ReplaceGlobal(child, childClass)

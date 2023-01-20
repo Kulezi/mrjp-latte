@@ -18,6 +18,9 @@ type globalDeclVisitor struct {
 	parser.BaseLatteVisitor
 	signatures Signatures
 	inMethod   bool
+
+	methodCnt int
+	fieldCnt  int
 }
 
 func makeGlobalDeclVisitor() *globalDeclVisitor {
@@ -142,7 +145,7 @@ func (v *globalDeclVisitor) CheckFunctionsSignatures() error {
 			}
 		case TClass:
 			for _, field := range t.Fields {
-				if fun, ok := field.(TFun); ok {
+				if fun, ok := field.Type.(TFun); ok {
 					if err := v.checkFunctionSignature(fun); err != nil {
 						return err
 					}
@@ -266,12 +269,15 @@ func (v *globalDeclVisitor) VisitTArray(ctx *parser.TArrayContext) interface{} {
 }
 
 type field struct {
-	ID   string
-	Type Type
+	ID     string
+	Type   Type
+	Offset int
 }
 
-func (v *globalDeclVisitor) collectFields(fields []parser.IFieldContext) (map[string]Type, error) {
-	ret := make(map[string]Type)
+func (v *globalDeclVisitor) collectFields(fields []parser.IFieldContext) (map[string]FieldInfo, error) {
+	v.methodCnt = 0
+	v.fieldCnt = 0
+	ret := make(map[string]FieldInfo)
 	for _, fieldCtx := range fields {
 		res := v.Visit(fieldCtx)
 		if err, ok := res.(error); ok {
@@ -282,12 +288,15 @@ func (v *globalDeclVisitor) collectFields(fields []parser.IFieldContext) (map[st
 		if conflicting, ok := ret[f.ID]; ok {
 			return nil, DuplicateIdentifierError{
 				Ident: f.ID,
-				Pos1:  conflicting.Position(),
+				Pos1:  conflicting.Type.Position(),
 				Pos2:  f.Type.Position(),
 			}
 		}
 
-		ret[f.ID] = f.Type
+		ret[f.ID] = FieldInfo{
+			Type:   f.Type,
+			Offset: f.Offset,
+		}
 	}
 
 	return ret, nil
@@ -300,8 +309,10 @@ func (v *globalDeclVisitor) VisitBaseClassDef(ctx *parser.BaseClassDefContext) i
 	}
 
 	class := TClass{
-		ID:     ctx.ID(),
-		Fields: fields,
+		ID:              ctx.ID(),
+		Fields:          fields,
+		TotalMethods:    v.methodCnt,
+		TotalNonMethods: v.fieldCnt,
 	}
 
 	return v.createGlobal(class.String(), class)
@@ -316,9 +327,11 @@ func (v *globalDeclVisitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefCont
 	}
 
 	class := TClass{
-		ID:     ctx.ID(0),
-		Fields: fields,
-		Parent: &parent,
+		ID:              ctx.ID(0),
+		Fields:          fields,
+		TotalMethods:    v.methodCnt,
+		TotalNonMethods: v.fieldCnt,
+		Parent:          &parent,
 	}
 
 	v.signatures.Parent[class.String()] = parent
@@ -326,9 +339,11 @@ func (v *globalDeclVisitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefCont
 }
 
 func (v *globalDeclVisitor) VisitClassFieldDef(ctx *parser.ClassFieldDefContext) interface{} {
+	v.fieldCnt++
 	return field{
-		ID:   ctx.ID().GetText(),
-		Type: v.Visit(ctx.Nvtype_()).(Type),
+		ID:     ctx.ID().GetText(),
+		Type:   v.Visit(ctx.Nvtype_()).(Type),
+		Offset: v.fieldCnt,
 	}
 }
 
@@ -341,9 +356,13 @@ func (v *globalDeclVisitor) VisitClassMethodDef(ctx *parser.ClassMethodDefContex
 	}
 
 	fun := res.(TFun)
+
+	offset := v.methodCnt
+	v.methodCnt++
 	return field{
-		ID:   fun.Ident,
-		Type: fun,
+		ID:     fun.Ident,
+		Type:   fun,
+		Offset: offset,
 	}
 }
 

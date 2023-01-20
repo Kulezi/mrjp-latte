@@ -33,19 +33,22 @@ func (v *Visitor) GetBoolLoc() Location {
 	return loc
 }
 
-// func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
-// 	object := v.evalExpr(ctx.Expr(0))
-// 	switch object.Type().(type) {
-// 	case types.TClass:
-// 		panic("classes not supported")
-// 	case types.TArray:
-// 		defer v.PushField("length", LMem{
-// 			Type_: types.TInt{},
-// 			Addr:  object,
-// 		})()
-// 	}
-// 	return v.evalExpr(ctx.Expr(1))
-// }
+func (v *Visitor) VisitEMethodCall(ctx *parser.EMethodCallContext) interface{} {
+	Unimplemented("can't use method call - classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
+
+	return nil
+}
+
+func (v *Visitor) VisitEFieldArrayAccess(ctx *parser.EFieldArrayAccessContext) interface{} {
+	Unimplemented("can't use field array access - classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
+
+	return nil
+}
+
+func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
+	Unimplemented("can't use field - classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
+	return nil
+}
 
 func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
 	array := v.evalExpr(ctx.Expr(0))

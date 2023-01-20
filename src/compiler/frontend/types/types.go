@@ -262,10 +262,20 @@ func (t TBool) DefaultValue() interface{} {
 	return false
 }
 
+type FieldInfo struct {
+	Type Type
+
+	// For methods: index in vtable.
+	// For fields: offset from struct beginning.
+	Offset int
+}
+
 type TClass struct {
-	ID     antlr.TerminalNode
-	Fields map[string]Type
-	Parent *TClassRef
+	ID              antlr.TerminalNode
+	Fields          map[string]FieldInfo
+	TotalNonMethods int
+	TotalMethods    int
+	Parent          *TClassRef
 }
 
 func (t TClass) String() string {
