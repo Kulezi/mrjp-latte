@@ -341,7 +341,7 @@ func (t TArray) Const() (value interface{}, ok bool) {
 }
 
 func (t TArray) DefaultValue() interface{} {
-	panic("can't take default value of a array")
+	return 0
 }
 
 type FArg struct {

@@ -1,0 +1,11 @@
+int main() {
+    int[] x;
+    x = new int[3];
+    x[0] = 1;
+    x[1] = 2;
+    x[2] = 3;
+    printInt(x[0]);
+    printInt(x[1]);
+    printInt(x[2]);
+    return 0;
+}

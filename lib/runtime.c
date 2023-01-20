@@ -30,9 +30,8 @@ int32_t compare(const char *s1, const char *s2) {
 }
 
 int32_t *newArray(int32_t size) {
-    int32_t *arr = calloc(4, size + 1);
+    int32_t *arr = calloc(size + 1, 4);
     arr[0] = size;
-    for (int32_t i = 1; i <= size; i++) arr[i] = i;
     return arr;
 }
 

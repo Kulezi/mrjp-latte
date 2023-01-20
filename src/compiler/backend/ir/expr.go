@@ -34,8 +34,17 @@ func (v *Visitor) GetBoolLoc() Location {
 }
 
 func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
-	Unimplemented("can't access field - classes are not yet supported\n\tat %s", types.PosFromToken(ctx.GetStart()))
-	return nil
+	object := v.evalExpr(ctx.Expr(0))
+	switch object.Type().(type) {
+	case types.TClass:
+		panic("classes not supported")
+	case types.TArray:
+		defer v.PushField("length", LMem{
+			Type_: types.TInt{},
+			Addr:  object,
+		})()
+	}
+	return v.evalExpr(ctx.Expr(1))
 }
 
 func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
@@ -187,7 +196,7 @@ func (v *Visitor) VisitEOr(ctx *parser.EOrContext) interface{} {
 func (v *Visitor) VisitENewArray(ctx *parser.ENewArrayContext) interface{} {
 	t, _ := v.EvalType(ctx.Singular_type_())
 	size := v.evalExpr(ctx.Expr())
-	dst := v.FreshTemp("new_array", t)
+	dst := v.FreshTemp("new_array", types.TArray{StartToken: ctx.GetStart(), Elem: t})
 	v.EmitQuad(QNewArray{
 		Type: t,
 		Dst:  dst,
@@ -231,6 +240,15 @@ func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
 		}
 
 		return LUnassigned{}
+	}
+
+	if _, ok := loc.(LMem); ok {
+		value := v.FreshTemp("eid_deref", loc.Type())
+		v.EmitQuad(QMov{
+			Src: loc,
+			Dst: value,
+		})
+		return value
 	}
 
 	return loc

@@ -246,7 +246,52 @@ func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 }
 
 func (v *Visitor) VisitSFor(ctx *parser.SForContext) interface{} {
-	Unimplemented("arrays are not supported yet\n\t%s", types.PosFromToken(ctx.GetStart()))
+	lBody := v.FreshLabel("_for_body")
+	lCond := v.FreshLabel("_for_cond")
+	lEnd := v.FreshLabel("_for_end")
+
+	arr := v.evalSExp(ctx.Expr())
+	loc, drop := v.ShadowLocal(ctx.ID().GetText(), arr.Type().BaseType())
+	defer drop()
+	counter, drop := v.ShadowLocal("for_counter", types.TInt{})
+	defer drop()
+	v.EmitQuad(QMov{
+		Src: LConst{Type_: types.TInt{}, Value: 0},
+		Dst: counter,
+	})
+	v.EmitQuad(QJmp{Dst: lCond})
+
+	v.StartBlock(lBody)
+	ptr := v.FreshTemp("for_ptr", types.TInt{})
+	v.EmitQuad(QArrayAccess{
+		Array: arr,
+		Index: counter,
+		Dst:   ptr,
+	})
+	v.EmitQuad(QDeref{
+		Src: ptr,
+		Dst: loc,
+	})
+	v.Visit(ctx.Stmt())
+	v.EmitQuad(QBinOp{
+		Op:  "+",
+		Lhs: counter,
+		Rhs: LConst{Type_: types.TInt{}, Value: 1},
+		Dst: counter,
+	})
+
+	v.StartBlock(lCond)
+	defer v.PushLabels(lBody, lEnd, lEnd)()
+	v.EmitQuad(QRelOp{
+		Op:     "==",
+		Lhs:    counter,
+		Rhs:    LMem{Type_: types.TInt{}, Addr: arr},
+		LTrue:  lEnd,
+		LNext:  lEnd,
+		LFalse: lBody,
+	})
+
+	v.StartBlock(lEnd)
 	return nil
 }
 

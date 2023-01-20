@@ -20,7 +20,7 @@ func (v *Visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
 		Dst:   dst,
 	})
 
-	return dst
+	return LMem{Type_: array.Type().BaseType(), Addr: dst}
 }
 
 func (v *Visitor) VisitLVId(ctx *parser.LVIdContext) interface{} {

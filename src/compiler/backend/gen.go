@@ -197,14 +197,21 @@ func (x86 *X86Generator) GenFromQuad(q ir.Quadruple) {
 
 // Returns the address of a variable relative to rbp, or "" if it's a temporary.
 func (x86 *X86Generator) getLoc(loc ir.Location) string {
-	reg := loc.(ir.LReg)
-	if reg.Variable == "" {
-		return ""
+	switch loc := loc.(type) {
+	case ir.LReg:
+		if loc.Variable == "" {
+			return ""
+		}
+		varOffset := loc.Index
+		funOffset := x86.curFun.Offset
+		offset := (varOffset - funOffset + 1) * DWORD
+		return fmt.Sprintf("%#x(%s)", -offset, ebp)
+	case ir.LMem:
+		x86.EmitLoad(ecx, loc.Addr)
+		return fmt.Sprintf("(%s)", ecx)
+	default:
+		panic("unsupported location")
 	}
-	varOffset := reg.Index
-	funOffset := x86.curFun.Offset
-	offset := (varOffset - funOffset + 1) * DWORD
-	return fmt.Sprintf("%#x(%s)", -offset, ebp)
 }
 
 func (x86 *X86Generator) EmitLoad(register string, loc ir.Location) {
@@ -233,22 +240,33 @@ func (x86 *X86Generator) EmitLoad(register string, loc ir.Location) {
 		if loc.Variable == "" {
 			x86.EmitOp("popl %s", register)
 		} else {
-			x86.EmitOp("movl %s, %s", x86.getLoc(loc), register)
+			x86.EmitOp("movl %s, %s\t# emitload-reg-%s", x86.getLoc(loc), register, loc)
 		}
+	case ir.LMem:
+		x86.EmitLoad(register, loc.Addr)
+		x86.EmitOp("movl (%s), %s", register, register)
+	default:
+		panic(":(((")
 	}
+
 }
 
 func (x86 *X86Generator) EmitQMov(q ir.QMov) {
-	x86.EmitLoad(eax, q.Src)
+	switch dst := q.Dst.(type) {
 	// In case of a standalone expression we can forget the result.
-	if _, ok := q.Dst.(ir.LDrop); ok {
+	case ir.LDrop:
+		x86.EmitLoad(eax, q.Src)
 		return
-	}
-	dst := x86.getLoc(q.Dst)
-	if dst == "" {
-		x86.EmitOp("pushl %s", eax)
-	} else {
-		x86.EmitOp("movl %s, %s", eax, x86.getLoc(q.Dst))
+	case ir.LReg, ir.LMem:
+		addr := x86.getLoc(dst)
+		x86.EmitLoad(eax, q.Src)
+		if addr == "" {
+			x86.EmitOp("pushl %s\t# %s", eax, q)
+		} else {
+			x86.EmitOp("movl %s, %s \t# %s", eax, addr, q)
+		}
+	default:
+		panic(":(((")
 	}
 }
 
@@ -442,16 +460,25 @@ func (x86 *X86Generator) EmitArrayAccess(q ir.QArrayAccess) {
 
 	// First field of an array stores its length.
 	displacement := DWORD
-	x86.EmitOp("leal %d(%s, %s, %d), %s", displacement, eax, ebx, DWORD, eax)
+	x86.EmitOp("leal %d(%s, %s, %d), %s	#%s", displacement, eax, ebx, DWORD, eax, q)
 	x86.EmitOp("pushl %s", eax)
 }
 
 func (x86 *X86Generator) EmitDeref(q ir.QDeref) {
 	x86.EmitLoad(eax, q.Src)
-	x86.EmitOp("pushl (%s)", eax)
+	x86.EmitOp("movl (%s), %s", eax, eax)
+	if dst, ok := q.Dst.(ir.LReg); ok {
+		if dst.Variable != "" {
+			x86.EmitOp("movl %s, %s", eax, x86.getLoc(dst))
+		} else {
+			x86.EmitOp("pushl %s", eax)
+		}
+	}
 }
 
 func (x86 *X86Generator) EmitNewArray(q ir.QNewArray) {
+	x86.EmitLoad(eax, q.Size)
+	x86.EmitOp("pushl %s", eax)
 	x86.EmitCall(ir.QCall{
 		Signature: newArraySignature,
 		Label:     ir.Label{IsFunction: true, Name: "newArray"},

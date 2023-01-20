@@ -11,6 +11,14 @@ type Location interface {
 	Type() Type
 }
 
+type LMem struct {
+	Type_ Type
+	Addr  Location
+}
+
+func (v LMem) String() string { return fmt.Sprintf("*%s", v.Addr) }
+func (v LMem) Type() Type     { return v.Type_ }
+
 type LDrop struct{ Type_ Type }
 
 func (v LDrop) String() string { return "LDrop" }
