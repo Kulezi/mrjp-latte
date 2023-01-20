@@ -20,7 +20,7 @@ var goodDirs = []string{
 	// "../../mgtests/lattests/tests/margdoc",
 	// "../../mgtests/lattests/tests/margdoc/lvalues",
 	"../../tests/mrjp-tests/good/basic",
-	// "../../mrjp-tests/good/arrays",
+	"../../tests/mrjp-tests/good/arrays",
 	// "../../mrjp-tests/good/hardcore",
 	// "../../mrjp-tests/good/virtual",
 	// "../../mrjp-tests/gr5",
@@ -47,6 +47,7 @@ func TestTypecheckGood(t *testing.T) {
 				filename := dir + "/" + item.Name()
 				if path.Ext(filename) == ".lat" {
 					t.Run(filename, func(t *testing.T) {
+						t.Parallel()
 						basename := strings.TrimSuffix(filename, ".lat")
 
 						intermediate := basename + ".s"
@@ -78,6 +79,7 @@ func TestTypecheckBad(t *testing.T) {
 				filename := dir + "/" + item.Name()
 				if path.Ext(filename) == ".lat" {
 					t.Run(filename, func(t *testing.T) {
+						t.Parallel()
 						err := CompileX64(config.Config{
 							Source: filename,
 						})
@@ -114,6 +116,7 @@ func TestGoodCompile(t *testing.T) {
 				filename := dir + "/" + item.Name()
 				if path.Ext(filename) == ".lat" {
 					t.Run(filename, func(t *testing.T) {
+						t.Parallel()
 						basename := strings.TrimSuffix(filename, ".lat")
 
 						intermediate := basename + ".s"
@@ -147,6 +150,7 @@ func TestGoodAnswers(t *testing.T) {
 				filename := dir + "/" + item.Name()
 				if path.Ext(filename) == ".lat" {
 					t.Run(filename, func(t *testing.T) {
+						t.Parallel()
 						basename := strings.TrimSuffix(filename, ".lat")
 
 						intermediate := basename + ".s"

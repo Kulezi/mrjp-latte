@@ -15,6 +15,10 @@ clean:
 test: 
 	@cd src/compiler; go test . -count=1
 
+test-verbose: 
+	@cd src/compiler; go test . -count=1 -v
+
+
 .PHONY: cover
 PACKAGES = $(shell cat testpackages.txt)
 cover: 
