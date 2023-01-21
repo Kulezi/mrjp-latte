@@ -51,10 +51,16 @@ func TestTypecheckGood(t *testing.T) {
 				filename := dir + "/" + item.Name()
 				if path.Ext(filename) == ".lat" {
 					t.Run(filename, func(t *testing.T) {
+						defer func() {
+							if r := recover(); r != nil {
+								t.Fatal(r)
+							}
+						}()
 						// t.Parallel()
 						basename := strings.TrimSuffix(filename, ".lat")
 
 						intermediate := basename + ".s"
+
 						err := CompileX64(config.Config{
 							TypeCheck:    true,
 							Source:       filename,
@@ -83,6 +89,11 @@ func TestTypecheckBad(t *testing.T) {
 				filename := dir + "/" + item.Name()
 				if path.Ext(filename) == ".lat" {
 					t.Run(filename, func(t *testing.T) {
+						defer func() {
+							if r := recover(); r != nil {
+								t.Fatal(r)
+							}
+						}()
 						// t.Parallel()
 						err := CompileX64(config.Config{
 							Source: filename,
@@ -120,6 +131,11 @@ func TestGoodCompile(t *testing.T) {
 				filename := dir + "/" + item.Name()
 				if path.Ext(filename) == ".lat" {
 					t.Run(filename, func(t *testing.T) {
+						defer func() {
+							if r := recover(); r != nil {
+								t.Fatal(r)
+							}
+						}()
 						// t.Parallel()
 						basename := strings.TrimSuffix(filename, ".lat")
 
@@ -154,6 +170,11 @@ func TestGoodAnswers(t *testing.T) {
 				filename := dir + "/" + item.Name()
 				if path.Ext(filename) == ".lat" {
 					t.Run(filename, func(t *testing.T) {
+						defer func() {
+							if r := recover(); r != nil {
+								t.Fatal(r)
+							}
+						}()
 						// t.Parallel()
 						basename := strings.TrimSuffix(filename, ".lat")
 

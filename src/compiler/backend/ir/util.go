@@ -9,6 +9,7 @@ import (
 func Unimplemented(format string, args ...interface{}) {
 	format = "ERROR\n" + format
 	fmt.Fprintf(os.Stderr, format, args...)
+	panic("unimplemented")
 	os.Exit(1)
 }
 
