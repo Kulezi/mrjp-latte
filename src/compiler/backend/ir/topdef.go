@@ -48,7 +48,11 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	return nil
 }
 
+// TODO: Methods below should generate:
+// Class VTable, first field being the class constructor.
+
 func (v *Visitor) VisitBaseClassDef(ctx *parser.BaseClassDefContext) interface{} {
+
 	Unimplemented("Classes are not supported in this revision\n\tFound one at %s", types.PosFromToken(ctx.GetStart()))
 	return nil
 }

@@ -1,8 +1,10 @@
 package ir
 
 import (
+	"fmt"
 	"latte/compiler/config"
 	"latte/compiler/frontend/typecheck"
+	"latte/compiler/frontend/types"
 	"latte/parser"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
@@ -17,6 +19,11 @@ func (l Label) String() string {
 	return l.Name
 }
 
+type fname struct {
+	class string
+	name  string
+}
+
 // Visitor for intermediate representation generation
 type Visitor struct {
 	*typecheck.Visitor
@@ -25,6 +32,10 @@ type Visitor struct {
 
 	variableLocations map[string]Location
 	allAddresses      map[string]struct{}
+
+	functionLabels map[fname]Label
+
+	VTables map[string]Label
 
 	CFG    map[Label]BasicBlock
 	Blocks []BasicBlock
@@ -56,12 +67,23 @@ func (v *Visitor) VisitProgram(ctx *parser.ProgramContext) interface{} {
 }
 
 func MakeVisitor(v *typecheck.Visitor, config config.Config) *Visitor {
-	return &Visitor{
+	visitor := &Visitor{
 		Visitor:           v,
 		config:            config,
 		variableLocations: make(map[string]Location),
 		allAddresses:      make(map[string]struct{}),
+		functionLabels:    make(map[fname]Label),
 		CFG:               make(map[Label]BasicBlock),
 		FunInfo:           make(FunInfo),
 	}
+
+	// Prealloc labels for all VTables.
+	for _, v := range v.Signatures.Globals {
+		if class, ok := v.Type.(types.TClass); ok {
+			ident := class.ID.GetText()
+			visitor.VTables[class.ID.GetText()] = visitor.FreshLabel(fmt.Sprintf("_%s_vtable_", ident))
+		}
+	}
+
+	return visitor
 }

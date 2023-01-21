@@ -13,9 +13,40 @@ func Unimplemented(format string, args ...interface{}) {
 	os.Exit(1)
 }
 
+var reservedFunctions = map[string]struct{}{
+	"main":        {},
+	"printInt":    {},
+	"printString": {},
+	"readInt":     {},
+	"readString":  {},
+	"error":       {},
+}
+
+func reservedFunction(ident string) bool {
+	_, ok := reservedFunctions[ident]
+	return ok
+}
+
 func (v *Visitor) GetFunctionLabel(ident string) Label {
-	// TODO: This will need a change when objects are introduced.
-	return Label{IsFunction: true, Name: ident}
+	var fname fname
+	fname.name = ident
+	if v.CurClass != nil {
+		fname.class = (*v.CurClass).ID.GetText()
+	}
+
+	if label, ok := v.functionLabels[fname]; ok {
+		return label
+	}
+
+	if v.CurClass == nil && reservedFunction(ident) {
+		v.functionLabels[fname] = Label{IsFunction: true, Name: ident}
+		return v.functionLabels[fname]
+	}
+
+	label := v.FreshLabel(fmt.Sprintf("_%s_%s", fname.class, fname.name))
+	label.IsFunction = true
+	v.functionLabels[fname] = label
+	return label
 }
 
 func (v *Visitor) FreshTemp(prefix string, t Type) LReg {
