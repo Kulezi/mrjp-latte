@@ -15,13 +15,18 @@ type Label struct {
 	Name       string
 }
 
+type VTableInfo struct {
+	Label Label
+	Class types.TClass
+}
+
 func (l Label) String() string {
 	return l.Name
 }
 
-type fname struct {
-	class string
-	name  string
+type Fname struct {
+	Class string
+	Name  string
 }
 
 // Visitor for intermediate representation generation
@@ -33,9 +38,9 @@ type Visitor struct {
 	variableLocations map[string]Location
 	allAddresses      map[string]struct{}
 
-	functionLabels map[fname]Label
+	functionLabels map[Fname]Label
 
-	VTables map[string]Label
+	VTables map[string]VTableInfo
 
 	CFG    map[Label]BasicBlock
 	Blocks []BasicBlock
@@ -72,7 +77,8 @@ func MakeVisitor(v *typecheck.Visitor, config config.Config) *Visitor {
 		config:            config,
 		variableLocations: make(map[string]Location),
 		allAddresses:      make(map[string]struct{}),
-		functionLabels:    make(map[fname]Label),
+		VTables:           make(map[string]VTableInfo),
+		functionLabels:    make(map[Fname]Label),
 		CFG:               make(map[Label]BasicBlock),
 		FunInfo:           make(FunInfo),
 	}
@@ -81,9 +87,14 @@ func MakeVisitor(v *typecheck.Visitor, config config.Config) *Visitor {
 	for _, v := range v.Signatures.Globals {
 		if class, ok := v.Type.(types.TClass); ok {
 			ident := class.ID.GetText()
-			visitor.VTables[class.ID.GetText()] = visitor.FreshLabel(fmt.Sprintf("_%s_vtable_", ident))
+			visitor.VTables[class.ID.GetText()] = VTableInfo{
+				Label: visitor.FreshLabel(fmt.Sprintf("_%s_vtable_", ident)),
+				Class: class,
+			}
 		}
 	}
 
 	return visitor
 }
+
+var _ parser.LatteVisitor = &Visitor{}

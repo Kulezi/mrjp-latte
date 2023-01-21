@@ -35,6 +35,12 @@ int32_t *newArray(int32_t size) {
     return arr;
 }
 
+int32_t *newClass(int32_t vtable, int32_t size) {
+    int32_t *class = calloc(size + 1, 4);
+    class[0] = vtable;
+    return class;
+}
+
 char *concat(const char *s1, const char *s2) {
     size_t new_len = strlen(s1) + strlen(s2) + 1;
     char *res = malloc(sizeof(char) * new_len);

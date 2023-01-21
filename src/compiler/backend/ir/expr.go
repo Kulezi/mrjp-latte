@@ -209,13 +209,28 @@ func (v *Visitor) VisitENewArray(ctx *parser.ENewArrayContext) interface{} {
 }
 
 func (v *Visitor) VisitENew(ctx *parser.ENewContext) interface{} {
-	Unimplemented("can't use new - classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
-	return nil
+	t, _ := v.EvalType(ctx.Singular_type_())
+	class := t.(types.TClass)
+	dst := v.FreshTemp("new_class", class)
+	v.EmitQuad(QNewClass{
+		Class: class,
+		Dst:   dst,
+	})
+	return dst
 }
 
 func (v *Visitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
-	Unimplemented("can't use self - classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
-	return nil
+	loc := v.GetLocal("self")
+	if _, ok := loc.(LMem); ok {
+		value := v.FreshTemp("eid_deref", loc.Type())
+		v.EmitQuad(QMov{
+			Src: loc,
+			Dst: value,
+		})
+		return value
+	}
+
+	return loc
 }
 
 func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {

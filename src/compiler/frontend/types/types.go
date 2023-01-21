@@ -306,7 +306,7 @@ func (t TClass) Const() (value interface{}, ok bool) {
 }
 
 func (t TClass) DefaultValue() interface{} {
-	panic("can't take default value of a class")
+	return 0
 }
 
 type TClassRef struct {

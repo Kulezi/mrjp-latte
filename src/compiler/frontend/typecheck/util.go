@@ -6,7 +6,7 @@ import (
 	"latte/parser"
 )
 
-func (v *Visitor) evalClass(ident string) TClass {
+func (v *Visitor) EvalClass(ident string) TClass {
 	t, ok := v.TypeOfGlobal(ident)
 	if !ok {
 		panic(fmt.Sprintf("typecheck: found undeclared class %s", ident))
@@ -72,6 +72,7 @@ func (v *Visitor) EnterType(t Type, lvalue bool) (exit func()) {
 }
 
 func (v *Visitor) EnterClass(signature TClass) (exit func()) {
+	v.CurClass = &signature
 	v.Depth++
 	// Put all fields into enviroment.
 	oldLocals := v.Signatures.Locals
@@ -85,6 +86,7 @@ func (v *Visitor) EnterClass(signature TClass) (exit func()) {
 	return func() {
 		v.Signatures.Locals = oldLocals
 		v.Depth--
+		v.CurClass = nil
 	}
 }
 

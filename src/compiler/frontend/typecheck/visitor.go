@@ -55,9 +55,4 @@ func (v *Visitor) VisitProgram(ctx *parser.ProgramContext) interface{} {
 	return res
 }
 
-func (v *Visitor) VisitClassMethodDef(ctx *parser.ClassMethodDefContext) interface{} {
-	// Check method validity.
-	return v.Visit(ctx.Fundef())
-}
-
 var _ parser.LatteVisitor = &Visitor{}

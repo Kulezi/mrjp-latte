@@ -58,11 +58,9 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 }
 
 func (v *Visitor) VisitBaseClassDef(ctx *parser.BaseClassDefContext) interface{} {
-	signature := v.evalClass(ctx.ID().GetText())
+	class := v.EvalClass(ctx.ID().GetText())
+	defer v.EnterClass(class)()
 
-	defer v.EnterClass(signature)()
-
-	v.CurClass = &signature
 	// Evaluate methods
 	for _, field := range ctx.AllField() {
 		if err, ok := v.Visit(field).(error); ok {
@@ -70,16 +68,13 @@ func (v *Visitor) VisitBaseClassDef(ctx *parser.BaseClassDefContext) interface{}
 		}
 	}
 
-	v.CurClass = nil
 	return nil
 }
 
 func (v *Visitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefContext) interface{} {
-	signature := v.evalClass(ctx.ID(0).GetText())
+	class := v.EvalClass(ctx.ID(0).GetText())
+	defer v.EnterClass(class)()
 
-	defer v.EnterClass(signature)()
-
-	v.CurClass = &signature
 	// Evaluate methods
 	for _, field := range ctx.AllField() {
 		if err, ok := v.Visit(field).(error); ok {
@@ -87,11 +82,15 @@ func (v *Visitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefContext) inter
 		}
 	}
 
-	v.CurClass = nil
 	return nil
 }
 
 func (v *Visitor) VisitClassFieldDef(ctx *parser.ClassFieldDefContext) interface{} {
 	// We still need to check if returned type exists.
 	return v.Visit(ctx.Nvtype_())
+}
+
+func (v *Visitor) VisitClassMethodDef(ctx *parser.ClassMethodDefContext) interface{} {
+	// Check method validity.
+	return v.Visit(ctx.Fundef())
 }

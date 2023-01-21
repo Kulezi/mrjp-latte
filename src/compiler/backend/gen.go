@@ -26,14 +26,31 @@ var scratchRegisters = []string{eax, ecx, edx, esp}
 var preservedRegisters = []string{ebp, esi, edi, ebx}
 
 func GenX64(s frontend.State, config Config) string {
-	cfg, finfo := ir.Generate(s, config)
+	cfg, finfo, vtables, functionLabels := ir.Generate(s, config)
 	if config.PrintIR {
 		fmt.Println(cfg)
 	}
 
-	x86 := X86Generator{FunInfo: finfo, stringAdresses: make(map[string]string)}
+	x86 := X86Generator{FunInfo: finfo, stringAdresses: make(map[string]string), vtables: vtables}
 
 	x86.Emit(".data\n")
+	for _, vtable := range vtables {
+		x86.EmitLabel(vtable.Label.Name)
+		class := vtable.Class
+		fields := make([]ir.Label, class.TotalMethods)
+		for _, field := range vtable.Class.Fields {
+			if fun, ok := field.Type.(types.TFun); ok {
+				fields[field.Offset] = functionLabels[ir.Fname{
+					Class: class.ID.GetText(),
+					Name:  fun.Ident,
+				}]
+			}
+		}
+
+		for _, label := range fields {
+			x86.EmitOp(".long %s", label.Name)
+		}
+	}
 
 	for _, block := range cfg.Nodes {
 		x86.GenDataFromBlock(block)
@@ -53,6 +70,7 @@ type X86Generator struct {
 	curFun         ir.VarInfo
 	res            string
 	stringAdresses map[string]string
+	vtables        map[string]ir.VTableInfo
 }
 
 func (x86 *X86Generator) GenDataFromBlock(block ir.BasicBlock) {
@@ -190,6 +208,8 @@ func (x86 *X86Generator) GenFromQuad(q ir.Quadruple) {
 		x86.EmitDeref(q)
 	case ir.QNewArray:
 		x86.EmitNewArray(q)
+	case ir.QNewClass:
+		x86.EmitNewClass(q)
 	default:
 		panic("unsupported quadruple")
 	}
@@ -487,8 +507,30 @@ func (x86 *X86Generator) EmitNewArray(q ir.QNewArray) {
 	})
 }
 
+func (x86 *X86Generator) EmitNewClass(q ir.QNewClass) {
+	size := ir.LConst{Type_: types.TInt{}, Value: q.Class.TotalNonMethods}
+	x86.EmitOp("pushl %s", x86.vtables[q.Class.ID.GetText()].Label)
+	x86.EmitLoad(eax, size)
+	x86.EmitOp("pushl %s", eax)
+	x86.EmitCall(ir.QCall{
+		Signature: newClassSignature,
+		Label:     ir.Label{IsFunction: true, Name: "newClass"},
+		Dst:       q.Dst,
+		Args:      []ir.Location{ir.LConst{}, size},
+	})
+}
+
 var newArraySignature = types.TFun{
 	Ident:  "newArray",
 	Args:   []types.FArg{{Ident: "size", Type: types.TInt{}}},
+	Result: types.TInt{},
+}
+
+var newClassSignature = types.TFun{
+	Ident: "newClass",
+	Args: []types.FArg{
+		{Ident: "vtable", Type: types.TInt{}},
+		{Ident: "size", Type: types.TInt{}},
+	},
 	Result: types.TInt{},
 }

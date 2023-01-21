@@ -28,10 +28,10 @@ func reservedFunction(ident string) bool {
 }
 
 func (v *Visitor) GetFunctionLabel(ident string) Label {
-	var fname fname
-	fname.name = ident
+	var fname Fname
+	fname.Name = ident
 	if v.CurClass != nil {
-		fname.class = (*v.CurClass).ID.GetText()
+		fname.Class = (*v.CurClass).ID.GetText()
 	}
 
 	if label, ok := v.functionLabels[fname]; ok {
@@ -43,10 +43,29 @@ func (v *Visitor) GetFunctionLabel(ident string) Label {
 		return v.functionLabels[fname]
 	}
 
-	label := v.FreshLabel(fmt.Sprintf("_%s_%s", fname.class, fname.name))
+	label := v.FreshLabel(fmt.Sprintf("_%s_%s", fname.Class, fname.Name))
 	label.IsFunction = true
 	v.functionLabels[fname] = label
 	return label
+}
+
+func (v *Visitor) EnterClass(signature TClass) (exit func()) {
+	v.CurClass = &signature
+	v.Depth++
+	// Put all fields into enviroment.
+	oldLocals := v.Signatures.Locals
+	v.Signatures.Locals = make(Env)
+	for ident, t := range signature.Fields {
+		v.ShadowLocal(ident, t.Type)
+	}
+
+	v.ShadowLocal("self", signature)
+
+	return func() {
+		v.Signatures.Locals = oldLocals
+		v.Depth--
+		v.CurClass = nil
+	}
 }
 
 func (v *Visitor) FreshTemp(prefix string, t Type) LReg {

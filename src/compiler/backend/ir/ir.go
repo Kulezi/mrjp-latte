@@ -196,3 +196,11 @@ type QNewArray struct {
 }
 
 func (q QNewArray) String() string { return fmt.Sprintf("%s = new %s[%s]", q.Dst, q.Type, q.Size) }
+
+type QNewClass struct {
+	QBase
+	Class TClass
+	Dst   Location
+}
+
+func (q QNewClass) String() string { return fmt.Sprintf("%s = new %s", q.Dst, q.Class) }

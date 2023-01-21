@@ -47,7 +47,7 @@ type FunInfo map[Label]VarInfo
 
 // Generates a control flow graph that is in non-SSA form,
 // along with information about variables and string literals.
-func Generate(s frontend.State, config config.Config) (ControlFlowGraph, FunInfo) {
+func Generate(s frontend.State, config config.Config) (ControlFlowGraph, FunInfo, map[string]VTableInfo, map[Fname]Label) {
 	v := MakeVisitor(typecheck.MakeVisitor(s.Signatures), config)
 	v.Visit(s.Tree)
 
@@ -95,5 +95,5 @@ func Generate(s frontend.State, config config.Config) (ControlFlowGraph, FunInfo
 
 	// cfg.Nodes = nonDead
 
-	return cfg, v.FunInfo
+	return cfg, v.FunInfo, v.VTables, v.functionLabels
 }
