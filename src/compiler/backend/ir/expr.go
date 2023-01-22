@@ -48,6 +48,20 @@ func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{}
 	ident := ctx.ID().GetText()
 	var dst Location
 	switch t := lhs.Type().(type) {
+	case types.TClassRef:
+		class := v.EvalClass(t.ID.GetText())
+		fieldInfo := class.Fields[ident]
+		ptr := v.FreshTemp("class_field_ref", fieldInfo.Type)
+		dst = v.FreshTemp("class_field", fieldInfo.Type)
+		v.EmitQuad(QArrayAccess{
+			Array: lhs,
+			Index: LConst{Type_: types.TInt{}, Value: fieldInfo.Offset - 1},
+			Dst:   ptr,
+		})
+		v.EmitQuad(QDeref{
+			Src: ptr,
+			Dst: dst,
+		})
 	case types.TClass:
 		fieldInfo := t.Fields[ident]
 		ptr := v.FreshTemp("class_field_ref", fieldInfo.Type)

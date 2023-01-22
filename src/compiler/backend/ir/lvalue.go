@@ -3,6 +3,7 @@ package ir
 import (
 	"latte/compiler/frontend/types"
 	"latte/parser"
+	"log"
 )
 
 func (v *Visitor) VisitLVFieldArrayRef(ctx *parser.LVFieldArrayRefContext) interface{} {
@@ -17,8 +18,28 @@ func (v *Visitor) VisitLVFieldMethodCall(ctx *parser.LVFieldMethodCallContext) i
 }
 
 func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
-	Unimplemented("classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
-	return nil
+	lhs := v.evalExpr(ctx.Expr())
+	ident := ctx.ID().GetText()
+	log.Printf("\n####\n%#v\n$$$\n, %#v\n####\n", lhs, lhs.Type())
+
+	var class types.TClass
+	switch t := lhs.Type().(type) {
+	case types.TClassRef:
+		class = v.EvalClass(t.ID.GetText())
+	case types.TClass:
+		class = t
+	default:
+		panic("field access as lvalue happened on non class type")
+	}
+
+	fieldInfo := class.Fields[ident]
+	dst := v.FreshTemp("class_field", fieldInfo.Type)
+	v.EmitQuad(QArrayAccess{
+		Array: lhs,
+		Index: LConst{Type_: types.TInt{}, Value: fieldInfo.Offset - 1},
+		Dst:   dst,
+	})
+	return LMem{Type_: dst.Type(), Addr: dst}
 }
 
 func (v *Visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {

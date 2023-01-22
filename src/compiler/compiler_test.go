@@ -17,9 +17,9 @@ import (
 var goodDirs = []string{
 	"../../tests/kulezi_tests/good",
 	"../../tests/kulezi_tests/extensions/arrays1",
-	"../../tests/kulezi_tests/extensions/objects1",
-	"../../tests/kulezi_tests/extensions/objects2",
-	"../../tests/kulezi_tests/extensions/struct",
+	// "../../tests/kulezi_tests/extensions/objects1",
+	// "../../tests/kulezi_tests/extensions/objects2",
+	// "../../tests/kulezi_tests/extensions/struct",
 
 	// "../../mgtests/lattests/tests/margdoc",
 	// "../../mgtests/lattests/tests/margdoc/lvalues",

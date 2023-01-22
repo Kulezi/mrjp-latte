@@ -17,6 +17,7 @@ void error() {
 }
 
 void printString(const char *x) {
+    if (x == NULL) x = "";
     puts(x);
     fflush(stdout);
 }
