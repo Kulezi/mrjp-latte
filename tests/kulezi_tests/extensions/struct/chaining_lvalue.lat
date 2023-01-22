@@ -1,0 +1,29 @@
+int main() {
+    C x = new C;
+    x.x = new C;
+    x.y = 1;
+    printInt(x.y);
+
+    x.x.x = new C;
+    x.x.y = 2;
+    printInt(x.x.y);
+
+    x.x.x.x = new C;
+    x.x.x.y = 3;
+    printInt(x.x.x.y);
+
+    x.x.x.x.x = new C;
+    x.x.x.x.y = 4;
+    printInt(x.x.x.x.y);
+
+    x.x.x.x.x.x = new C;
+    x.x.x.x.x.y = 5;
+    printInt(x.x.x.x.x.y);
+
+    return 0;
+}
+
+class C {
+    C x;
+    int y;
+}

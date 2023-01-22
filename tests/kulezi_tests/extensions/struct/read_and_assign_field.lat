@@ -1,0 +1,14 @@
+int main() {
+    C c = new C;
+    c.x = 1;
+    printInt(c.x);
+    c.x = 2;
+    printInt(c.x);
+    c.x = 3;
+    printInt(c.x);
+    return 0;
+}
+
+class C {
+    int x;
+}

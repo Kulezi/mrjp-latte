@@ -1,0 +1,33 @@
+int main() {
+    boolean x;
+    boolean y = true;
+    if (x) {
+        printString("true");
+    } else {
+        printString("false");
+    }
+
+    if (y) {
+        printString("true");
+    } else {
+        printString("false");
+    }
+
+    printBool(x);
+    printBool(y);
+    printBool(!x);
+    printBool(!y);
+    printBool(x == y);
+    printBool(x != y);
+    printBool(x && y);
+    printBool(x || y);
+    return 0;
+}
+
+void printBool(boolean x) {
+    if (x) {
+        printString("true");
+    } else {
+        printString("false");
+    }
+}

@@ -1,0 +1,6 @@
+int main() {
+    C x = new C;
+    return 0;
+}
+
+class C {}

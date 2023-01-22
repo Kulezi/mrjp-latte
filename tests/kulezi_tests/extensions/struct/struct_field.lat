@@ -4,7 +4,7 @@ class A {
 
 int main() {
     A x = new A;
-    printInt(x.x);
     x.x = 3;
+    printInt(x.x);
     return 0;
 }

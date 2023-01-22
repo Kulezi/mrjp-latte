@@ -1,0 +1,19 @@
+int main() {
+    C c = new C;
+    printInt(c.x);
+
+    if (c.y) {
+        printString("true");
+    } else {
+        printString("false");
+    }
+
+    printString(c.z);
+    return 0;
+}
+
+class C {
+    int x;
+    boolean y;
+    string z;
+}
