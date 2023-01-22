@@ -35,19 +35,44 @@ func (v *Visitor) GetBoolLoc() Location {
 
 func (v *Visitor) VisitEMethodCall(ctx *parser.EMethodCallContext) interface{} {
 	Unimplemented("can't use method call - classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
-
 	return nil
 }
 
 func (v *Visitor) VisitEFieldArrayAccess(ctx *parser.EFieldArrayAccessContext) interface{} {
 	Unimplemented("can't use field array access - classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
-
 	return nil
 }
 
 func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
-	Unimplemented("can't use field - classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
-	return nil
+	lhs := v.evalExpr(ctx.Expr())
+	ident := ctx.ID().GetText()
+	var dst Location
+	switch t := lhs.Type().(type) {
+	case types.TClass:
+		fieldInfo := t.Fields[ident]
+		ptr := v.FreshTemp("class_field_ref", fieldInfo.Type)
+		dst = v.FreshTemp("class_field", fieldInfo.Type)
+		v.EmitQuad(QArrayAccess{
+			Array: lhs,
+			Index: LConst{Type_: types.TInt{}, Value: fieldInfo.Offset - 1},
+			Dst:   ptr,
+		})
+		v.EmitQuad(QDeref{
+			Src: ptr,
+			Dst: dst,
+		})
+	case types.TArray:
+		// It must be a length call.
+		dst = v.FreshTemp("array_length", types.TInt{})
+		v.EmitQuad(QDeref{
+			Src: lhs,
+			Dst: dst,
+		})
+	default:
+		panic("field access happened on non array/class type")
+	}
+
+	return dst
 }
 
 func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {

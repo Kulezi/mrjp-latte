@@ -21,6 +21,8 @@ test:
 test-verbose: 
 	@cd src/compiler; go test . -count=1 -v
 
+runtime:
+	@cd	lib; gcc -c -m32 runtime.c -o runtime.o
 
 .PHONY: cover
 PACKAGES = $(shell cat testpackages.txt)
