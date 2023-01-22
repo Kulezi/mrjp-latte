@@ -50,49 +50,6 @@ func (v *Visitor) VisitLVFieldArrayRef(ctx *parser.LVFieldArrayRefContext) inter
 	return arr.Elem
 }
 
-func (v *Visitor) VisitLVFieldMethodCall(ctx *parser.LVFieldMethodCallContext) interface{} {
-	lhs, err := v.EvalExpr(ctx.Expr(0))
-	if err != nil {
-		return err
-	}
-
-	drop := v.EnterType(lhs, false)
-	t, ok := v.TypeOfLocal(ctx.ID().GetText())
-	if !ok {
-		return UndeclaredIdentifierError{
-			Ident: ctx.ID(),
-		}
-	}
-	drop()
-
-	signature, ok := t.Type.(TFun)
-	if !ok {
-		return NotAFunctionError{Ident: ctx.ID(), Type: t}
-	}
-
-	args := ctx.AllExpr()[1:]
-	if len(signature.Args) != len(args) {
-		return InvalidFunctionArgumentCountError{
-			Expr:     ctx,
-			Provided: args,
-			Fun:      signature,
-		}
-	}
-
-	for i, e := range args {
-		if err := v.ExpectType(signature.Args[i].Type, e); err != nil {
-			return err
-		}
-	}
-
-	if classRef, ok := signature.Result.(TClassRef); ok {
-		class, _ := v.TypeOfGlobal(classRef.String())
-		return class.Type.(TClass)
-	}
-
-	return signature.Result
-}
-
 func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
 	lhs, err := v.EvalExpr(ctx.Expr())
 	if err != nil {

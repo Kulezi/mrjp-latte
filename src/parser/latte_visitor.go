@@ -41,9 +41,6 @@ type LatteVisitor interface {
 	// Visit a parse tree produced by LatteParser#LVFieldArrayRef.
 	VisitLVFieldArrayRef(ctx *LVFieldArrayRefContext) interface{}
 
-	// Visit a parse tree produced by LatteParser#LVFieldMethodCall.
-	VisitLVFieldMethodCall(ctx *LVFieldMethodCallContext) interface{}
-
 	// Visit a parse tree produced by LatteParser#LVField.
 	VisitLVField(ctx *LVFieldContext) interface{}
 

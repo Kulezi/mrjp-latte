@@ -86,6 +86,10 @@ func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{}
 		panic("field access happened on non array/class type")
 	}
 
+	if loc, ok := v.unassignBool(dst); ok {
+		return loc
+	}
+
 	return dst
 }
 
@@ -105,6 +109,10 @@ func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
 		Src: ptr,
 		Dst: value,
 	})
+
+	if loc, ok := v.unassignBool(value); ok {
+		return loc
+	}
 
 	return value
 }
@@ -272,9 +280,7 @@ func (v *Visitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
 	return loc
 }
 
-func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
-	ident := ctx.ID().GetText()
-	loc := v.GetLocal(ident)
+func (v *Visitor) unassignBool(loc Location) (Location, bool) {
 	if _, ok := loc.Type().(types.TBool); ok {
 		if v.lTrue == v.lNext {
 			v.EmitQuad(QJz{
@@ -296,7 +302,17 @@ func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
 			})
 		}
 
-		return LUnassigned{}
+		return LUnassigned{}, true
+	}
+
+	return nil, false
+}
+
+func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
+	ident := ctx.ID().GetText()
+	loc := v.GetLocal(ident)
+	if loc, ok := v.unassignBool(loc); ok {
+		return loc
 	}
 
 	if _, ok := loc.(LMem); ok {
@@ -373,8 +389,8 @@ func (v *Visitor) VisitEStr(ctx *parser.EStrContext) interface{} {
 }
 
 func (v *Visitor) VisitENull(ctx *parser.ENullContext) interface{} {
-	Unimplemented("nulls are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
-	return nil
+	class := v.EvalClass(ctx.ID().GetText())
+	return LConst{Type_: class, Value: 0}
 }
 
 func (v *Visitor) VisitEParen(ctx *parser.EParenContext) interface{} {

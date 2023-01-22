@@ -52,10 +52,6 @@ func (v *BaseLatteVisitor) VisitLVFieldArrayRef(ctx *LVFieldArrayRefContext) int
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseLatteVisitor) VisitLVFieldMethodCall(ctx *LVFieldMethodCallContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
 func (v *BaseLatteVisitor) VisitLVField(ctx *LVFieldContext) interface{} {
 	return v.VisitChildren(ctx)
 }

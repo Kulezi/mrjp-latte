@@ -19,7 +19,6 @@ block: '{' stmt* '}';
 lvalue:
 	expr '[' expr ']'			# LVArrayRef
 	| expr '.' ID '[' expr ']'	# LVFieldArrayRef
-	| expr '.' ID '(' expr ')'	# LVFieldMethodCall
 	| expr '.' ID				# LVField
 	| ID						# LVId;
 

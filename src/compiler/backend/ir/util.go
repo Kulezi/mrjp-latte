@@ -59,8 +59,6 @@ func (v *Visitor) EnterClass(signature TClass) (exit func()) {
 		v.ShadowLocal(ident, t.Type)
 	}
 
-	v.ShadowLocal("self", signature)
-
 	return func() {
 		v.Signatures.Locals = oldLocals
 		v.Depth--

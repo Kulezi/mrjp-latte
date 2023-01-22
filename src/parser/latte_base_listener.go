@@ -87,12 +87,6 @@ func (s *BaseLatteListener) EnterLVFieldArrayRef(ctx *LVFieldArrayRefContext) {}
 // ExitLVFieldArrayRef is called when production LVFieldArrayRef is exited.
 func (s *BaseLatteListener) ExitLVFieldArrayRef(ctx *LVFieldArrayRefContext) {}
 
-// EnterLVFieldMethodCall is called when production LVFieldMethodCall is entered.
-func (s *BaseLatteListener) EnterLVFieldMethodCall(ctx *LVFieldMethodCallContext) {}
-
-// ExitLVFieldMethodCall is called when production LVFieldMethodCall is exited.
-func (s *BaseLatteListener) ExitLVFieldMethodCall(ctx *LVFieldMethodCallContext) {}
-
 // EnterLVField is called when production LVField is entered.
 func (s *BaseLatteListener) EnterLVField(ctx *LVFieldContext) {}
 

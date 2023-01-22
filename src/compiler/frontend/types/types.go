@@ -364,6 +364,7 @@ type TFun struct {
 	Terminal antlr.TerminalNode
 	Args     []FArg
 	Result   Type
+	IsMethod bool
 }
 
 func (t TFun) String() string {

@@ -41,9 +41,6 @@ type LatteListener interface {
 	// EnterLVFieldArrayRef is called when entering the LVFieldArrayRef production.
 	EnterLVFieldArrayRef(c *LVFieldArrayRefContext)
 
-	// EnterLVFieldMethodCall is called when entering the LVFieldMethodCall production.
-	EnterLVFieldMethodCall(c *LVFieldMethodCallContext)
-
 	// EnterLVField is called when entering the LVField production.
 	EnterLVField(c *LVFieldContext)
 
@@ -223,9 +220,6 @@ type LatteListener interface {
 
 	// ExitLVFieldArrayRef is called when exiting the LVFieldArrayRef production.
 	ExitLVFieldArrayRef(c *LVFieldArrayRefContext)
-
-	// ExitLVFieldMethodCall is called when exiting the LVFieldMethodCall production.
-	ExitLVFieldMethodCall(c *LVFieldMethodCallContext)
 
 	// ExitLVField is called when exiting the LVField production.
 	ExitLVField(c *LVFieldContext)

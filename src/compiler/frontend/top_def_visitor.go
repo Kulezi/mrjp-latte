@@ -186,6 +186,7 @@ func (v *globalDeclVisitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 		Ident:    ctx.ID().GetText(),
 		Terminal: ctx.ID(),
 		Result:   v.Visit(ctx.Type_()).(Type),
+		IsMethod: v.inMethod,
 	}
 
 	if ctx.Arg() != nil {

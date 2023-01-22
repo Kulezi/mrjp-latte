@@ -3,7 +3,6 @@ package ir
 import (
 	"latte/compiler/frontend/types"
 	"latte/parser"
-	"log"
 )
 
 func (v *Visitor) VisitLVFieldArrayRef(ctx *parser.LVFieldArrayRefContext) interface{} {
@@ -12,15 +11,9 @@ func (v *Visitor) VisitLVFieldArrayRef(ctx *parser.LVFieldArrayRefContext) inter
 
 }
 
-func (v *Visitor) VisitLVFieldMethodCall(ctx *parser.LVFieldMethodCallContext) interface{} {
-	Unimplemented("classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
-	return nil
-}
-
 func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
 	lhs := v.evalExpr(ctx.Expr())
 	ident := ctx.ID().GetText()
-	log.Printf("\n####\n%#v\n$$$\n, %#v\n####\n", lhs, lhs.Type())
 
 	var class types.TClass
 	switch t := lhs.Type().(type) {
