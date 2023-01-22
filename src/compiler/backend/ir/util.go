@@ -55,8 +55,8 @@ func (v *Visitor) EnterClass(signature TClass) (exit func()) {
 	// Put all fields into enviroment.
 	oldLocals := v.Signatures.Locals
 	v.Signatures.Locals = make(Env)
-	for ident, t := range signature.Fields {
-		v.ShadowLocal(ident, t.Type)
+	for ident, fieldInfo := range signature.Fields {
+		v.PutField(ident, fieldInfo)
 	}
 
 	return func() {
@@ -112,20 +112,15 @@ func (v *Visitor) StartBlock(l Label) {
 	v.curBlock = BasicBlock{Label: l}
 }
 
-func (v *Visitor) PushField(ident string, loc LMem) (drop func()) {
-	oldSignature, ok := v.Signatures.Locals[ident]
-	oldLoc, ok := v.variableLocations[ident]
-
-	v.variableLocations[ident] = loc
+func (v *Visitor) PutField(ident string, fieldInfo FieldInfo) {
 	v.Signatures.Locals[ident] = TypeInfo{
-		Type: loc.Type_,
+		Type: fieldInfo.Type,
 	}
 
-	return func() {
-		if ok {
-			v.Signatures.Locals[ident] = oldSignature
-			v.variableLocations[ident] = oldLoc
-		}
+	v.variableLocations[ident] = LSelfField{
+		Type_:  fieldInfo.Type,
+		Name:   ident,
+		Offset: fieldInfo.Offset,
 	}
 }
 

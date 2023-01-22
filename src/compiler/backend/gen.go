@@ -200,6 +200,8 @@ func (x86 *X86Generator) GenFromQuad(q ir.Quadruple) {
 		x86.EmitVRet(q)
 	case ir.QCall:
 		x86.EmitCall(q)
+	case ir.QCallMethod:
+		x86.EmitCallMethod(q)
 	case ir.QPush:
 		x86.EmitPush(q)
 	case ir.QArrayAccess:
@@ -466,6 +468,17 @@ func (x86 *X86Generator) EmitVRet(q ir.QVRet) {
 
 func (x86 *X86Generator) EmitCall(q ir.QCall) {
 	x86.EmitOp("call %s", q.Label.Name)
+	// Pop arguments from the stack.
+	x86.EmitOp("addl $%#x, %s", len(q.Args)*DWORD, esp)
+
+	if _, ok := q.Signature.Result.(types.TVoid); !ok {
+		x86.EmitOp("pushl %s", eax)
+	}
+}
+
+func (x86 *X86Generator) EmitCallMethod(q ir.QCallMethod) {
+	x86.EmitLoad(eax, q.Label)
+	x86.EmitOp("call %s", eax)
 	// Pop arguments from the stack.
 	x86.EmitOp("addl $%#x, %s", len(q.Args)*DWORD, esp)
 

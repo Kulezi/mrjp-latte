@@ -3,6 +3,7 @@ package ir
 import (
 	"latte/compiler/frontend/types"
 	"latte/parser"
+	"log"
 	"strconv"
 )
 
@@ -268,6 +269,7 @@ func (v *Visitor) VisitENew(ctx *parser.ENewContext) interface{} {
 
 func (v *Visitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
 	loc := v.GetLocal("self")
+	log.Println(loc)
 	if _, ok := loc.(LMem); ok {
 		value := v.FreshTemp("eid_deref", loc.Type())
 		v.EmitQuad(QMov{
@@ -334,6 +336,12 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 	signature := t.Type.(types.TFun)
 
 	var args []Location
+	if signature.IsMethod {
+		self := v.GetLocal("self")
+		v.EmitQuad(QPush{Src: self})
+		args = append(args, self)
+	}
+
 	for i, e := range ctx.AllExpr() {
 		pop := func() {}
 		if _, ok := signature.Args[i].Type.(types.TBool); ok {
@@ -359,12 +367,40 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 
 	dst := v.FreshTemp("call_tmp", signature.Result)
 
-	v.EmitQuad(QCall{
-		Signature: signature,
-		Label:     v.GetFunctionLabel(ident),
-		Dst:       dst,
-		Args:      args,
-	})
+	if signature.IsMethod {
+		class := *v.CurClass
+
+		vtablePtr := v.FreshTemp("vtab_ptr", types.TInt{})
+		v.EmitQuad(QDeref{
+			Src: v.GetLocal("self"),
+			Dst: vtablePtr,
+		})
+		funAddr := v.FreshTemp("vtab_addr", types.TInt{})
+		v.EmitQuad(QArrayAccess{
+			Array: vtablePtr,
+			Index: LConst{Type_: types.TInt{}, Value: class.Fields[ident].Offset},
+			Dst:   funAddr,
+		})
+		funLabel := v.FreshTemp("method_label", types.TInt{})
+		v.EmitQuad(QDeref{
+			Src: funAddr,
+			Dst: funLabel,
+		})
+
+		v.EmitQuad(QCallMethod{
+			Signature: signature,
+			Label:     funLabel,
+			Dst:       dst,
+			Args:      args,
+		})
+	} else {
+		v.EmitQuad(QCall{
+			Signature: signature,
+			Label:     v.GetFunctionLabel(ident),
+			Dst:       dst,
+			Args:      args,
+		})
+	}
 
 	if _, ok := signature.Result.(types.TBool); ok {
 		v.EmitQuad(QRelOp{

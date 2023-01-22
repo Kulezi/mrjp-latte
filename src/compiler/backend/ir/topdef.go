@@ -24,6 +24,12 @@ func (v *Visitor) VisitFunDef(ctx *parser.FunDefContext) interface{} {
 	v.StartBlock(label)
 
 	beforeVars := v.varCount
+
+	if v.CurClass != nil {
+		_, drop := v.ShadowLocal("self", *v.CurClass)
+		defer drop()
+	}
+
 	for _, arg := range signature.Args {
 		_, drop := v.ShadowLocal(arg.Ident, arg.Type)
 		defer drop()

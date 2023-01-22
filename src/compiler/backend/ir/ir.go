@@ -11,6 +11,15 @@ type Location interface {
 	Type() Type
 }
 
+type LSelfField struct {
+	Type_  Type
+	Name   string
+	Offset int
+}
+
+func (v LSelfField) String() string { return fmt.Sprintf("self.%s", v.Name) }
+func (v LSelfField) Type() Type     { return v.Type_ }
+
 type LMem struct {
 	Type_ Type
 	Addr  Location
@@ -163,6 +172,16 @@ type QCall struct {
 }
 
 func (q QCall) String() string { return fmt.Sprintf("%s = call %s(%s)", q.Dst, q.Label, q.Args) }
+
+type QCallMethod struct {
+	QBase
+	Signature TFun
+	Label     Location
+	Dst       Location
+	Args      []Location
+}
+
+func (q QCallMethod) String() string { return fmt.Sprintf("%s = call %s(%s)", q.Dst, q.Label, q.Args) }
 
 type QPush struct {
 	QBase
