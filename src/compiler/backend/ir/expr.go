@@ -41,15 +41,17 @@ func (v *Visitor) VisitEMethodCall(ctx *parser.EMethodCallContext) interface{} {
 	fieldInfo := class.Fields[ident]
 	signature := fieldInfo.Type.(types.TFun)
 
-	var args []Location
-	if signature.IsMethod {
-		v.EmitQuad(QPush{Src: classPtr})
-		if !isVariable(classPtr) {
-			v.EmitQuad(QDup{})
-		}
+	var classPtrHolder Location
 
-		args = append(args, classPtr)
-	}
+	var args []Location
+	var drop func()
+	classPtrHolder, drop = v.ShadowLocal("_method_self", types.TInt{})
+	defer drop()
+
+	v.EmitQuad(QMov{Src: classPtr, Dst: classPtrHolder})
+	v.EmitQuad(QPush{Src: classPtrHolder})
+
+	args = append(args, classPtr)
 
 	for i, e := range ctx.AllExpr()[1:] {
 		pop := func() {}
@@ -75,7 +77,7 @@ func (v *Visitor) VisitEMethodCall(ctx *parser.EMethodCallContext) interface{} {
 
 	vtablePtr := v.FreshTemp("vtab_ptr", types.TInt{})
 	v.EmitQuad(QDeref{
-		Src: classPtr,
+		Src: classPtrHolder,
 		Dst: vtablePtr,
 	})
 	funAddr := v.FreshTemp("vtab_addr", types.TInt{})
@@ -167,9 +169,7 @@ func (v *Visitor) VisitEFieldArrayAccess(ctx *parser.EFieldArrayAccessContext) i
 	return value
 }
 
-func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
-	lhs := v.evalExpr(ctx.Expr())
-	ident := ctx.ID().GetText()
+func (v *Visitor) EvalSelfFieldLocation(lhs Location, ident string) Location {
 	var dst Location
 	switch t := lhs.Type().(type) {
 	case types.TClassRef:
@@ -215,6 +215,12 @@ func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{}
 	}
 
 	return dst
+}
+
+func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {
+	lhs := v.evalExpr(ctx.Expr())
+	ident := ctx.ID().GetText()
+	return v.EvalSelfFieldLocation(lhs, ident)
 }
 
 func (v *Visitor) VisitEArrayRef(ctx *parser.EArrayRefContext) interface{} {
@@ -435,9 +441,6 @@ func (v *Visitor) unassignBool(loc Location) (Location, bool) {
 func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
 	ident := ctx.ID().GetText()
 	loc := v.GetLocal(ident)
-	if loc, ok := v.unassignBool(loc); ok {
-		return loc
-	}
 
 	if _, ok := loc.(LMem); ok {
 		value := v.FreshTemp("eid_deref", loc.Type())
@@ -446,6 +449,15 @@ func (v *Visitor) VisitEId(ctx *parser.EIdContext) interface{} {
 			Dst: value,
 		})
 		return value
+	}
+
+	if _, ok := loc.(LSelfField); ok {
+		lhs := v.VisitESelf(nil).(Location)
+		return v.EvalSelfFieldLocation(lhs, ident)
+	}
+
+	if loc, ok := v.unassignBool(loc); ok {
+		return loc
 	}
 
 	return loc

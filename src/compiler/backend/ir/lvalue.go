@@ -54,10 +54,7 @@ func (v *Visitor) VisitLVFieldArrayRef(ctx *parser.LVFieldArrayRefContext) inter
 	return LMem{Type_: array.Type().BaseType(), Addr: ptr}
 }
 
-func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
-	lhs := v.evalExpr(ctx.Expr())
-	ident := ctx.ID().GetText()
-
+func (v *Visitor) evalSelfFieldRef(lhs Location, ident string) Location {
 	var class types.TClass
 	switch t := lhs.Type().(type) {
 	case types.TClassRef:
@@ -75,7 +72,15 @@ func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
 		Index: LConst{Type_: types.TInt{}, Value: fieldInfo.Offset - 1},
 		Dst:   dst,
 	})
+
 	return LMem{Type_: dst.Type(), Addr: dst}
+}
+
+func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {
+	lhs := v.evalExpr(ctx.Expr())
+	ident := ctx.ID().GetText()
+
+	return v.evalSelfFieldRef(lhs, ident)
 }
 
 func (v *Visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
@@ -93,7 +98,12 @@ func (v *Visitor) VisitLVArrayRef(ctx *parser.LVArrayRefContext) interface{} {
 
 func (v *Visitor) VisitLVId(ctx *parser.LVIdContext) interface{} {
 	ident := ctx.ID().GetText()
-	return v.GetLocal(ident)
+	loc := v.GetLocal(ident)
+	if _, ok := loc.(LSelfField); ok {
+		lhs := v.VisitESelf(nil).(Location)
+		return v.evalSelfFieldRef(lhs, ident)
+	}
+	return loc
 }
 
 func (v *Visitor) evalLV(ctx parser.ILvalueContext) (loc Location) {

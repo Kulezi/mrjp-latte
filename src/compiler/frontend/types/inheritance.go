@@ -42,6 +42,7 @@ func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[
 				}
 			}
 			newFieldInfo.Origin = childFieldInfo.Origin
+			newFieldInfo.Type = childFieldInfo.Type
 		}
 
 		// Overriden methods have the same offset in vtable.

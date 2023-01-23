@@ -6,12 +6,11 @@ import (
 	. "latte/compiler/config"
 	"latte/compiler/frontend"
 	"latte/compiler/frontend/types"
-	"log"
 	"runtime"
 )
 
 const (
-	Debug       = true
+	Debug       = false
 	syscallExit = 60
 	DWORD       = 4
 
@@ -291,7 +290,6 @@ func (x86 *X86Generator) EmitLoad(register string, loc ir.Location) {
 		x86.EmitOp("movl %#x(%s), %s #emitload-sf1", -DWORD, ebp, ecx)
 		x86.EmitOp("movl %#x(%s), %s #emitload-sf2", DWORD*loc.Offset, ecx, register)
 	default:
-		log.Printf("%s\n\n %#v", loc, loc)
 		panic(":(((")
 	}
 
@@ -550,8 +548,8 @@ func (x86 *X86Generator) EmitCallMethod(q ir.QCallMethod) {
 func (x86 *X86Generator) EmitArrayAccess(q ir.QArrayAccess) {
 	x86.dbg(q)
 
-	x86.EmitLoad(eax, q.Array)
 	x86.EmitLoad(ebx, q.Index)
+	x86.EmitLoad(eax, q.Array)
 
 	// First field of an array stores its length.
 	displacement := DWORD

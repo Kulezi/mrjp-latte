@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"io/ioutil"
@@ -12,6 +13,7 @@ import (
 	"path"
 	"strings"
 	"testing"
+	"time"
 )
 
 var goodDirs = []string{
@@ -26,9 +28,8 @@ var goodDirs = []string{
 	"../../tests/mrjp-tests/good/basic",
 	"../../tests/mrjp-tests/good/arrays",
 	"../../tests/mrjp-tests/good/virtual",
+	"../../tests/mrjp-tests/gr5",
 	// "../../mrjp-tests/good/hardcore",
-	// "../../mrjp-tests/good/virtual",
-	// "../../mrjp-tests/gr5",
 	"../../tests/official_tests/good",
 	"../../tests/official_tests/extensions/arrays1",
 	"../../tests/official_tests/extensions/objects1",
@@ -195,7 +196,9 @@ func TestGoodAnswers(t *testing.T) {
 							t.Fatal(err)
 						}
 
-						cmd := exec.Command(fmt.Sprintf("./%s", basename))
+						ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+						defer cancel()
+						cmd := exec.CommandContext(ctx, fmt.Sprintf("./%s", basename))
 						inputFile, err := os.Open(basename + ".input")
 						if err == nil {
 							cmd.Stdin = inputFile
