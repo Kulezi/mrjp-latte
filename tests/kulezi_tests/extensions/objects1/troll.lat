@@ -1,0 +1,33 @@
+int main() {
+    Troll x = new Troll;
+    x.a = 42;
+    x.b = "troll";
+    x.c = true;
+    x.print();
+    return 0;
+}
+
+class Troll {
+    int a;
+    string b;
+    boolean c;
+
+    void print() {
+        printInt(a);
+        printInt(self.a);
+        printString(b);
+        printString(self.b);
+        printBoolean(c);
+        printBoolean(self.c);
+        self.printBoolean(c);
+        self.printBoolean(self.c);
+    }
+
+    void printBoolean(boolean b) {
+        if (b) {
+            printString("true");
+        } else {
+            printString("false");
+        }
+    }
+}

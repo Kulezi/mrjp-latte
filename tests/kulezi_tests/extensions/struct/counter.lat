@@ -1,0 +1,26 @@
+int main() {
+    C c = new C;
+    c.x = c.x + 1;
+    printInt(c.x);
+    c.x = c.x + 1;
+    printInt(c.x);
+    c.x = c.x + 1;
+    printInt(c.x);
+    c.x++;
+    printInt(c.x);
+    c.x++;
+    printInt(c.x);
+    c.x++;
+    printInt(c.x);
+    c.x--;
+    printInt(c.x);
+    c.x--;
+    printInt(c.x);
+    c.x--;
+    printInt(c.x);
+    return 0;
+}
+
+class C {
+    int x;
+}

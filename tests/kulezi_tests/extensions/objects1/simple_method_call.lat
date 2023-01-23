@@ -1,0 +1,9 @@
+class C {
+    void f() { printString("hello"); }
+}
+
+int main() {
+    C x = new C;
+    x.f();
+    return 0;
+}

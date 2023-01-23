@@ -275,7 +275,7 @@ type field struct {
 	Offset int
 }
 
-func (v *globalDeclVisitor) collectFields(fields []parser.IFieldContext) (map[string]FieldInfo, error) {
+func (v *globalDeclVisitor) collectFields(className string, fields []parser.IFieldContext) (map[string]FieldInfo, error) {
 	v.methodCnt = 0
 	v.fieldCnt = 0
 	ret := make(map[string]FieldInfo)
@@ -296,6 +296,7 @@ func (v *globalDeclVisitor) collectFields(fields []parser.IFieldContext) (map[st
 
 		ret[f.ID] = FieldInfo{
 			Type:   f.Type,
+			Origin: className,
 			Offset: f.Offset,
 		}
 	}
@@ -304,7 +305,7 @@ func (v *globalDeclVisitor) collectFields(fields []parser.IFieldContext) (map[st
 }
 
 func (v *globalDeclVisitor) VisitBaseClassDef(ctx *parser.BaseClassDefContext) interface{} {
-	fields, err := v.collectFields(ctx.AllField())
+	fields, err := v.collectFields(ctx.ID().GetText(), ctx.AllField())
 	if err != nil {
 		return err
 	}
@@ -322,7 +323,7 @@ func (v *globalDeclVisitor) VisitBaseClassDef(ctx *parser.BaseClassDefContext) i
 // Returns the function signature as a Type.
 func (v *globalDeclVisitor) VisitDerivedClassDef(ctx *parser.DerivedClassDefContext) interface{} {
 	parent := TClassRef{ID: ctx.ID(1)}
-	fields, err := v.collectFields(ctx.AllField())
+	fields, err := v.collectFields(ctx.ID(0).GetText(), ctx.AllField())
 	if err != nil {
 		return err
 	}

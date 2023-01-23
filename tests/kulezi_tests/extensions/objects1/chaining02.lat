@@ -1,0 +1,18 @@
+int main() {
+    C x = new C;
+    printInt(x.this().x);
+    x.this().x++;
+
+    printInt(x.this().this().x);
+    x.this().this().x++;
+
+    printInt(x.this().this().this().x);
+    x.this().this().this().x++;
+
+    return 0;
+}
+
+class C {
+    int x;
+    C this() { return self; }
+}

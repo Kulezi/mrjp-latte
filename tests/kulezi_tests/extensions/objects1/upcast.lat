@@ -1,0 +1,27 @@
+class Point2 {
+    int x;
+    int y;
+
+    void move(int dx, int dy) {
+        x = x + dx;
+        y = y + dy;
+    }
+
+    int getX() { return x; }
+
+    int getY() { return y; }
+}
+
+class Point3 extends Point2 {
+}
+
+
+int main () {
+    Point2 p = new Point3;
+
+    p.move(3, 5);
+
+    printInt(p.getX());
+    printInt(p.getY());
+    return 0;
+}

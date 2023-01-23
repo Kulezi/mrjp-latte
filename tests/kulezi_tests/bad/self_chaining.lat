@@ -1,0 +1,19 @@
+class C {
+    int x;
+
+    void incrementBy5() {
+        x++;
+        self.x++;
+        self.self.x++;
+        self.self.self.x++;
+        self.self.self.self.x++;
+    }
+}
+
+int main() {
+    C c = new C;
+    printInt(c.x);
+    c.incrementBy5();
+    printInt(c.x);
+    return 0;
+}

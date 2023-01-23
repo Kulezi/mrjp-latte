@@ -1,0 +1,6 @@
+int main() { return 0; }
+
+class C {
+    int x;
+    int f() { return self.x; }
+}

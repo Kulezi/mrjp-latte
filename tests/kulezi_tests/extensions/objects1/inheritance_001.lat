@@ -7,5 +7,11 @@ class B extends A {
 }
 
 int main() {
+    B b = new B;
+    b.x = 5;
+    printInt(b.x);
+
+    A a = b;
+    printInt(a.x);
     return 0;
 }

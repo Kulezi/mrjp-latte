@@ -35,23 +35,7 @@ func GenX64(s frontend.State, config Config) string {
 	x86 := X86Generator{FunInfo: finfo, stringAdresses: make(map[string]string), vtables: vtables}
 
 	x86.Emit(".data\n")
-	for _, vtable := range vtables {
-		x86.EmitLabel(vtable.Label.Name)
-		class := vtable.Class
-		fields := make([]ir.Label, class.TotalMethods)
-		for _, field := range vtable.Class.Fields {
-			if fun, ok := field.Type.(types.TFun); ok {
-				fields[field.Offset] = functionLabels[ir.Fname{
-					Class: class.ID.GetText(),
-					Name:  fun.Ident,
-				}]
-			}
-		}
-
-		for _, label := range fields {
-			x86.EmitOp(".long %s", label.Name)
-		}
-	}
+	x86.EmitVTables(vtables, functionLabels)
 
 	for _, block := range cfg.Nodes {
 		x86.GenDataFromBlock(block)
@@ -64,6 +48,26 @@ func GenX64(s frontend.State, config Config) string {
 	}
 
 	return x86.res
+}
+
+func (x86 *X86Generator) EmitVTables(vtables map[string]ir.VTableInfo, functionLabels map[ir.Fname]ir.Label) {
+	for _, vtable := range vtables {
+		x86.EmitLabel(vtable.Label.Name)
+		class := vtable.Class
+		fields := make([]ir.Label, class.TotalMethods)
+		for _, field := range vtable.Class.Fields {
+			if fun, ok := field.Type.(types.TFun); ok {
+				fields[field.Offset] = functionLabels[ir.Fname{
+					Class: field.Origin,
+					Name:  fun.Ident,
+				}]
+			}
+		}
+
+		for _, label := range fields {
+			x86.EmitOp(".long %s", label.Name)
+		}
+	}
 }
 
 type X86Generator struct {

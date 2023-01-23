@@ -1,0 +1,18 @@
+int main() {
+    Getset x = new Getset;
+    x.setField(5);
+    printInt(x.getField());
+    x.setField(10);
+    printInt(x.getField());
+    x.setField(15);
+    printInt(x.getField());
+    return 0;
+}
+
+class Getset {
+    int field;
+
+    void setField(int x) { field = x; }
+
+    int getField() { return field; }
+}

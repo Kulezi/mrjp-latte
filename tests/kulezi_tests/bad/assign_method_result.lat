@@ -1,0 +1,9 @@
+class A {
+    A f() { return self; }
+}
+
+int main() {
+    A a = new A;
+    a.f() = new A;
+    return 0;
+}

@@ -263,7 +263,8 @@ func (t TBool) DefaultValue() interface{} {
 }
 
 type FieldInfo struct {
-	Type Type
+	Type   Type
+	Origin string
 
 	// For methods: index in vtable.
 	// For fields: offset from struct beginning.

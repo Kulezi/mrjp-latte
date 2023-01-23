@@ -1,0 +1,11 @@
+int main() {
+    A a = new A;
+    a.f().x = 5;
+    printInt(a.x);
+    return 0;
+}
+
+class A {
+    int x;
+    A f() { return self; }
+}

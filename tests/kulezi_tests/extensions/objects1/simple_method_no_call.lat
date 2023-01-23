@@ -1,0 +1,10 @@
+class C {
+    void f() {
+        f();
+        f();
+    }
+}
+
+int main() {
+    return 0;
+}
