@@ -29,6 +29,7 @@ func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[
 			continue
 		}
 
+		newFieldInfo := parentFieldInfo
 		// Function overriding needs matching signatures.
 		if childFieldInfo, ok := childFields[ident]; ok {
 			if !SameType(parentFieldType, childFieldInfo.Type) {
@@ -40,10 +41,11 @@ func (s *Signatures) inheritClass(child string, parent TClassRef, evaluated map[
 					MethodName:   ident,
 				}
 			}
+			newFieldInfo.Origin = childFieldInfo.Origin
 		}
 
 		// Overriden methods have the same offset in vtable.
-		childFields[ident] = parentFieldInfo
+		childFields[ident] = newFieldInfo
 	}
 
 	// Eval offsets for fields and methods that are not present in the parent.
