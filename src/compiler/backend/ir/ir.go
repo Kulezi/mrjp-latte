@@ -185,11 +185,10 @@ func (q QCallMethod) String() string { return fmt.Sprintf("%s = call %s(%s)", q.
 
 type QPush struct {
 	QBase
-	Src        Location
-	Additional int
+	Src Location
 }
 
-func (q QPush) String() string { return fmt.Sprintf("%dx push %s", q.Additional+1, q.Src) }
+func (q QPush) String() string { return fmt.Sprintf("push %s", q.Src) }
 
 type QArrayAccess struct {
 	QBase
@@ -233,3 +232,7 @@ type QNewClass struct {
 }
 
 func (q QNewClass) String() string { return fmt.Sprintf("%s = new %s", q.Dst, q.Class) }
+
+type QDup struct{ QBase }
+
+func (q QDup) String() string { return "dup" }

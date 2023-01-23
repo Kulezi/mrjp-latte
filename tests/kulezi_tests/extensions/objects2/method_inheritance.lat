@@ -1,20 +1,32 @@
 class A {
-    int f() {
-        return 1;
-    }
+    int f() { return 1; }
 }
 
 class B extends A {
 }
 
+class C extends B {
+    int f() { return 2; }
+}
+
 int main() {
-    A x;
-    x.f();
+    A x = new A;
+    printInt(x.f());
 
     x = new B;
-    x.f();
+    printInt(x.f());
 
-    B y;
-    y.f();
+    B y = new B;
+    printInt(y.f());
+
+    x = new C;
+    printInt(x.f());
+
+    y = new C;
+    printInt(y.f());
+
+    x = y;
+    printInt(x.f());
+
     return 0;
 }

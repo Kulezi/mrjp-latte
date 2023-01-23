@@ -43,14 +43,11 @@ func (v *Visitor) VisitEMethodCall(ctx *parser.EMethodCallContext) interface{} {
 
 	var args []Location
 	if signature.IsMethod {
-		var additional int
-		if loc, ok := classPtr.(LReg); ok && loc.Variable != "" {
-			additional = 0
-		} else {
-			additional = 1
+		v.EmitQuad(QPush{Src: classPtr})
+		if !isVariable(classPtr) {
+			v.EmitQuad(QDup{})
 		}
 
-		v.EmitQuad(QPush{Src: classPtr, Additional: additional})
 		args = append(args, classPtr)
 	}
 
@@ -112,8 +109,62 @@ func (v *Visitor) VisitEMethodCall(ctx *parser.EMethodCallContext) interface{} {
 }
 
 func (v *Visitor) VisitEFieldArrayAccess(ctx *parser.EFieldArrayAccessContext) interface{} {
-	Unimplemented("can't use field array access - classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
-	return nil
+	lhs := v.evalExpr(ctx.Expr(0))
+	ident := ctx.ID().GetText()
+	var array Location
+	switch t := lhs.Type().(type) {
+	case types.TClassRef:
+		class := v.EvalClass(t.ID.GetText())
+		fieldInfo := class.Fields[ident]
+		ptr := v.FreshTemp("class_array_field_ref", fieldInfo.Type)
+		array = v.FreshTemp("class_array_field", fieldInfo.Type)
+		v.EmitQuad(QArrayAccess{
+			Array: lhs,
+			Index: LConst{Type_: types.TInt{}, Value: fieldInfo.Offset - 1},
+			Dst:   ptr,
+		})
+		v.EmitQuad(QDeref{
+			Src: ptr,
+			Dst: array,
+		})
+	case types.TClass:
+		fieldInfo := t.Fields[ident]
+		ptr := v.FreshTemp("class_array_field_ref", fieldInfo.Type)
+		array = v.FreshTemp("class_array_field", fieldInfo.Type)
+		v.EmitQuad(QArrayAccess{
+			Array: lhs,
+			Index: LConst{Type_: types.TInt{}, Value: fieldInfo.Offset - 1},
+			Dst:   ptr,
+		})
+		v.EmitQuad(QDeref{
+			Src: ptr,
+			Dst: array,
+		})
+	default:
+		panic("field access happened on non array/class type")
+	}
+
+	index := v.evalExpr(ctx.Expr(1))
+
+	ptr := v.FreshTemp("arr_access", array.Type().BaseType())
+
+	v.EmitQuad(QArrayAccess{
+		Array: array,
+		Index: index,
+		Dst:   ptr,
+	})
+
+	value := v.FreshTemp("arr_deref", array.Type().BaseType())
+	v.EmitQuad(QDeref{
+		Src: ptr,
+		Dst: value,
+	})
+
+	if loc, ok := v.unassignBool(value); ok {
+		return loc
+	}
+
+	return value
 }
 
 func (v *Visitor) VisitEFieldAccess(ctx *parser.EFieldAccessContext) interface{} {

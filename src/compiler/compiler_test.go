@@ -19,17 +19,21 @@ var goodDirs = []string{
 	"../../tests/kulezi_tests/extensions/arrays1",
 	"../../tests/kulezi_tests/extensions/objects1",
 	"../../tests/kulezi_tests/extensions/objects2",
-	"../../tests/mrjp-tests/good/virtual",
 	"../../tests/kulezi_tests/extensions/struct",
 
 	// "../../mgtests/lattests/tests/margdoc",
 	// "../../mgtests/lattests/tests/margdoc/lvalues",
 	"../../tests/mrjp-tests/good/basic",
 	"../../tests/mrjp-tests/good/arrays",
+	"../../tests/mrjp-tests/good/virtual",
 	// "../../mrjp-tests/good/hardcore",
-	"../../mrjp-tests/good/virtual",
-	"../../mrjp-tests/gr5",
+	// "../../mrjp-tests/good/virtual",
+	// "../../mrjp-tests/gr5",
 	"../../tests/official_tests/good",
+	"../../tests/official_tests/extensions/arrays1",
+	"../../tests/official_tests/extensions/objects1",
+	"../../tests/official_tests/extensions/objects2",
+	"../../tests/official_tests/extensions/struct",
 }
 
 var badDirs = []string{

@@ -1,16 +1,36 @@
-int main () {
-  Counter c = new Counter;
-  int x = c.value[0].x;
-  // c = c.clone().value[c.clone().value[2+2*2].x].clone().value[0];
-  return 0;
+int main() {
+    List list = list5(1, 2, 3, 4, 5);
+    printInt(list.value);
+    printInt(list.next.value);
+    printInt(list.next.next.value);
+    printInt(list.next.next.next.value);
+    printInt(list.next.next.next.next.value);
+    return 0;
 }
 
-class Counter {
-  Counter[] value;
-  int x;
+List list5(int a, int b, int c, int d, int e) {
+    List E = new List;
+    E.value = e;
+    List D = new List;
+    D.value = d;
+    D.next = E;
 
-  Counter clone () {
-    return self;
-  }
+    List C = new List;
+    C.value = c;
+    C.next = D;
+
+    List B = new List;
+    B.value = b;
+    B.next = C;
+
+    List A = new List;
+    A.value = a;
+    A.next = B;
+
+    return A;
 }
 
+class List {
+    int value;
+    List next;
+}

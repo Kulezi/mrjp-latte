@@ -1,13 +1,13 @@
 class B extends A {
     int a;
-    void f(int a) { printString("f-b"); }
+    void f() { printString("f-b"); }
     void g() {}
 }
 
 class A {
     int a;
     int b;
-    void f(int a) { printString("f-a"); }
+    void f() { printString("f-a"); }
 }
 
 class C extends A {
@@ -18,9 +18,18 @@ class C extends A {
 
 class D extends B {
     int d;
-    void f(int a) { printString("f-d"); }
+    void f() { printString("f-d"); }
 }
 
 int main() {
+    A a = new A;
+    B b = new B;
+    C c = new C;
+    D d = new D;
+    a.f();
+    b.f();
+    c.f();
+    d.f();
+
     return 0;
 }

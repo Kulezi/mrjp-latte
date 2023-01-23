@@ -1,11 +1,57 @@
 int main() {
     A a = new A;
-    a.f().x = 5;
-    printInt(a.x);
+
+    printString("1:\n");
+    a.print();
+
+    a.getSelf().x = 5;
+    a.getSelf().y = true;
+    a.getSelf().z = "stary_string";
+
+    a.getSelf().a = a.copy();
+
+    printString("2:\n");
+    a.print();
+
+    a.getSelf().x = 5;
+    a.getSelf().y = false;
+    a.getSelf().z = "nowy_string";
+    a.getSelf().a = a.copy();
+
+    printString("3:\n");
+    a.print();
+
     return 0;
 }
 
 class A {
     int x;
-    A f() { return self; }
+    boolean y;
+    string z;
+    A a;
+
+    A getSelf() { return self; }
+
+    A copy() {
+        A res = new A;
+        res.x = x;
+        res.y = y;
+        res.z = z;
+        return res;
+    }
+
+    void print() {
+        printInt(x);
+        if (y) {
+            printString("true");
+        } else {
+            printString("false");
+        }
+        printString(z);
+        if (a == (A)null) {
+            printString("null");
+        } else {
+            a.print();
+        }
+    }
 }

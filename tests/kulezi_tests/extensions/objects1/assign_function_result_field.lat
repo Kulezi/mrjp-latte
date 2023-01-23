@@ -1,14 +1,19 @@
 int main() {
-    xd().x[1] = 5;
+    xd().x = 5;
+    xd().y = false;
+    xd().z = "true";
+    xd().a = xd();
     return 0;
 }
 
 class A {
-    int[] x;
+    int x;
+    boolean y;
+    string z;
+    A a;
 }
 
 A xd() {
     A res = new A;
-    res.x = new int[5];
     return res;
 }

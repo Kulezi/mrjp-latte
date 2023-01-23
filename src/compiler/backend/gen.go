@@ -6,10 +6,12 @@ import (
 	. "latte/compiler/config"
 	"latte/compiler/frontend"
 	"latte/compiler/frontend/types"
+	"log"
 	"runtime"
 )
 
 const (
+	Debug       = true
 	syscallExit = 60
 	DWORD       = 4
 
@@ -224,6 +226,8 @@ func (x86 *X86Generator) GenFromQuad(q ir.Quadruple) {
 		x86.EmitNewArray(q)
 	case ir.QNewClass:
 		x86.EmitNewClass(q)
+	case ir.QDup:
+		x86.EmitDup(q)
 	default:
 		panic("unsupported quadruple")
 	}
@@ -287,6 +291,7 @@ func (x86 *X86Generator) EmitLoad(register string, loc ir.Location) {
 		x86.EmitOp("movl %#x(%s), %s #emitload-sf1", -DWORD, ebp, ecx)
 		x86.EmitOp("movl %#x(%s), %s #emitload-sf2", DWORD*loc.Offset, ecx, register)
 	default:
+		log.Printf("%s\n\n %#v", loc, loc)
 		panic(":(((")
 	}
 
@@ -301,8 +306,8 @@ func (x86 *X86Generator) EmitQMov(q ir.QMov) {
 		x86.EmitLoad(eax, q.Src)
 		return
 	case ir.LReg, ir.LMem:
-		addr := x86.getLoc(dst)
 		x86.EmitLoad(eax, q.Src)
+		addr := x86.getLoc(dst)
 		if addr == "" {
 			x86.EmitOp("pushl %s\t# %s", eax, q)
 		} else {
@@ -318,11 +323,8 @@ func (x86 *X86Generator) EmitQMov(q ir.QMov) {
 
 func (x86 *X86Generator) EmitPush(q ir.QPush) {
 	x86.dbg(q)
-
 	x86.EmitLoad(eax, q.Src)
-	for i := 0; i <= q.Additional; i++ {
-		x86.EmitOp("pushl %s", eax)
-	}
+	x86.EmitOp("push %s", eax)
 }
 
 func (x86 *X86Generator) EmitStringAdd(q ir.QBinOp) {
@@ -607,6 +609,10 @@ func (x86 *X86Generator) EmitNewClass(q ir.QNewClass) {
 	})
 }
 
+func (x86 *X86Generator) EmitDup(q ir.QDup) {
+	x86.EmitOp("pushl (%s)", esp)
+}
+
 var newArraySignature = types.TFun{
 	Ident:  "newArray",
 	Args:   []types.FArg{{Ident: "size", Type: types.TInt{}}},
@@ -623,9 +629,11 @@ var newClassSignature = types.TFun{
 }
 
 func (x86 *X86Generator) dbg(q ir.Quadruple) {
-	pc := make([]uintptr, 10) // at least 1 entry needed
-	runtime.Callers(2, pc)
-	f := runtime.FuncForPC(pc[0])
-	trace := f.Name()
-	x86.EmitOp("# %s %s", q, trace)
+	if Debug {
+		pc := make([]uintptr, 10) // at least 1 entry needed
+		runtime.Callers(2, pc)
+		f := runtime.FuncForPC(pc[0])
+		trace := f.Name()
+		x86.EmitOp("# %s %s", q, trace)
+	}
 }

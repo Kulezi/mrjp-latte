@@ -6,9 +6,52 @@ import (
 )
 
 func (v *Visitor) VisitLVFieldArrayRef(ctx *parser.LVFieldArrayRefContext) interface{} {
-	Unimplemented("classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
-	return nil
+	lhs := v.evalExpr(ctx.Expr(0))
+	ident := ctx.ID().GetText()
+	var array Location
+	switch t := lhs.Type().(type) {
+	case types.TClassRef:
+		class := v.EvalClass(t.ID.GetText())
+		fieldInfo := class.Fields[ident]
+		ptr := v.FreshTemp("class_array_field_ref", fieldInfo.Type)
+		array = v.FreshTemp("class_array_field", fieldInfo.Type)
+		v.EmitQuad(QArrayAccess{
+			Array: lhs,
+			Index: LConst{Type_: types.TInt{}, Value: fieldInfo.Offset - 1},
+			Dst:   ptr,
+		})
+		v.EmitQuad(QDeref{
+			Src: ptr,
+			Dst: array,
+		})
+	case types.TClass:
+		fieldInfo := t.Fields[ident]
+		ptr := v.FreshTemp("class_array_field_ref", fieldInfo.Type)
+		array = v.FreshTemp("class_array_field", fieldInfo.Type)
+		v.EmitQuad(QArrayAccess{
+			Array: lhs,
+			Index: LConst{Type_: types.TInt{}, Value: fieldInfo.Offset - 1},
+			Dst:   ptr,
+		})
+		v.EmitQuad(QDeref{
+			Src: ptr,
+			Dst: array,
+		})
+	default:
+		panic("field access happened on non array/class type")
+	}
 
+	index := v.evalExpr(ctx.Expr(1))
+
+	ptr := v.FreshTemp("arr_access", array.Type().BaseType())
+
+	v.EmitQuad(QArrayAccess{
+		Array: array,
+		Index: index,
+		Dst:   ptr,
+	})
+
+	return LMem{Type_: array.Type().BaseType(), Addr: ptr}
 }
 
 func (v *Visitor) VisitLVField(ctx *parser.LVFieldContext) interface{} {

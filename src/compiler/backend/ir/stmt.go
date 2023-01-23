@@ -76,8 +76,16 @@ func (v *Visitor) VisitSDecl(ctx *parser.SDeclContext) interface{} {
 }
 
 func (v *Visitor) VisitSAss(ctx *parser.SAssContext) interface{} {
-	src := v.evalSExp(ctx.Expr())
 	dst := v.evalLV(ctx.Lvalue())
+	if _, ok := dst.Type().(types.TBool); ok {
+		lTrue, lFalse := v.FreshLabel("sassTrue"), v.FreshLabel("sassFalse")
+		defer v.PushLabels(lTrue, lFalse, lTrue)()
+	}
+	src := v.evalSExp(ctx.Expr())
+	if _, ok := src.(LUnassigned); ok {
+		src = v.GetBoolLoc()
+	}
+
 	v.EmitQuad(QMov{
 		Src: src,
 		Dst: dst,
@@ -247,12 +255,27 @@ func (v *Visitor) VisitSWhile(ctx *parser.SWhileContext) interface{} {
 	return nil
 }
 
+func isVariable(loc Location) bool {
+	if reg, ok := loc.(LReg); ok {
+		return reg.Variable != ""
+	}
+	return false
+}
+
 func (v *Visitor) VisitSFor(ctx *parser.SForContext) interface{} {
 	lBody := v.FreshLabel("_for_body")
 	lCond := v.FreshLabel("_for_cond")
 	lEnd := v.FreshLabel("_for_end")
 
 	arr := v.evalSExp(ctx.Expr())
+
+	arrLoc, drop := v.ShadowLocal("arr_ptr", types.TInt{})
+	defer drop()
+	v.EmitQuad(QMov{
+		Src: arr,
+		Dst: arrLoc,
+	})
+
 	loc, drop := v.ShadowLocal(ctx.ID().GetText(), arr.Type().BaseType())
 	defer drop()
 	counter, drop := v.ShadowLocal("for_counter", types.TInt{})
@@ -266,7 +289,7 @@ func (v *Visitor) VisitSFor(ctx *parser.SForContext) interface{} {
 	v.StartBlock(lBody)
 	ptr := v.FreshTemp("for_ptr", types.TInt{})
 	v.EmitQuad(QArrayAccess{
-		Array: arr,
+		Array: arrLoc,
 		Index: counter,
 		Dst:   ptr,
 	})
@@ -287,7 +310,7 @@ func (v *Visitor) VisitSFor(ctx *parser.SForContext) interface{} {
 	v.EmitQuad(QRelOp{
 		Op:     "==",
 		Lhs:    counter,
-		Rhs:    LMem{Type_: types.TInt{}, Addr: arr},
+		Rhs:    LMem{Type_: types.TInt{}, Addr: arrLoc},
 		LTrue:  lEnd,
 		LNext:  lEnd,
 		LFalse: lBody,
