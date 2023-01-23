@@ -25,6 +25,7 @@ func compileGCC(sourcePath, targetPath string) error {
 	out, err := exec.Command(
 		"i686-linux-gnu-gcc",
 		"-c",
+		"-g",
 		"-O0",
 		"-m32",
 		"-fno-pie",
@@ -45,6 +46,7 @@ func link(runtimePath, sourcePath, targetPath string) error {
 		"i686-linux-gnu-gcc",
 		sourcePath,
 		runtimePath,
+		"-g",
 		"-O0",
 		"-m32",
 		"-no-pie",

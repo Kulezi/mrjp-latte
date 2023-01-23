@@ -6,6 +6,7 @@ import (
 	. "latte/compiler/config"
 	"latte/compiler/frontend"
 	"latte/compiler/frontend/types"
+	"runtime"
 )
 
 const (
@@ -138,9 +139,14 @@ func (x86 *X86Generator) EmitFunctionProlog() {
 		}
 	}
 
+	argCnt := len(x86.curFun.Signature.Args)
+	if x86.curFun.Signature.IsMethod {
+		argCnt++
+	}
 	// The stack is now [args], return address, oldRbp.
-	offset := (len(x86.curFun.Signature.Args) + 1)
-	for i := range x86.curFun.Signature.Args {
+	offset := (argCnt + 1)
+
+	for i := 0; i < argCnt; i++ {
 		x86.EmitOp("movl %#x(%s), %s", DWORD*(offset-i), ebp, eax)
 		x86.EmitOp("movl %s, %#x(%s)", eax, -DWORD*(i+1), ebp)
 	}
@@ -206,6 +212,8 @@ func (x86 *X86Generator) GenFromQuad(q ir.Quadruple) {
 		x86.EmitPush(q)
 	case ir.QArrayAccess:
 		x86.EmitArrayAccess(q)
+	case ir.QArrayDeref:
+		x86.EmitArrayDeref(q)
 	case ir.QDeref:
 		x86.EmitDeref(q)
 	case ir.QNewArray:
@@ -230,6 +238,10 @@ func (x86 *X86Generator) getLoc(loc ir.Location) string {
 		return fmt.Sprintf("%#x(%s)", -offset, ebp)
 	case ir.LMem:
 		x86.EmitLoad(ecx, loc.Addr)
+		return fmt.Sprintf("(%s)", ecx)
+	case ir.LSelfField:
+		x86.EmitOp("movl %#x(%s), %s #emitload-sf1", -DWORD, ebp, ecx)
+		x86.EmitOp("leal %#x(%s), %s #emitload-sf2", DWORD*loc.Offset, ecx, ecx)
 		return fmt.Sprintf("(%s)", ecx)
 	default:
 		panic("unsupported location")
@@ -267,6 +279,9 @@ func (x86 *X86Generator) EmitLoad(register string, loc ir.Location) {
 	case ir.LMem:
 		x86.EmitLoad(register, loc.Addr)
 		x86.EmitOp("movl (%s), %s", register, register)
+	case ir.LSelfField:
+		x86.EmitOp("movl %#x(%s), %s #emitload-sf1", -DWORD, ebp, ecx)
+		x86.EmitOp("movl %#x(%s), %s #emitload-sf2", DWORD*loc.Offset, ecx, register)
 	default:
 		panic(":(((")
 	}
@@ -274,6 +289,8 @@ func (x86 *X86Generator) EmitLoad(register string, loc ir.Location) {
 }
 
 func (x86 *X86Generator) EmitQMov(q ir.QMov) {
+	x86.dbg(q)
+
 	switch dst := q.Dst.(type) {
 	// In case of a standalone expression we can forget the result.
 	case ir.LDrop:
@@ -287,17 +304,26 @@ func (x86 *X86Generator) EmitQMov(q ir.QMov) {
 		} else {
 			x86.EmitOp("movl %s, %s \t# %s", eax, addr, q)
 		}
+	case ir.LSelfField:
+		x86.EmitLoad(eax, q.Src)
+		x86.EmitOp("movl %s, %s", eax, x86.getLoc(dst))
 	default:
 		panic(":(((")
 	}
 }
 
 func (x86 *X86Generator) EmitPush(q ir.QPush) {
+	x86.dbg(q)
+
 	x86.EmitLoad(eax, q.Src)
-	x86.EmitOp("pushl %s", eax)
+	for i := 0; i <= q.Additional; i++ {
+		x86.EmitOp("pushl %s", eax)
+	}
 }
 
 func (x86 *X86Generator) EmitStringAdd(q ir.QBinOp) {
+	x86.dbg(q)
+
 	x86.EmitLoad(eax, q.Lhs)
 	x86.EmitLoad(ebx, q.Rhs)
 	x86.EmitOp("pushl %s", ebx)
@@ -314,6 +340,8 @@ func (x86 *X86Generator) EmitStringAdd(q ir.QBinOp) {
 }
 
 func (x86 *X86Generator) EmitBinOp(q ir.QBinOp) {
+	x86.dbg(q)
+
 	if _, ok := q.Lhs.Type().(types.TString); ok {
 		x86.EmitStringAdd(q)
 		return
@@ -339,14 +367,22 @@ func (x86 *X86Generator) EmitBinOp(q ir.QBinOp) {
 		panic("unsupported binary operator")
 	}
 
-	if dst, ok := q.Dst.(ir.LReg); ok && dst.Variable != "" {
-		x86.EmitOp("movl %s, %s", eax, x86.getLoc(dst))
-	} else {
-		x86.EmitOp("pushl %s", eax)
+	switch dst := q.Dst.(type) {
+	case ir.LReg:
+		if dst.Variable != "" {
+			x86.EmitOp("movl %s, %s", eax, x86.getLoc(dst))
+		} else {
+			x86.EmitOp("pushl %s #%#v", eax, q.Dst)
+		}
+	default:
+		x86.EmitOp("movl %s, %s #xd", eax, x86.getLoc(dst))
 	}
+
 }
 
 func (x86 *X86Generator) EmitStringRelOp(q ir.QRelOp) {
+	x86.dbg(q)
+
 	x86.EmitLoad(eax, q.Lhs)
 	x86.EmitLoad(ebx, q.Rhs)
 	x86.EmitOp("pushl %s", ebx)
@@ -388,6 +424,8 @@ var inverseJmp = map[string]string{
 }
 
 func (x86 *X86Generator) EmitRelOp(q ir.QRelOp) {
+	x86.dbg(q)
+
 	if _, ok := q.Lhs.Type().(types.TString); ok {
 		x86.EmitStringRelOp(q)
 		return
@@ -426,28 +464,38 @@ func (x86 *X86Generator) EmitRelOp(q ir.QRelOp) {
 }
 
 func (x86 *X86Generator) EmitNeg(q ir.QNeg) {
+	x86.dbg(q)
+
 	x86.EmitLoad(eax, q.Arg)
 	x86.EmitOp("neg %s", eax)
 	x86.EmitOp("pushl %s", eax)
 }
 
 func (x86 *X86Generator) EmitJmp(q ir.QJmp) {
+	x86.dbg(q)
+
 	x86.EmitOp("jmp %s", q.Dst)
 }
 
 func (x86 *X86Generator) EmitJz(q ir.QJz) {
+	x86.dbg(q)
+
 	x86.EmitLoad(eax, q.Value)
 	x86.EmitOp("test %s, %s", eax, eax)
 	x86.EmitOp("jz %s", q.Dst)
 }
 
 func (x86 *X86Generator) EmitJnz(q ir.QJnz) {
+	x86.dbg(q)
+
 	x86.EmitLoad(eax, q.Value)
 	x86.EmitOp("test %s, %s", eax, eax)
 	x86.EmitOp("jnz %s", q.Dst)
 }
 
 func (x86 *X86Generator) EmitRet(q ir.QRet) {
+	x86.dbg(q)
+
 	// if x86.curFun.Function.Name == "main" {
 	// 	// Put return value to rdi, it's a scratch register so epilog won't change it.
 	// 	x86.EmitLoad(rdi, q.Value)
@@ -462,11 +510,15 @@ func (x86 *X86Generator) EmitRet(q ir.QRet) {
 }
 
 func (x86 *X86Generator) EmitVRet(q ir.QVRet) {
+	x86.dbg(q)
+
 	x86.EmitFunctionEpilog()
 	x86.EmitOp("ret")
 }
 
 func (x86 *X86Generator) EmitCall(q ir.QCall) {
+	x86.dbg(q)
+
 	x86.EmitOp("call %s", q.Label.Name)
 	// Pop arguments from the stack.
 	x86.EmitOp("addl $%#x, %s", len(q.Args)*DWORD, esp)
@@ -477,8 +529,10 @@ func (x86 *X86Generator) EmitCall(q ir.QCall) {
 }
 
 func (x86 *X86Generator) EmitCallMethod(q ir.QCallMethod) {
+	x86.dbg(q)
+
 	x86.EmitLoad(eax, q.Label)
-	x86.EmitOp("call %s", eax)
+	x86.EmitOp("call *%s", eax)
 	// Pop arguments from the stack.
 	x86.EmitOp("addl $%#x, %s", len(q.Args)*DWORD, esp)
 
@@ -488,6 +542,8 @@ func (x86 *X86Generator) EmitCallMethod(q ir.QCallMethod) {
 }
 
 func (x86 *X86Generator) EmitArrayAccess(q ir.QArrayAccess) {
+	x86.dbg(q)
+
 	x86.EmitLoad(eax, q.Array)
 	x86.EmitLoad(ebx, q.Index)
 
@@ -497,7 +553,19 @@ func (x86 *X86Generator) EmitArrayAccess(q ir.QArrayAccess) {
 	x86.EmitOp("pushl %s", eax)
 }
 
+func (x86 *X86Generator) EmitArrayDeref(q ir.QArrayDeref) {
+	x86.dbg(q)
+
+	x86.EmitLoad(eax, q.Array)
+	x86.EmitLoad(ebx, q.Index)
+
+	// First field of an array stores its length.
+	displacement := DWORD
+	x86.EmitOp("pushl %d(%s, %s, %d)", displacement, eax, ebx, DWORD)
+}
+
 func (x86 *X86Generator) EmitDeref(q ir.QDeref) {
+	x86.dbg(q)
 	x86.EmitLoad(eax, q.Src)
 	x86.EmitOp("movl (%s), %s", eax, eax)
 	if dst, ok := q.Dst.(ir.LReg); ok {
@@ -510,6 +578,7 @@ func (x86 *X86Generator) EmitDeref(q ir.QDeref) {
 }
 
 func (x86 *X86Generator) EmitNewArray(q ir.QNewArray) {
+	x86.dbg(q)
 	x86.EmitLoad(eax, q.Size)
 	x86.EmitOp("pushl %s", eax)
 	x86.EmitCall(ir.QCall{
@@ -521,8 +590,9 @@ func (x86 *X86Generator) EmitNewArray(q ir.QNewArray) {
 }
 
 func (x86 *X86Generator) EmitNewClass(q ir.QNewClass) {
+	x86.dbg(q)
 	size := ir.LConst{Type_: types.TInt{}, Value: q.Class.TotalNonMethods}
-	x86.EmitOp("pushl %s", x86.vtables[q.Class.ID.GetText()].Label)
+	x86.EmitOp("pushl $%s", x86.vtables[q.Class.ID.GetText()].Label)
 	x86.EmitLoad(eax, size)
 	x86.EmitOp("pushl %s", eax)
 	x86.EmitCall(ir.QCall{
@@ -546,4 +616,12 @@ var newClassSignature = types.TFun{
 		{Ident: "size", Type: types.TInt{}},
 	},
 	Result: types.TInt{},
+}
+
+func (x86 *X86Generator) dbg(q ir.Quadruple) {
+	pc := make([]uintptr, 10) // at least 1 entry needed
+	runtime.Callers(2, pc)
+	f := runtime.FuncForPC(pc[0])
+	trace := f.Name()
+	x86.EmitOp("# %s %s", q, trace)
 }

@@ -28,6 +28,13 @@ func reservedFunction(ident string) bool {
 }
 
 func (v *Visitor) GetFunctionLabel(ident string) Label {
+	if reservedFunction(ident) {
+		return Label{
+			IsFunction: true,
+			Name:       ident,
+		}
+	}
+
 	var fname Fname
 	fname.Name = ident
 	if v.CurClass != nil {
@@ -67,6 +74,11 @@ func (v *Visitor) EnterClass(signature TClass) (exit func()) {
 }
 
 func (v *Visitor) FreshTemp(prefix string, t Type) LReg {
+	if classRef, ok := t.(TClassRef); ok {
+		ti, _ := v.TypeOfGlobal(classRef.String())
+		t = ti.Type
+	}
+
 	tries := 0
 	for {
 		ident := prefix
@@ -113,12 +125,18 @@ func (v *Visitor) StartBlock(l Label) {
 }
 
 func (v *Visitor) PutField(ident string, fieldInfo FieldInfo) {
+	t := fieldInfo.Type
+	if classRef, ok := t.(TClassRef); ok {
+		class, _ := v.TypeOfGlobal(classRef.String())
+		t = class.Type
+	}
+
 	v.Signatures.Locals[ident] = TypeInfo{
-		Type: fieldInfo.Type,
+		Type: t,
 	}
 
 	v.variableLocations[ident] = LSelfField{
-		Type_:  fieldInfo.Type,
+		Type_:  t,
 		Name:   ident,
 		Offset: fieldInfo.Offset,
 	}

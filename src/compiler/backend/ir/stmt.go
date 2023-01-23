@@ -87,11 +87,12 @@ func (v *Visitor) VisitSAss(ctx *parser.SAssContext) interface{} {
 }
 
 func (v *Visitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
+	lhs := v.evalLV(ctx.Lvalue())
 	dst := v.evalLV(ctx.Lvalue())
 	v.EmitQuad(QBinOp{
 		Dst: dst,
 		Op:  "+",
-		Lhs: dst,
+		Lhs: lhs,
 		Rhs: LConst{
 			Type_: types.TInt{},
 			Value: 1,
@@ -102,11 +103,12 @@ func (v *Visitor) VisitSIncr(ctx *parser.SIncrContext) interface{} {
 }
 
 func (v *Visitor) VisitSDecr(ctx *parser.SDecrContext) interface{} {
+	lhs := v.evalLV(ctx.Lvalue())
 	dst := v.evalLV(ctx.Lvalue())
 	v.EmitQuad(QBinOp{
 		Dst: dst,
 		Op:  "-",
-		Lhs: dst,
+		Lhs: lhs,
 		Rhs: LConst{
 			Type_: types.TInt{},
 			Value: 1,

@@ -3,7 +3,6 @@ package ir
 import (
 	"latte/compiler/frontend/types"
 	"latte/parser"
-	"log"
 	"strconv"
 )
 
@@ -35,8 +34,81 @@ func (v *Visitor) GetBoolLoc() Location {
 }
 
 func (v *Visitor) VisitEMethodCall(ctx *parser.EMethodCallContext) interface{} {
-	Unimplemented("can't use method call - classes are not yet supported\n\t%s", types.PosFromToken(ctx.GetStart()))
-	return nil
+	classPtr := v.evalExpr(ctx.Expr(0))
+	class := classPtr.Type().(types.TClass)
+
+	ident := ctx.ID().GetText()
+	fieldInfo := class.Fields[ident]
+	signature := fieldInfo.Type.(types.TFun)
+
+	var args []Location
+	if signature.IsMethod {
+		var additional int
+		if loc, ok := classPtr.(LReg); ok && loc.Variable != "" {
+			additional = 0
+		} else {
+			additional = 1
+		}
+
+		v.EmitQuad(QPush{Src: classPtr, Additional: additional})
+		args = append(args, classPtr)
+	}
+
+	for i, e := range ctx.AllExpr()[1:] {
+		pop := func() {}
+		if _, ok := signature.Args[i].Type.(types.TBool); ok {
+			lTrue, lFalse := v.FreshLabel("bool_argTrue"), v.FreshLabel("bool_argFalse")
+			pop = v.PushLabels(lTrue, lFalse, lTrue)
+		}
+		arg := v.evalExpr(e)
+		switch arg.(type) {
+		case LUnassigned:
+			arg = v.GetBoolLoc()
+		case LDrop:
+		default:
+			v.EmitQuad(QPush{
+				Src: arg,
+			})
+		}
+		pop()
+		args = append(args, arg)
+	}
+
+	dst := v.FreshTemp("call_tmp", signature.Result)
+
+	vtablePtr := v.FreshTemp("vtab_ptr", types.TInt{})
+	v.EmitQuad(QDeref{
+		Src: classPtr,
+		Dst: vtablePtr,
+	})
+	funAddr := v.FreshTemp("vtab_addr", types.TInt{})
+	v.EmitQuad(QArrayDeref{
+		Array: vtablePtr,
+		Index: LConst{Type_: types.TInt{}, Value: class.Fields[ident].Offset - 1},
+		Dst:   funAddr,
+	})
+
+	v.EmitQuad(QCallMethod{
+		Signature: signature,
+		Label:     funAddr,
+		Dst:       dst,
+		Args:      args,
+	})
+
+	if _, ok := signature.Result.(types.TBool); ok {
+		v.EmitQuad(QRelOp{
+			Op:     "==",
+			LFalse: v.lFalse,
+			LTrue:  v.lTrue,
+			LNext:  v.lNext,
+			Lhs:    dst,
+			Rhs:    LConst{Type_: types.TBool{}, Value: true},
+		})
+		return LUnassigned{Type_: types.TBool{}}
+	}
+
+	return dst
+
 }
 
 func (v *Visitor) VisitEFieldArrayAccess(ctx *parser.EFieldArrayAccessContext) interface{} {
@@ -269,7 +341,6 @@ func (v *Visitor) VisitENew(ctx *parser.ENewContext) interface{} {
 
 func (v *Visitor) VisitESelf(ctx *parser.ESelfContext) interface{} {
 	loc := v.GetLocal("self")
-	log.Println(loc)
 	if _, ok := loc.(LMem); ok {
 		value := v.FreshTemp("eid_deref", loc.Type())
 		v.EmitQuad(QMov{
@@ -352,11 +423,8 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 		switch arg.(type) {
 		case LUnassigned:
 			arg = v.GetBoolLoc()
-		case LConst:
-			v.EmitQuad(QPush{
-				Src: arg,
-			})
-		case LReg:
+		case LDrop:
+		default:
 			v.EmitQuad(QPush{
 				Src: arg,
 			})
@@ -376,20 +444,14 @@ func (v *Visitor) VisitEFunCall(ctx *parser.EFunCallContext) interface{} {
 			Dst: vtablePtr,
 		})
 		funAddr := v.FreshTemp("vtab_addr", types.TInt{})
-		v.EmitQuad(QArrayAccess{
+		v.EmitQuad(QArrayDeref{
 			Array: vtablePtr,
-			Index: LConst{Type_: types.TInt{}, Value: class.Fields[ident].Offset},
+			Index: LConst{Type_: types.TInt{}, Value: class.Fields[ident].Offset - 1},
 			Dst:   funAddr,
 		})
-		funLabel := v.FreshTemp("method_label", types.TInt{})
-		v.EmitQuad(QDeref{
-			Src: funAddr,
-			Dst: funLabel,
-		})
-
 		v.EmitQuad(QCallMethod{
 			Signature: signature,
-			Label:     funLabel,
+			Label:     funAddr,
 			Dst:       dst,
 			Args:      args,
 		})

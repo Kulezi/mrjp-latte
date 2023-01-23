@@ -55,11 +55,11 @@ func Run(filename string) (State, error) {
 		return State{}, err
 	}
 
-	for _, v := range s.Signatures.Globals {
-		if class, ok := v.Type.(TClass); ok {
-			printClass(class)
-		}
-	}
+	// for _, v := range s.Signatures.Globals {
+	// 	if class, ok := v.Type.(TClass); ok {
+	// 		printClass(class)
+	// 	}
+	// }
 
 	return s, nil
 }
